@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="pub2sd2",
-    version="0.9.9.16acf",
+    version="0.9.9.16acg",
     url="https://github.com/madskinner/pub2sd",
     author="Mark Skinner",
     author_email="mark_skinner@sil.org",
