@@ -1,0 +1,4 @@
+include pub2sd/*.json
+include *.json
+include pub2sd/*.html
+recursive-include pub2sd/images *
