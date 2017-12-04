@@ -8,7 +8,7 @@ setuptools.setup(
     author_email="mark_skinner@sil.org",
     description="Publish MP3 files to SD cards",
     long_description=open('README.rst').read(),
-    data_files=[('../tests', ['set_tags.json', 'default_values.json', 'hash_tag_on.json', 'idiot_tags.json', 'localized_text.json', 'read_tag.json', 'read_tag_hide_encoding.json', 'read_tag_info.json', 'trim_tag.json',]),],
+    data_files=[('../tests', ['set_tags.json', 'default_values.json', 'hash_tag_on.json', 'idiot_tags.json', 'localized_text.json', 'read_tag.json', 'read_tag_hide_encoding.json', 'read_tag_info.json', 'trim_tag.json',]),
                 ('', ['set_tags.json', 'default_values.json', 'hash_tag_on.json', 'idiot_tags.json', 'localized_text.json', 'read_tag.json', 'read_tag_hide_encoding.json', 'read_tag_info.json', 'trim_tag.json',]),],
     packages=setuptools.find_packages(),
     package_data={'pub2sd': ['*.html', '*.json', '*.ico', 'images/*.png', 'images/*.jpg', 'images/*.ico']},
