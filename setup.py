@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(
-    name="pub2sd",
+    name="pub2sd2",
     version="0.9.9.16",
     url="https://github.com/madskinner/pub2sd",
     author="Mark Skinner",

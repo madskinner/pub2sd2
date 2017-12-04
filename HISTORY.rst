@@ -5,7 +5,7 @@ History
 
 0.9.9.16(2017)
 ------------------
-on_prepare_files() refactored.
+extensively refactored.
 
 0.9.9.15(2017)
 ------------------
