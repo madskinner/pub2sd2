@@ -72,7 +72,7 @@ SCRIPT_DIR = get_script_directory()
 
 INTERFACE_LANGS = {'langs':{'0':'en-US', '1':'fr-FR', '2':'pt-PT'},}
 
-SET_TAGS = json.load(codecs.open("set_tags.json", mode='r', encoding='utf-8'))
+SET_TAGS = json.load(codecs.open("./set_tags.json", mode='r', encoding='utf-8'))
 
 LOCALIZED_TEXT = json.load(codecs.open("localized_text.json", mode='r', \
                                                              encoding='utf-8'))
