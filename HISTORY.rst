@@ -3,6 +3,10 @@
 History
 -------
 
+0.9.9.18(2017)
+------------------
+use pkg_resources and resource_filename to access data files, in order to get readthedocs to build?
+
 0.9.9.17(2017)
 ------------------
 extensively refactored.

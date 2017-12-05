@@ -31,6 +31,8 @@ from tkinter import font, Tk, Toplevel, filedialog, messagebox, StringVar, \
 from tkinter.ttk import Button, Checkbutton, Entry, Frame, Label, LabelFrame, \
                         Radiobutton, Scrollbar, Combobox, Notebook, \
                         Progressbar, Treeview, Style
+                        
+from pkg_resources import resource_filename
 
 import ast
 import psutil
@@ -65,6 +67,7 @@ def get_script_directory():
     """return path to current script"""
     #path = os.path.realpath(sys.argv[0])
     return os.path.dirname(__file__)
+#    return os.path.dirname(__file__)
 #    return os.path.realpath(sys.argv[0]) \
 #                if os.path.isdir(os.path.realpath(sys.argv[0])) \
 #                        else os.path.dirname(os.path.realpath(sys.argv[0]))
@@ -74,39 +77,39 @@ SCRIPT_DIR = get_script_directory()
 INTERFACE_LANGS = {'langs':{'0':'en-US', '1':'fr-FR', '2':'pt-PT'},}
 
 SET_TAGS = json.load(codecs.open(\
-                    os.path.normpath(SCRIPT_DIR + "/set_tags.json"), \
+                    resource_filename(__name__, "set_tags.json"), \
                                             mode='r', encoding='utf-8'))
 
 LOCALIZED_TEXT = json.load(codecs.open(\
-                    os.path.normpath(SCRIPT_DIR + "/localized_text.json"), \
+                    resource_filename(__name__, "localized_text.json"), \
                                     mode='r', encoding='utf-8'))
 
 TRIM_TAG = json.load(codecs.open(\
-                    os.path.normpath(SCRIPT_DIR + "/trim_tag.json"), \
+                    resource_filename(__name__, "trim_tag.json"), \
                                     mode='r', encoding='utf-8'))
 
 READ_TAG = json.load(codecs.open(\
-                    os.path.normpath(SCRIPT_DIR + "/read_tag.json"), \
+                    resource_filename(__name__, "read_tag.json"), \
                                     mode='r', encoding='utf-8'))
 
 IDIOT_TAGS = json.load(codecs.open(\
-                    os.path.normpath(SCRIPT_DIR + "/idiot_tags.json"), \
+                    resource_filename(__name__, "idiot_tags.json"), \
                                     mode='r', encoding='utf-8'))
 
 READ_TAG_INFO = json.load(codecs.open(\
-                    os.path.normpath(SCRIPT_DIR + "/read_tag_info.json"), \
+                    resource_filename(__name__, "read_tag_info.json"), \
                                     mode='r', encoding='utf-8'))
 
 HASH_TAG_ON = json.load(codecs.open(\
-                    os.path.normpath(SCRIPT_DIR + "/hash_tag_on.json"), \
+                    resource_filename(__name__, "hash_tag_on.json"), \
                                     mode='r', encoding='utf-8'))
 
 READ_TAG_HIDE_ENCODING = json.load(codecs.open(\
-                os.path.normpath(SCRIPT_DIR + "/read_tag_hide_encoding.json"),\
+                resource_filename(__name__, "read_tag_hide_encoding.json"),\
                                                    mode='r', encoding='utf-8'))
 
 DEFAULT_VALUES = json.load(codecs.open(\
-                    os.path.normpath(SCRIPT_DIR + "/default_values.json"), \
+                    resource_filename(__name__, "default_values.json"), \
                                     mode='r', encoding='utf-8'))
 
 LATIN1 = "À/À, Á/Á, Â/Â, Ã/Ã, Ä/Ä, Å/Å, " + \
@@ -413,7 +416,7 @@ THE_IDIOT_P = {\
                 'COMM':'atag.text[0]', \
                 }
 
-THIS_VERSION = '0.9.9.17'
+THIS_VERSION = '0.9.9.18'
 
 
 
