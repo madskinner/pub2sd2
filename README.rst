@@ -33,7 +33,6 @@ Features
 
 * TODO
 
-   - refactor code and add docstrings so I and others can make sense of it
    - tests added? switch from unittest to pytest?
    - Add support for Mac in platform dependent code
    - Add Mass eject for usb/SDcard - platform dependent

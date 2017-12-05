@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="pub2sd2",
-    version="0.9.9.16acg",
+    version="0.9.9.17",
     url="https://github.com/madskinner/pub2sd",
     author="Mark Skinner",
     author_email="mark_skinner@sil.org",
@@ -21,5 +21,6 @@ setuptools.setup(
                  'Programming Language :: Python :: 3.4',
                  'Programming Language :: Python :: 3.5',
                  'Programming Language :: Python :: 3.6'],
-    keywords='publish mp3 metadata sdcard'
+    keywords='publish mp3 metadata sdcard',
+    include_package_data=True
 )

@@ -64,37 +64,50 @@ DOUBLE_SPACE_TO_SINGLE = re.compile(r'(.*?)\s\s(.*?)')
 def get_script_directory():
     """return path to current script"""
     #path = os.path.realpath(sys.argv[0])
-    return os.path.realpath(sys.argv[0]) \
-                if os.path.isdir(os.path.realpath(sys.argv[0])) \
-                        else os.path.dirname(os.path.realpath(sys.argv[0]))
+    return os.path.dirname(__file__)
+#    return os.path.realpath(sys.argv[0]) \
+#                if os.path.isdir(os.path.realpath(sys.argv[0])) \
+#                        else os.path.dirname(os.path.realpath(sys.argv[0]))
 
 SCRIPT_DIR = get_script_directory()
 
 INTERFACE_LANGS = {'langs':{'0':'en-US', '1':'fr-FR', '2':'pt-PT'},}
 
-SET_TAGS = json.load(codecs.open(SCRIPT_DIR + "/set_tags.json", mode='r', encoding='utf-8'))
+SET_TAGS = json.load(codecs.open(\
+                    os.path.normpath(SCRIPT_DIR + "/set_tags.json"), \
+                                            mode='r', encoding='utf-8'))
 
-LOCALIZED_TEXT = json.load(codecs.open("localized_text.json", mode='r', \
-                                                             encoding='utf-8'))
+LOCALIZED_TEXT = json.load(codecs.open(\
+                    os.path.normpath(SCRIPT_DIR + "/localized_text.json"), \
+                                    mode='r', encoding='utf-8'))
 
-TRIM_TAG = json.load(codecs.open("trim_tag.json", mode='r', encoding='utf-8'))
+TRIM_TAG = json.load(codecs.open(\
+                    os.path.normpath(SCRIPT_DIR + "/trim_tag.json"), \
+                                    mode='r', encoding='utf-8'))
 
-READ_TAG = json.load(codecs.open("read_tag.json", mode='r', encoding='utf-8'))
+READ_TAG = json.load(codecs.open(\
+                    os.path.normpath(SCRIPT_DIR + "/read_tag.json"), \
+                                    mode='r', encoding='utf-8'))
 
-IDIOT_TAGS = json.load(codecs.open("idiot_tags.json", mode='r', \
-                                                             encoding='utf-8'))
+IDIOT_TAGS = json.load(codecs.open(\
+                    os.path.normpath(SCRIPT_DIR + "/idiot_tags.json"), \
+                                    mode='r', encoding='utf-8'))
 
-READ_TAG_INFO = json.load(codecs.open("read_tag_info.json", mode='r', \
-                                                             encoding='utf-8'))
+READ_TAG_INFO = json.load(codecs.open(\
+                    os.path.normpath(SCRIPT_DIR + "/read_tag_info.json"), \
+                                    mode='r', encoding='utf-8'))
 
-HASH_TAG_ON = json.load(codecs.open("hash_tag_on.json", mode='r', \
-                                                            encoding='utf-8'))
+HASH_TAG_ON = json.load(codecs.open(\
+                    os.path.normpath(SCRIPT_DIR + "/hash_tag_on.json"), \
+                                    mode='r', encoding='utf-8'))
 
-READ_TAG_HIDE_ENCODING = json.load(codecs.open("read_tag_hide_encoding.json",\
+READ_TAG_HIDE_ENCODING = json.load(codecs.open(\
+                os.path.normpath(SCRIPT_DIR + "/read_tag_hide_encoding.json"),\
                                                    mode='r', encoding='utf-8'))
 
-DEFAULT_VALUES = json.load(codecs.open("default_values.json", mode='r', \
-                                                            encoding='utf-8'))
+DEFAULT_VALUES = json.load(codecs.open(\
+                    os.path.normpath(SCRIPT_DIR + "/default_values.json"), \
+                                    mode='r', encoding='utf-8'))
 
 LATIN1 = "À/À, Á/Á, Â/Â, Ã/Ã, Ä/Ä, Å/Å, " + \
             "Æ/Æ, Ç/Ç, È/È, É/É, Ê/Ê, Ë/Ë, " + \
@@ -400,7 +413,7 @@ THE_IDIOT_P = {\
                 'COMM':'atag.text[0]', \
                 }
 
-THIS_VERSION = '0.9.9.16ac'
+THIS_VERSION = '0.9.9.17'
 
 
 
@@ -1203,6 +1216,7 @@ class GuiCore(Tk):
             tagname = SET_TAGS[lang][tag]
             #??? need to ensure tagname is translated to fr and pt
             set_tagb.append('{}:({})'.format(tagname, tag.upper()))
+            #print(set_tagb)
         self.ddnSelectTag = Combobox(self.boxEnter, state='readonly', \
                                      textvariable=self.set_tag, width=70)
         self.ddnSelectTag.bind("<<ComboboxSelected>>", self.on_get)
@@ -2068,7 +2082,7 @@ class GuiCore(Tk):
                 old_columns.extend(['APIC_'])
         return old_columns
 
-    def set_btn_state_for_on_click_f1_next(self):
+    def set_btn_state_for_on_click_f1_next(self, lang):
         """set btn state for on_click_f1_next"""
         self.btnImportContents['state'] = "normal"
         if self.mode.get() == 0:
@@ -2076,6 +2090,10 @@ class GuiCore(Tk):
             self.ddnSelectTag['values'] = ['{}:{}'.format(k, \
                              SET_TAGS[lang][k]) \
                                 for k in self.selected_tags if k != 'APIC']
+            print(self.selected_tags)
+            print(['{}:{}'.format(k, \
+                             SET_TAGS[lang][k]) \
+                                for k in self.selected_tags if k != 'APIC'])
             self.btnImportContents['state'] = "normal"
             self.btnAddCollection['state'] = "disabled"
             self.btnAddFiles['state'] = "disabled"
@@ -2140,7 +2158,7 @@ class GuiCore(Tk):
                 self.tree.heading(item, text=SET_TAGS[lang][item])
                 self.tree.column(item, minwidth=0, \
                         width=self.font.measure(SET_TAGS[lang][item]), \
-                                              anchor='center', stretch=NO)    
+                                              anchor='center', stretch=NO)
             else:
                 #not an idiot so show tag codes not descriptions
                 self.tree.heading(item, text=item)
@@ -2166,7 +2184,7 @@ class GuiCore(Tk):
 
         self.n.add(self.f2)
         self.n.select(2)
-        self.set_btn_state_for_on_click_f1_next()
+        self.set_btn_state_for_on_click_f1_next(lang)
         self.change_lang()
 
     def on_click_f2_next(self):
@@ -2469,11 +2487,14 @@ class GuiCore(Tk):
                             aresult.extend([str(theParameters)])
                     result.extend(['|'.join(aresult)])
                 else:
-                    if k == 'TIT2':
-                        title = os.path.basename(filepath)[:-4]
-                        result.extend(['[3, ["{}"]]'.format(title.strip())])
-                    else:
-                        result.extend(['-',])
+                    title = os.path.basename(filepath)[:-4]
+                    result.extend(['[3, ["{}"]]'.format(title.strip())]\
+                                         if k == 'TIT2' else ['-',])
+#                    if k == 'TIT2':
+#                        title = os.path.basename(filepath)[:-4]
+#                        result.extend(['[3, ["{}"]]'.format(title.strip())])
+#                    else:
+#                        result.extend(['-',])
                 if k in self.template.keys() and len(self.template[k]) > 0 \
                                                          and result[-1] == '-':
                     result[-1] = DEFAULT_VALUES['ide3v24'][k].\
@@ -2681,10 +2702,11 @@ class GuiCore(Tk):
 
         #seperate out the final directory name in the path,
         # this will becomethe collection name
-        if platform.system() == 'Windows':
-            dir_name = os.path.normpath(adir_path).split('\\')[-1]
-        else:
-            dir_name = os.path.normpath(adir_path).split('/')[-1]
+#        dir_name = os.path.split(adir_path)[-1]
+#        if platform.system() == 'Windows':
+#            dir_name = os.path.normpath(adir_path).split('\\')[-1]
+#        else:
+#            dir_name = os.path.normpath(adir_path).split('/')[-1]
         lang = self.ddnGuiLanguage.get()
         self.status['text'] = LOCALIZED_TEXT[lang]['Unpacking'] + adir_path
         self.update()
@@ -2696,7 +2718,8 @@ class GuiCore(Tk):
         #add collection to the tree named for this directory
         vout = ['collection', '-', '-']
         if 'TIT2' in self.displayColumns:
-            vout.extend([self.my_unidecode(dir_name),])
+            vout.extend([self.my_unidecode(os.path.split(adir_path)[-1]),])
+#            vout.extend([self.my_unidecode(dir_name),])
         #print('vout =>{}<'.format(vout))
         vout.extend(['-' for item in self.displayColumns[2:-1]])
 
@@ -2711,15 +2734,19 @@ class GuiCore(Tk):
         _ff = {}
         flist = {}
         #step through a list of filepaths for all mp3 files in current dir only
-        for f_ in [os.path.normpath(afile) \
+#        for f_ in [os.path.normpath(afile) \
+        for f_ in [forward_slash_path(afile) \
                    for afile in glob.glob(adir_path + '/*.mp3')]:
-            f_ = '/'.join(f_.split('\\'))
+#            f_ = '/'.join(f_.split('\\'))
             #filename is the file name sans path sans extension
-            filename = os.path.basename(f_)[:-4]
+#            filename = os.path.basename(f_)[:-4]
 #            _lf = self.sort_key_for_filenames(filename)
 #            _ff[_lf] = filename
-            _ff[self.sort_key_for_filenames(filename)] = filename
-            flist[filename] = f_
+#            _ff[self.sort_key_for_filenames(filename)] = filename
+#            flist[filename] = f_
+            _ff[self.sort_key_for_filenames(os.path.basename(f_)[:-4])] = \
+                                                    os.path.basename(f_)[:-4]
+            flist[os.path.basename(f_)[:-4]] = f_
 
         for _ll in sorted(_ff):
 #            filename = _ff[_ll]
@@ -2743,12 +2770,14 @@ class GuiCore(Tk):
                                 if int(4*self.maxcolumnwidths[v]/5) > 75 \
                                 else 75 \
                                 for v in range(0, len(self.maxcolumnwidths))]
-            imagetk = None #???
-            if imagetk is not None:
-                self.tree.insert(thisdir, index='end', values=somevalues, \
-                                 open=True, text='file', image=imagetk)
-            else:
-                self.tree.insert(thisdir, index='end', values=somevalues, \
+#            imagetk = None #???
+#            if imagetk is not None:
+#                self.tree.insert(thisdir, index='end', values=somevalues, \
+#                                 open=True, text='file', image=imagetk)
+#            else:
+#                self.tree.insert(thisdir, index='end', values=somevalues, \
+#                                 open=True, text='file')
+            self.tree.insert(thisdir, index='end', values=somevalues, \
                                  open=True, text='file')
             self.progbar.step()
             self.update()
@@ -3136,6 +3165,23 @@ class GuiCore(Tk):
                             LOCALIZED_TEXT[lang]['Set'] + ' ' + column, \
                             LOCALIZED_TEXT[lang]["URL is invalid."])
 
+    def on_set_trck(self, tempstr, focus, lang, text, column):
+        """is TRCK tag so set track no"""
+        tp = tempstr[0].split('/')
+        if len(tp) > 1:
+            self.is_track_of_tracks(tp, tempstr, focus, text, lang)#, column)
+        elif tempstr[0].isdecimal: #is track
+            self.next_track = 1 if int(tempstr[0]) == 0 \
+                                else int(tempstr[0])
+            if self.tree.set(focus, 'Type') in ['collection', 'project']:
+                self.set_tracks(focus, tempstr[0], '', tempstr[1:])
+            elif self.isHide.get() == 1:
+                tempstr[0] = '"{}"'.format(self.next_track)
+                self.tree.set(focus, column, ','.join(tempstr))
+        else: #invalid track
+            messagebox.showwarning('', \
+              LOCALIZED_TEXT[lang]['Set'] + ' TRCK, >{}< {}'.format(text, \
+                LOCALIZED_TEXT[lang]["doesn't contain a valid integer."]))
 
     def on_set(self):
         '''set value of tag'''
@@ -3158,23 +3204,10 @@ class GuiCore(Tk):
                                     column, test, len(HASH_TAG_ON[column])))
                     return
         if column == 'TRCK':
-            tempstr = [t[1:-1] for t in text[4:-2].split(',')] \
-                                      if self.mode.get() != 0 else [text,]
-            tp = tempstr[0].split('/')
-            if len(tp) > 1:
-                self.is_track_of_tracks(tp, tempstr, focus, text, lang)
-            elif tempstr[0].isdecimal: #is track
-                self.next_track = 1 if int(tempstr[0]) == 0 \
-                                    else int(tempstr[0])
-                if self.tree.set(focus, 'Type') in ['collection', 'project']:
-                    self.set_tracks(focus, tempstr[0], '', tempstr[1:])
-                elif self.isHide.get() == 1:
-                    tempstr[0] = '"{}"'.format(self.next_track)
-                    self.tree.set(focus, column, ','.join(tempstr))
-            else: #invalid track
-                messagebox.showwarning('', \
-                  LOCALIZED_TEXT[lang]['Set'] + ' TRCK, >{}< {}'.format(text, \
-                    LOCALIZED_TEXT[lang]["doesn't contain a valid integer."]))
+            self.on_set_trck(\
+            [t[1:-1] for t in text[4:-2].split(',')] if self.mode.get() != 0 \
+                                                     else [text,], \
+                                                    focus, lang, text, column)
         elif column in ['WCOM', 'WCOP', 'WOAF', 'WOAR', 'WOAS', 'WORS', \
                                                             'WPAY', 'WPUB']:
             self.on_set_is_url(text, focus, column, lang)
@@ -3361,7 +3394,7 @@ class GuiCore(Tk):
                                      ('JPG files', '*.jpg')], \
                           title="Select PNG or JPG file…")
             #now replace windows backslashes with forward slashes
-            fart = '/'.join(fart.split('\\'))
+            fart = forward_slash_path(fart)
             if len(fart) > 0:
                 for focus in list_of_items:
                     if self.mode.get() == 0:
@@ -3447,24 +3480,28 @@ class GuiCore(Tk):
         os.path.normpath(param[4]), 'rb').read()
         return [_encoding, _mime, _type, _desc, _data]
 
+    def p_f_s_f_t_process_apic(self, child, audio, thetags, lang):
+        """add the APIC tag and data to the audio file"""
+        picture_type_1_2 = False
+        for atag in thetags:
+            if atag != '-' and atag != '#':
+                # is not empty so add it!
+                if self.mode.get() == 0:
+                    _encoding, _mime, _type, _desc, _data = \
+                        self.preparing_file_scaning_for_tags_idiot_mode(\
+                                                    atag, child)
+                else:
+                    _encoding, _mime, _type, _desc, _data = \
+                       self.preparing_file_scaning_for_tags_advanced_mode(\
+                            atag, lang, child, picture_type_1_2, thetags)
+                audio.add(APIC(_encoding, _mime, _type, \
+                               _desc, _data))
+
     def preparing_file_scaning_for_tags(self, child, k, audio, thetags, lang):
         """process tag for on_prepare_files"""
 
         if k == "APIC":
-            picture_type_1_2 = False
-            for atag in thetags:
-                if atag != '-' and atag != '#':
-                    # is not empty so add it!
-                    if self.mode.get() == 0:
-                        _encoding, _mime, _type, _desc, _data = \
-                            self.preparing_file_scaning_for_tags_idiot_mode(\
-                                                        atag, child)
-                    else:
-                        _encoding, _mime, _type, _desc, _data = \
-                           self.preparing_file_scaning_for_tags_advanced_mode(\
-                                atag, lang, child, picture_type_1_2, thetags)
-                    audio.add(APIC(_encoding, _mime, _type, \
-                                   _desc, _data))
+            self.p_f_s_f_t_process_apic(child, audio, thetags, lang)
         else:
             list_owners = list()
             #list_owners is used by exec(PF['ENCR']) and exec(PF['GRID']),
@@ -4135,15 +4172,14 @@ def on_publish_files(target, lang, Pub2SD, project, play_list_targets, \
                      is_copy_playlists_to_top, files):
     '''publish files to target used by MyThead class'''
     #finally copy all file to final destination):
-
-    if target[1:] != ':\\' and \
-             os.path.exists(os.path.normpath(target + '/' + project)):# + '/' + project)):
-        # remove if exists
-        shutil.rmtree(os.path.normpath(target + '/' + project))
-
-    tp = os.path.normpath(target + '/' + project)
-    os.makedirs(tp, mode=0o777, exist_ok=True)
     target += '/'
+
+    if target[1:] != ':\\/' and \
+             os.path.exists(os.path.normpath(target +  project)):
+        # remove if exists
+        shutil.rmtree(os.path.normpath(target +  project))
+
+    os.makedirs(os.path.normpath(target + project), mode=0o777, exist_ok=True)
     target = forward_slash_path(target)
     #decide if space avaialable on target - abort if not with error message
     total, used, free = shutil.disk_usage(os.path.normpath(target))
