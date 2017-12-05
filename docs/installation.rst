@@ -2,9 +2,9 @@
 Installation
 ============
 
-You can download the latest version for Windows 64bit enviroments (Pub2SDwizard_0.9.9.11_x64_setup.exe) from here_.
+You can download the latest version for Windows 64bit enviroments (Pub2SDwizard_0.9.9.18_x64_setup.exe) from here_.
 
-.. _here: https://app.box.com/s/i83abhpeb4wyce367oyihfawfr56oy0h
+.. _here: https://app.box.com/s/072hxtbsgfhwh9uhw1yvj281fm58bual
 
 Then just double-click on the '.exe' file, and follow the installers instructions.
 

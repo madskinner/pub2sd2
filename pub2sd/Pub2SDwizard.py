@@ -2093,10 +2093,10 @@ class GuiCore(Tk):
             self.ddnSelectTag['values'] = ['{}:{}'.format(k, \
                              SET_TAGS[lang][k]) \
                                 for k in self.selected_tags if k != 'APIC']
-            print(self.selected_tags)
-            print(['{}:{}'.format(k, \
-                             SET_TAGS[lang][k]) \
-                                for k in self.selected_tags if k != 'APIC'])
+#            print(self.selected_tags)
+#            print(['{}:{}'.format(k, \
+#                             SET_TAGS[lang][k]) \
+#                                for k in self.selected_tags if k != 'APIC'])
             self.btnImportContents['state'] = "normal"
             self.btnAddCollection['state'] = "disabled"
             self.btnAddFiles['state'] = "disabled"
@@ -4327,10 +4327,12 @@ def main():
     gui.title(' Pub2SDwizard v{}'.format(THIS_VERSION))
 
     if platform.system() == 'Windows':
-        gui.wm_iconbitmap(os.path.normpath((get_script_directory() + \
-                                                            '/mainc.ico')))
+        gui.wm_iconbitmap(os.path.normpath((\
+                                    resource_filename(__name__, 'mainc.ico'))))
     elif platform.system() == 'Linux':
-        img = PhotoImage(file=(get_script_directory() + '/images/mainc.png'))
+        img = PhotoImage(\
+                        file=(resource_filename(__name__, 'images/mainc.png')))
+#        img = PhotoImage(file=(get_script_directory() + '/images/mainc.png'))
         gui.tk.call('wm', 'iconphoto', gui._w, img)
     else:
         messagebox.showwarning('Warning', "Help I've been kidnaped by {}!!!".\
