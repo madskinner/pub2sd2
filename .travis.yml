@@ -2,28 +2,28 @@ language: python
 matrix:
     include:
         - os: linux
+          dist: xenial
           sudo: required
           python: 3.4
           env: TOXENV=py34
         - os: linux
+          dist: xenial
           sudo: required
           python: 3.5
           env: TOXENV=py35
         - os: linux
+          dist: xenial
           sudo: required
           python: 3.6
           env: TOXENV=py36
         - os: osx
-#          language: generic
-          python: 3.4
+          language: generic
           env: TOXENV=py34
         - os: osx
-#          language: generic
-          python: 3.4
+          language: generic
           env: TOXENV=py35
         - os: osx
-#          language: generic
-          python: 3.4
+          language: generic
           env: TOXENV=py36
 #python:
 #  - "3.4"
