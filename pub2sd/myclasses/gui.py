@@ -3235,7 +3235,6 @@ class GuiCore(Tk):
         self.status['text'] = \
                    LOCALIZED_TEXT[lang]['Calculating needed space...']
         self.update()
-        #print('path=>{}'.format(target))
         _, _, free = shutil.disk_usage(os.path.normpath(target))
         needed = folder_size(\
                     os.path.normpath(self.Pub2SD + '/Temp/'+self. project)) / \
@@ -3284,13 +3283,11 @@ class GuiCore(Tk):
             fileId[child].close()
             self.progbar.step()
             self.update()
-        #print('now copy playlists to {} ...'.format(target))
         self.on_copy_playlists(target)
 
     def on_copy_playlists(self, target):
         """copy playlists to target, at locatons specified in
                                                          play_list_targets"""
-        #print('in copy playlists')
         source = os.path.normpath(self.Pub2SD + '/Temp/'+ self.project + '/')
         playlists = [p for p in os.listdir(source) \
                      if p.endswith('.M3U8') or p.endswith('M3U')]
@@ -3389,7 +3386,7 @@ class GuiCore(Tk):
         self.update()
         #list_children split list into file_children and coll_children
         # for each coll child
-        project_path_ = '../{}/'.format(self.project) #self.drive +
+        project_path_ = '../{}/'.format(self.project) 
         project_file_list = list()
         self.create_play_list(self.project_id, project_path_, \
                                                           project_file_list)
@@ -3422,9 +3419,8 @@ class GuiCore(Tk):
         #now make playlist for this collection
         playlist = ['#EXTM3U',]
         #write out to self.Pub2SD +/Temp/+ self.project/ collection name
-        #print('self.M3UorM3U8.get() = {}'.format(self.M3UorM3U8.get()))
         if self.M3UorM3U8.get() == 2:
-            #print('\t#is utf-8')
+            #is utf-8
             for item in this_list:#   secs,alb,title,location
                 playlist.append('#EXTINF:{},{}-{}\r\n../{}'.\
                                 format(item[3], item[2], item[1], \
@@ -3436,7 +3432,7 @@ class GuiCore(Tk):
             fileout.write('\r\n'.join(playlist))
             fileout.close()
         elif self.M3UorM3U8.get() == 1:
-            #print('\t#is legacy')
+            #is legacy
             for item in this_list:
                 playlist.append('#EXTINF:{},{}-{}\r\n../{}'.\
                                 format(item[3], self.my_unidecode(item[2]), \
@@ -3449,7 +3445,7 @@ class GuiCore(Tk):
             fileout.write('\r\n'.join(playlist))
             fileout.close()
         else:
-            #print('\t#is both')
+            #is both
             utf8list = ['#EXTM3U',]
             playlist = ['#EXTM3U',]
             for item in this_list:#   secs,alb,title,location
@@ -3541,7 +3537,7 @@ class GuiCore(Tk):
         self.boxM3U['text'] = \
            LOCALIZED_TEXT[lang]['Create playlists using Legacy/UTF-8 encoding']
         self.rdbBoth['text'] = LOCALIZED_TEXT[lang]["Both"]
-        #self.chkCoolMusic['text'] = LOCALIZED_TEXT[lang]["CoolMusic"]
+
         self.lblEnterList['text'] = LOCALIZED_TEXT[lang]["EnterList"]
         self.lblOutputIntro['text'] = LOCALIZED_TEXT[lang]["OutputIntro"]
         self.lblOutputSizeText['text'] = LOCALIZED_TEXT[lang]["OutputSizeText"]
@@ -3697,111 +3693,6 @@ def get_rid_of_multiple_spaces(tin):
     while '' in tout:
         tout.remove('')
     return ' '.join(tout)
-
-#def on_copy_playlists(target, Pub2SD, project, play_list_targets, \
-#                                                      is_copy_playlists_to_top):
-#    '''copy playlists'''
-#    source = os.path.normpath(Pub2SD + '/Temp/'+ project + '/')
-#    listinsource = os.listdir(source)
-#    playlists = [p for p in os.listdir(source) \
-#                     if p.endswith('.M3U8') or p.endswith('.M3U')]
-#    #main playlists
-#    for pp in playlists:
-#        shutil.copyfile(os.path.normpath(source + '/' + pp), \
-#                        os.path.normpath(target + project + '/' + pp))
-#    #now top level?
-#    if is_copy_playlists_to_top == 1:
-#        #shutil.copyfile(os.path.normpath(source + '/' + pp), os.path.normpath(target + pp))
-#        for pp in playlists:
-#            encode = 'utf-8' if pp.endswith('.M3U8') else 'cp1252'
-#            fin = codecs.open(os.path.normpath(source + '/'+ pp),\
-#                                      mode='r', encoding=encode)
-#            fout = codecs.open(os.path.normpath(target + pp), mode='w', \
-#                               encoding=encode)
-#            fout.write('\r\n'.join([aline.replace('../', './') \
-#                                    for aline in fin.readlines()]))
-#            fin.close()
-#            fout.close()
-#    #now in list
-#    for tt in play_list_targets:
-#        if len(tt) > 0:
-#            os.makedirs(target + tt, mode=0o777, exist_ok=True)
-#            for pp in playlists:
-#                shutil.copyfile(os.path.normpath(source + '/' + pp), \
-#                                os.path.normpath(target + tt + '/' + pp))
-
-#def on_publish_files(target, lang, Pub2SD, project, play_list_targets, \
-#                     is_copy_playlists_to_top, files):
-#    '''publish files to target used by MyThead class'''
-#    #finally copy all file to final destination):
-#    target += '/'
-#
-#    if target[1:] != ':\\/' and \
-#             os.path.exists(os.path.normpath(target +  project)):
-#        # remove if exists
-#        shutil.rmtree(os.path.normpath(target +  project))
-#
-#    os.makedirs(os.path.normpath(target + project), mode=0o777, exist_ok=True)
-#    target = forward_slash_path(target)
-#    #decide if space avaialable on target - abort if not with error message
-#    total, used, free = shutil.disk_usage(os.path.normpath(target))
-#    needed = folder_size(os.path.normpath(Pub2SD + '/Temp/'+ project)) / \
-#                                                            (1024.0 * 1024.0)
-#    free = free / (1024.0 * 1024.0)
-#    if needed > free:
-#        messagebox.showerror(\
-#                LOCALIZED_TEXT[lang]["Insufficent space on target!"], \
-#                LOCALIZED_TEXT[lang]["Needed {}Mb, but only {}Mb available"].\
-#                              format(needed, free))
-#        return
-#    os.makedirs(os.path.normpath(target + '/' + project), mode=0o777, \
-#                exist_ok=True)
-#
-#    #list all paths used and make them
-#    listpaths = {os.path.normpath(target + \
-#                                  '/'.join(files[child][3].split('/')[:-1])) \
-#                                                    for child in files}
-#    #now make temp dirs
-#    [os.makedirs(final_path, mode=0o777, exist_ok=True) \
-#                                                 for final_path in listpaths]
-#    #open all target files at once to make create dates the same
-#    fileId = {child: open(target + files[child][3], mode='wb') \
-#                                                          for child in files}
-#    #open all source files copy to target and close source files
-#    for child in files:
-#        filein = open(files[child][0], mode='rb')
-#        fileId[child].write(filein.read())
-#        filein.close()
-#    #close target files
-#    for child in files:
-#        fileId[child].close()
-#
-#    on_copy_playlists(target, Pub2SD, project, play_list_targets, \
-#                      is_copy_playlists_to_top)
-
-#def parse_name(name):
-#    '''dummy'''
-#    output = ['' for i in range(0, 250)]
-#    index = 0
-#    alpha = False
-#    for achar in name:
-#        if achar.isdecimal():
-#            if alpha is False:
-#                output[index] += achar
-#            else:
-#                alpha = True
-#                index += 1
-#                output[index] += achar
-#
-#        elif achar.isalpha():
-#            if alpha is False:
-#                alpha = True
-#                index += 1
-#                output[index] += achar
-#            else:
-#                output[index] += achar
-#    result = [o for o in output if len(o) > 0]
-#    return result
 
 def de_hex(tin):
     '''turn hex string to int and return string'''

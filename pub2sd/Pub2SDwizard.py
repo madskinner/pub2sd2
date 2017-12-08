@@ -19,11 +19,9 @@ import platform
 from tkinter import messagebox, PhotoImage
 
 from pkg_resources import resource_filename
-#if __name__ == '__main__' and __package__ is None:
-#    #from os import sys, path
-#    os.sys.path.append(os.path.dirname(os.path.dirname(\
-#                                                os.path.abspath(__file__))))
-
+if __name__ == '__main__' and __package__ is None:
+    os.sys.path.append(os.path.dirname(os.path.dirname(\
+                                                os.path.abspath(__file__))))
 from pub2sd.myclasses.myconst.therest import THIS_VERSION
 from pub2sd.myclasses.gui import GuiCore
 
@@ -44,7 +42,6 @@ def main():
         # we are running in a normal Python environment
         bundle_dir = os.path.dirname(os.path.abspath(__file__))
 
-#    load_of_pickles()
 
     gui = GuiCore(None) # see GuiCore's __init__ method
     gui.title(' Pub2SDwizard v{}'.format(THIS_VERSION))
