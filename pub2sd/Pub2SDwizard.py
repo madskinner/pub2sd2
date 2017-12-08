@@ -19,7 +19,10 @@ import platform
 from tkinter import messagebox, PhotoImage
 
 from pkg_resources import resource_filename
-
+if __name__ == '__main__' and __package__ is None:
+    #from os import sys, path
+    os.sys.path.append(os.path.dirname(os.path.dirname(\
+                                                os.path.abspath(__file__))))
 
 from myclasses.myconst.therest import THIS_VERSION
 from myclasses.gui import GuiCore
