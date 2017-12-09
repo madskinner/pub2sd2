@@ -41,6 +41,7 @@ def on_publish_files(target, lang, Pub2SD, project, play_list_targets, \
     target = forward_slash_path(target)
     #decide if space avaialable on target - abort if not with error message
     total, used, free = shutil.disk_usage(os.path.normpath(target))
+    _, _, free = shutil.disk_usage(os.path.normpath(target))
     needed = folder_size(os.path.normpath(Pub2SD + '/Temp/'+ project)) / \
                                                             (1024.0 * 1024.0)
     free = free / (1024.0 * 1024.0)
@@ -79,7 +80,7 @@ def on_copy_playlists(target, Pub2SD, project, play_list_targets, \
                                                      is_copy_playlists_to_top):
     '''copy playlists'''
     source = os.path.normpath(Pub2SD + '/Temp/'+ project + '/')
-    listinsource = os.listdir(source)
+#    listinsource = os.listdir(source)
     playlists = [p for p in os.listdir(source) \
                      if p.endswith('.M3U8') or p.endswith('.M3U')]
     #main playlists
@@ -101,7 +102,7 @@ def on_copy_playlists(target, Pub2SD, project, play_list_targets, \
             fout.close()
     #now in list
     for tt in play_list_targets:
-        if len(tt) > 0:
+        if tt:
             os.makedirs(target + tt, mode=0o777, exist_ok=True)
             for pp in playlists:
                 shutil.copyfile(os.path.normpath(source + '/' + pp), \

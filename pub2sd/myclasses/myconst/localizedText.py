@@ -1,7 +1,7 @@
 
 INTERFACE_LANGS = {'langs':{'0':'en-US', '1':'fr-FR', '2':'pt-PT'},}
 
-SET_TAGS = { 
+SET_TAGS = {\
         'en-US':{ \
             'AENC':'Audio encryption', \
             'APIC':'Cover', \
@@ -301,45 +301,68 @@ SET_TAGS = {
             } \
         }
 
- 
+
 LOCALIZED_TEXT = { \
         'en-US':{ \
-            'Copying all source files to a working directory...':"Copying all source files to a working directory...",\
+            'Copying all source files to a working directory...':\
+                        "Copying all source files to a working directory...",\
             'Gb':'Gb', \
             'Mb':'Mb', \
             "Both":"Both", \
-            'Create playlists using Legacy/UTF-8 encoding':"Create playlists using Legacy/UTF-8 encoding", \
+            'Create playlists using Legacy/UTF-8 encoding':\
+                            "Create playlists using Legacy/UTF-8 encoding", \
             'Closing target files...':"Closing target files...", \
             'Copying to target files...':'Copying to target files...', \
             'Opening target files...':'Opening target files...', \
             'Making project directories...':'Making project directories...', \
             'Calculating needed space...':'Calculating needed space...', \
-            'Removing any old project files...':'Removing any old project files...', \
+            'Removing any old project files...':\
+                                        'Removing any old project files...', \
             'Creating playlists...':'Creating playlists...', \
             "Insufficent space on target!":"Insufficent space on target!", \
-            "Needed {}Mb, but only {}Mb available":"Needed {}Mb, but only {}Mb available.", \
+            "Needed {}Mb, but only {}Mb available":\
+                                    "Needed {}Mb, but only {}Mb available.", \
             "Output to HD in progress...":"Output to HD in progress...", \
             "Output to HD completed.":"Output to HD completed.", \
             "Output to SD('s) completed.":"Output to SD/USB('s) completed.", \
-            '{} Threads active':'In the process of writing to {} SD/USB drives.', \
+            '{} Threads active':\
+                            'In the process of writing to {} SD/USB drives.', \
             'Insufficent space on {}':'Insufficent space on {}', \
-            "Needs {}Mb, has {}Mb free space.":"{}Mb needed, but only {}Mb free space.", \
+            "Needs {}Mb, has {}Mb free space.":\
+                                    "{}Mb needed, but only {}Mb free space.", \
             "Invalid path":"Invalid path", \
             "Can't find {}":"Can't find {}", \
-            'Available':'Available USB/SDs, total size, used, free, percentage.', \
+            'Available':\
+                    'Available USB/SDs, total size, used, free, percentage.', \
             'Error in on_publish_files()':"Error in on_publish_files()", \
-            "Folder <{}> may be in use by another program. Close all other programs and try again.":"Folder <{}> may be in use by another program. Close all other programs and try again.", \
-            'Discarding duplicate mapping {}':'Discarding duplicate mapping {}', \
-            'Only one mapping allowed for each string.':'Only one mapping allowed for each string.', \
+            "Folder <{}> may be in use by another program. Close all other " + \
+                "programs and try again.":\
+                "Folder <{}> may be in use by another program. Close all " + \
+                    "other programs and try again.", \
+            'Discarding duplicate mapping {}':\
+                                        'Discarding duplicate mapping {}', \
+            'Only one mapping allowed for each string.':\
+                            'Only one mapping allowed for each string.', \
             'Discarding illegal map {}':'Discarding illegal map {}', \
-            "'\\' characters are not allowed.":"'\\' characters are not allowed.", \
-            "Initial string can not be null and one '/' is mandatory.":"Initial string can not be null and one '/' is manditory.", \
+            "'\\' characters are not allowed.":\
+                                        "'\\' characters are not allowed.", \
+            "Initial string can not be null and one '/' is mandatory.":\
+                "Initial string can not be null and one '/' is manditory.", \
             'Error in on_click_f4_next()':"Error in on_click_f4_next().", \
-            "Folder <{}> may be in use by another program. Close all other programs and try again.":"Folder <{}> may be in use by another program. Close all other programs and try again.", \
+            "Folder <{}> may be in use by another program. Close all other " +\
+                "programs and try again.":\
+                "Folder <{}> may be in use by another program. " + \
+                                "Close all other programs and try again.", \
             "AddLatin1Example":"Preferred example:", \
             "SavePref":"Save", \
-            'InitialDigit':"You may specify a prefix which will be added to the start of all the unique names generated for files and collections. This prefix will not be checked by Pub2SDwizard so ensure it's characters are acceptable in filenames for the intended devices and keep it short.", \
-            'lblPreferred':"You may prefer to specify a project specific mapping. " + \
+            'InitialDigit':\
+                "You may specify a prefix which will be added to the start " +\
+                "of all the unique names generated for files and " + \
+                "collections. This prefix will not be checked by " + \
+                "Pub2SDwizard so ensure it's characters are acceptable in " + \
+                "filenames for the intended devices and keep it short.", \
+            'lblPreferred':\
+                "You may prefer to specify a project specific mapping. " + \
                 "But be aware unrecognised characters will probally be displayed as square boxes " + \
                 "and may cause problems with the file system on the final users device. " + \
                 "Always test extensively before comminting to a particular mapping. " + \
@@ -953,17 +976,30 @@ LOCALIZED_TEXT = { \
             'pick one of':'Escolha um dos', \
             'Change indent':'Alterar recuo', \
             'Change order':'Alterar ordem', \
-            'PlayListsIntro':'Por padrão PlayLists serão gerados e colocados sob o diretório principal do projeto.\n' + \
-                        'Alguns feature-phones encontrarão estes automaticamente, outros olharão somente em dobradores específicos ou no nível superior do cartão do SD.\n' + \
-                        "Estas listas de reprodução serão ignoradas por 'SD card' / USB Radios que só procuram ficheiros 'MP3'.\n" + \
-                        "\nCopie as listas de reprodução para:", \
+            'PlayListsIntro':'Por padrão PlayLists serão gerados e ' + \
+                'colocados sob o diretório principal do projeto.\n' + \
+                'Alguns feature-phones encontrarão estes automaticamente, ' + \
+                'outros olharão somente em dobradores específicos ou no ' + \
+                'nível superior do cartão do SD.\n' + \
+                "Estas listas de reprodução serão ignoradas por " + \
+                "'SD card' / USB Radios que só procuram ficheiros 'MP3'.\n" + \
+                "\nCopie as listas de reprodução para:", \
             'CopyPlayListsToTop':'A pasta de nível superior SD / USB.', \
-            'CoolMusic':"A pasta 'COOL_MUSIC' usada por alguns telefones Tecno", \
-            'EnterList':'(Insira uma lista separada por vírgulas de nomes de pasta que são usados pelos telefones de recurso que você está suportando.)', \
-            'OutputIntro':'Somente as primeiras 8 unidades removíveis encontradas serão listadas abaixo. Certifique-se de que o cartão SD ou a unidade USB à qual ' + \
-                        'pretende publicar estão inseridos, têm espaço livre suficiente ' + \
-                        'e nenhum nome de pasta entra em conflito com o nome do seu projecto. ' + \
-                        " Para obter o melhor desempenho, certifique-se de que eles estão conectados a uma porta USB3 (por meio de um hub USB3, se necessário).", \
+            'CoolMusic':\
+                "A pasta 'COOL_MUSIC' usada por alguns telefones Tecno", \
+            'EnterList':\
+                '(Insira uma lista separada por vírgulas de nomes de ' + \
+                'pasta que são usados pelos telefones de recurso que ' + \
+                'você está suportando.)', \
+            'OutputIntro':\
+                'Somente as primeiras 8 unidades removíveis encontradas ' + \
+                'serão listadas abaixo. Certifique-se de que o cartão SD ' + \
+                'ou a unidade USB à qual pretende publicar estão ' + \
+                'inseridos, têm espaço livre suficiente e nenhum nome ' + \
+                'de pasta entra em conflito com o nome do seu projecto. ' + \
+                "Para obter o melhor desempenho, certifique-se de que " + \
+                "eles estão conectados a uma porta USB3 (por meio de um " + \
+                "hub USB3, se necessário).", \
             'OutputSizeText':'Este projeto usará ~', \
             'Publish to SD/USB':'Publicar para SD/USB', \
             "Publish to '~\Pub2SD\{}_SD'":"Publicar para '~\Pub2SD\{}_SD'", \
@@ -1120,16 +1156,3 @@ DEFAULT_VALUES = {'ide3v24':{
             } \
         }
 
-import json
-import codecs
-
-def main():
-    json.dump( SET_TAGS, codecs.open("set_tags.json", mode='w', encoding='utf-8'))
-    json.dump( LOCALIZED_TEXT, codecs.open("localized_text.json", mode='w', encoding='utf-8'))
-    json.dump( TRIM_TAG, codecs.open("trim_tag.json", mode='w', encoding='utf-8'))
-    json.dump( DEFAULT_VALUES, codecs.open("default_values.json", mode='w', encoding='utf-8'))
-    pass
-
-
-if __name__ == '__main__':
-    main()

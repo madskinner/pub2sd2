@@ -1,3 +1,5 @@
+"""
+"""
 READ_TAG = { \
             'TXXX':'[atag.encoding, atag.desc, atag.data]', \
             'WXXX':'[atag.encoding, atag.desc, atag.url]', \
@@ -109,7 +111,6 @@ IDIOT_TAGS = { \
             'APIC':'[atag.encoding, atag.mime, atag.type, atag.desc, atag.data]', \
             'TBPM':'[atag.encoding, atag.text]', \
             'TLEN':'[atag.encoding, atag.text]', \
-            'TORY':'[atag.encoding, atag.text]', \
             'TSIZ':'[atag.encoding, atag.text]', \
             'TPOS':'[atag.encoding, atag.text]', \
             'TRCK':'[atag.encoding, atag.text]', \
@@ -486,18 +487,3 @@ READ_TAG_HIDE_ENCODING = { \
             'WPAY':'atag.url', \
             'WPUB':'atag.url' \
             }
-
-import json
-import codecs
-
-def main():
-    json.dump( READ_TAG, codecs.open("read_tag.json", mode='w', encoding='utf-8'))
-    json.dump( IDIOT_TAGS, codecs.open("idiot_tags.json", mode='w', encoding='utf-8'))
-    json.dump( READ_TAG_INFO, codecs.open("read_tag_info.json", mode='w', encoding='utf-8'))
-    json.dump( HASH_TAG_ON, codecs.open("hash_tag_on.json", mode='w', encoding='utf-8'))
-    json.dump( READ_TAG_HIDE_ENCODING, codecs.open("read_tag_hide_encoding.json", mode='w', encoding='utf-8'))
-    pass
-
-
-if __name__ == '__main__':
-    main()

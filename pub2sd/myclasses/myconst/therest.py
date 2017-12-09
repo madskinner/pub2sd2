@@ -112,204 +112,498 @@ PF = {\
                '\taudio.add(GRID(param[0], param[1], bytes(param[2])))', \
     }
 
+
+def _aenc(atag, advanced):
+    return [v if not isinstance(v, bytes) else list(v) \
+            for v in \
+            [atag.owner, atag.preview_start, atag.preview_length, atag.data]]
+    
+def _aspi(atag, advanced):
+    return [v if not isinstance(v, bytes) else list(v) \
+            for v in [atag.S, atag.L, atag.N, atag.b, atag.Fi]]
+    
+def _comm(atag, advanced):
+    return [int(atag.encoding), atag.lang, atag.desc, atag.text] \
+                                                if advanced else atag.text[0]
+def _comr(atag, advanced):
+    return [v if not isinstance(v, bytes) else list(v) \
+            for v in [int(atag.encoding), atag.price, atag.valid_until, \
+                      atag.contact, atag.format, atag.seller, atag.desc, \
+                      atag.mime, atag.logo]]
+    
+def _encr(atag, advanced):
+    return [v if not isinstance(v, bytes) else list(v) \
+            for v in [atag.owner, atag.method, atag.data]]
+    
+def _equ2(atag, advanced):
+    return [atag.method, atag.desc, atag.adjustments]
+
+def _etco(atag, advanced):
+    return [v if not isinstance(v, bytes) else list(v) \
+            for v in [bytes(atag.format), bytes(atag.events)]]
+    
+def _geob(atag, _):
+    return [v if not isinstance(v, bytes) else list(v) \
+            for v in [int(atag.encoding), atag.mime, atag.filename, \
+                      atag.desc, atag.data]]
+    
+def _grid(atag, advanced):
+    return [v if not isinstance(v, bytes) else list(v) \
+            for v in [atag.owner, atag.group, atag.data]]
+def _ipls(atag, advanced):
+    return [int(atag.encoding), atag.people]
+
+def _link(atag, advanced):
+    return [v if not isinstance(v, bytes) else list(v) \
+            for v in [atag.frameid, atag.url, atag.data]]
+    
+def _mcdi(atag, advanced):
+    return [v if not isinstance(v, bytes) else list(v) for v in [atag.data]]
+def _mllt(atag, advanced):
+    return [v if not isinstance(v, bytes) else list(v) \
+            for v in [int(atag.frames), int(atag.bytes), \
+                      int(atag.milliseconds), bytes(atag.bits_for_bytes), \
+                      bytes(atag.bits_for_milliseconds), bytes(atag.data)]]
+    
+def _mvin(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _mvnm(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _owne(atag, advanced):
+    return [int(atag.encoding), atag.price, atag.date, atag.seller]
+
+def _pcnt(atag, advanced):
+    return [atag.count]
+
+def _pcst(atag, advanced):
+    return [atag.value,]
+
+def _popm(atag, advanced):
+    return [atag.email, atag.rating]
+
+def _poss(atag, advanced):
+    return [atag.format, atag.position]
+
+def _priv(atag, advanced):
+    return [v if not isinstance(v, bytes) else list(v) \
+            for v in [atag.owner, atag.data]]
+    
+def _rbuf(atag, advanced):
+    return [v if not isinstance(v, bytes) else list(v) \
+            for v in [atag.size, atag.info, atag.offset]]
+    
+def _rva2(atag, advanced):
+    return [atag.desc, atag.channel, atag.gain, atag.peak]
+
+def _rvad(atag, advanced):
+    return [atag.adjustments]
+
+def _rvrb(atag, advanced):
+    return [atag.left, atag.right, atag.bounce_left, atag.bounce_right, \
+            atag.feedback_ltl, atag.feedback_ltr, atag.feedback_rtr, \
+            atag.feedback_rtl, atag.premix_ltr, atag.premix_rtl]
+    
+def _seek(atag, advanced):
+    return [atag.offset]
+
+def _sign(atag, advanced):
+    return [v if not isinstance(v, bytes) else list(v) \
+            for v in [atag.group, atag.sig]]
+    
+def _sylt(atag, advanced):
+    return [v if not isinstance(v, bytes) else list(v) \
+            for v in [int(atag.encoding), atag.lang, atag.format, \
+                      atag.type, atag.desc, atag.text]]
+    
+def _sytc(atag, advanced):
+    return [atag.format, atag.data]
+
+def _talb(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tbpm(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tcat(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tcmp(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tcom(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tcon(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tcop(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tdat(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tden(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tdes(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tdly(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tdor(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tdrc(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tdrl(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tdtg(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tenc(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _text(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tflt(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tgid(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _time(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tipl(atag, advanced):
+    return [int(atag.encoding), atag.people]
+
+def _tit1(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tit2(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tit3(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tkey(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tkwd(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tlan(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tlen(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tmcl(atag, advanced):
+    return [int(atag.encoding), atag.people]
+
+def _tmed(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tmoo(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _toal(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tofn(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _toly(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tope(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tory(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _town(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tpe1(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tpe2(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tpe3(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tpe4(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tpos(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tpro(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tpub(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _trck(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _trsn(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _trso(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tsiz(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tso2(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tsoa(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tsoc(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tsop(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tsot(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tsrc(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tsse(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _tsst(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _txxx(atag, advanced):
+    return [int(atag.encoding), atag.desc, atag.text] \
+                                            if advanced else atag.text[0]
+def _tyer(atag, advanced):
+    return [int(atag.encoding), atag.text] if advanced else atag.text[0]
+
+def _ufid(atag, advanced):
+    return [v if not isinstance(v, bytes) else list(v) \
+            for v in [atag.owner, atag.data]]
+    
+def _user(atag, advanced):
+    return [int(atag.encoding), atag.lang, atag.text]
+
+def _uslt(atag, advanced):
+    return [int(atag.encoding), atag.lang, atag.desc, atag.text]
+
+def _wcom(atag, advanced):
+    return [atag.url] if advanced else atag.url
+
+def _wcop(atag, advanced):
+    return [atag.url] if advanced else atag.url
+
+def _woaf(atag, advanced):
+    return [atag.url] if advanced else atag.url
+
+def _woar(atag, advanced):
+    return [atag.url] if advanced else atag.url
+
+def _woas(atag, advanced):
+    return [atag.url] if advanced else atag.url
+
+def _wors(atag, advanced):
+    return [atag.url] if advanced else atag.url
+
+def _wpay(atag, advanced):
+    return [atag.url] if advanced else atag.url
+
+def _wpub(atag, advanced):
+    return [atag.url] if advanced else atag.url
+
+def _wxxx(atag, advanced):
+    return [int(atag.encoding), atag.desc, atag.url]
+
 THE_P = {\
-        'MCDI':'[v if not isinstance(v, bytes) else list(v) ' + \
-                 'for v in [atag.data]]',\
-        'ASPI':'[v if not isinstance(v, bytes) else list(v) ' + \
-                 'for v in [atag.S, atag.L, atag.N, atag.b, atag.Fi]]',\
-        'SEEK':'[atag.offset]',\
-        'SIGN':'[v if not isinstance(v, bytes) else list(v) ' + \
-                 'for v in [atag.group, atag.sig]]',\
-        'PRIV':'[v if not isinstance(v, bytes) else list(v) ' + \
-                 'for v in [atag.owner, atag.data]]',\
-        'GRID':'[v if not isinstance(v, bytes) else list(v) ' + \
-                 'for v in [atag.owner, atag.group, atag.data]]',\
-        'ENCR':'[v if not isinstance(v, bytes) else list(v) ' + \
-                 'for v in [atag.owner, atag.method, atag.data]]',\
-        'COMR':'[v if not isinstance(v, bytes) else list(v) ' + \
-                 'for v in [int(atag.encoding), atag.price, ' + \
-                 'atag.valid_until, atag.contact, atag.format, ' + \
-                 'atag.seller, atag.desc, atag.mime, atag.logo]]',\
-        'OWNE':'[int(atag.encoding), atag.price, atag.date, atag.seller]',\
-        'USER':'[int(atag.encoding), atag.lang, atag.text]',\
-        'UFID':'[v if not isinstance(v, bytes) else list(v) ' + \
-                 'for v in [atag.owner, atag.data]]',\
-        'POSS':'[atag.format, atag.position]',\
-        'LINK':'[v if not isinstance(v, bytes) else list(v) ' + \
-                 'for v in [atag.frameid, atag.url, atag.data]]',\
-        'AENC':'[v if not isinstance(v, bytes) else list(v) ' + \
-                 'for v in [atag.owner, atag.preview_start, ' + \
-                 'atag.preview_length, atag.data]]',\
-        'RBUF':'[v if not isinstance(v, bytes) else list(v) ' + \
-                 'for v in [atag.size, atag.info, atag.offset]]',\
-        'GEOB':'[v if not isinstance(v, bytes) else list(v) ' + \
-                 'for v in [int(atag.encoding), atag.mime, atag.filename, ' + \
-                 'atag.desc, atag.data]]',\
-        'POPM':'[atag.email, atag.rating]',\
-        'PCST':'[atag.value,]',\
-        'PCNT':'[atag.count]',\
-        'RVRB':'[atag.left, atag.right, atag.bounce_left, ' + \
-                 'atag.bounce_right, atag.feedback_ltl, ' + \
-                 'atag.feedback_ltr, atag.feedback_rtr, ' + \
-                 'atag.feedback_rtl, atag.premix_ltr, atag.premix_rtl]',\
-        'RVAD':'[atag.adjustments]',\
-        'EQU2':'[atag.method, atag.desc, atag.adjustments]',\
-        'RVA2':'[atag.desc, atag.channel, atag.gain, atag.peak]',\
-        'COMM':'[int(atag.encoding), atag.lang, atag.desc, atag.text]',\
-        'SYLT':'[v if not isinstance(v, bytes) else list(v) ' + \
-                 'for v in [int(atag.encoding), atag.lang, atag.format, ' + \
-                 'atag.type, atag.desc, atag.text]]',\
-        'USLT':'[int(atag.encoding), atag.lang, atag.desc, atag.text]',\
-        'SYTC':'[atag.format, atag.data]',\
-        'MLLT':'[v if not isinstance(v, bytes) else list(v) ' + \
-                 'for v in [int(atag.frames), int(atag.bytes), ' + \
-                 'int(atag.milliseconds), bytes(atag.bits_for_bytes), ' + \
-                 'bytes(atag.bits_for_milliseconds), bytes(atag.data)]]',\
-        'ETCO':'[v if not isinstance(v, bytes) else list(v) ' + \
-                 'for v in [bytes(atag.format), bytes(atag.events)]]',\
-        'WXXX':'[int(atag.encoding), atag.desc, atag.url]',\
-        'TXXX':'[int(atag.encoding), atag.desc, atag.text]',\
-        'TIPL':'[int(atag.encoding), atag.people]', \
-        'TMCL':'[int(atag.encoding), atag.people]', \
-        'IPLS':'[int(atag.encoding), atag.people]', \
-        'TBPM':'[int(atag.encoding), atag.text]', \
-        'TLEN':'[int(atag.encoding), atag.text]', \
-        'TORY':'[int(atag.encoding), atag.text]', \
-        'TSIZ':'[int(atag.encoding), atag.text]', \
-        'TYER':'[int(atag.encoding), atag.text]', \
-        'TPOS':'[int(atag.encoding), atag.text]', \
-        'TRCK':'[int(atag.encoding), atag.text]', \
-        'MVIN':'[int(atag.encoding), atag.text]', \
-        'WCOM':'[atag.url]', \
-        'WCOP':'[atag.url]', \
-        'WOAF':'[atag.url]', \
-        'WOAR':'[atag.url]', \
-        'WOAS':'[atag.url]', \
-        'WORS':'[atag.url]', \
-        'WPAY':'[atag.url]', \
-        'WPUB':'[atag.url]', \
-        'MVNM':'[int(atag.encoding), atag.text]', \
-        'TALB':'[int(atag.encoding), atag.text]', \
-        'TCOM':'[int(atag.encoding), atag.text]', \
-        'TCON':'[int(atag.encoding), atag.text]', \
-        'TCOP':'[int(atag.encoding), atag.text]', \
-        'TCMP':'[int(atag.encoding), atag.text]', \
-        'TDAT':'[int(atag.encoding), atag.text]', \
-        'TDEN':'[int(atag.encoding), atag.text]', \
-        'TDES':'[int(atag.encoding), atag.text]', \
-        'TKWD':'[int(atag.encoding), atag.text]', \
-        'TCAT':'[int(atag.encoding), atag.text]', \
-        'TDLY':'[int(atag.encoding), atag.text]', \
-        'TDOR':'[int(atag.encoding), atag.text]', \
-        'TDRC':'[int(atag.encoding), atag.text]', \
-        'TDRL':'[int(atag.encoding), atag.text]', \
-        'TDTG':'[int(atag.encoding), atag.text]', \
-        'TENC':'[int(atag.encoding), atag.text]', \
-        'TEXT':'[int(atag.encoding), atag.text]', \
-        'TFLT':'[int(atag.encoding), atag.text]', \
-        'TGID':'[int(atag.encoding), atag.text]', \
-        'TIME':'[int(atag.encoding), atag.text]', \
-        'TIT1':'[int(atag.encoding), atag.text]', \
-        'TIT2':'[int(atag.encoding), atag.text]', \
-        'TIT3':'[int(atag.encoding), atag.text]', \
-        'TKEY':'[int(atag.encoding), atag.text]', \
-        'TLAN':'[int(atag.encoding), atag.text]', \
-        'TMED':'[int(atag.encoding), atag.text]', \
-        'TMOO':'[int(atag.encoding), atag.text]', \
-        'TOAL':'[int(atag.encoding), atag.text]', \
-        'TOFN':'[int(atag.encoding), atag.text]', \
-        'TOLY':'[int(atag.encoding), atag.text]', \
-        'TOPE':'[int(atag.encoding), atag.text]', \
-        'TOWN':'[int(atag.encoding), atag.text]', \
-        'TPE1':'[int(atag.encoding), atag.text]', \
-        'TPE2':'[int(atag.encoding), atag.text]', \
-        'TPE3':'[int(atag.encoding), atag.text]', \
-        'TPE4':'[int(atag.encoding), atag.text]', \
-        'TPRO':'[int(atag.encoding), atag.text]', \
-        'TPUB':'[int(atag.encoding), atag.text]', \
-        'TRSN':'[int(atag.encoding), atag.text]', \
-        'TRSO':'[int(atag.encoding), atag.text]', \
-        'TSO2':'[int(atag.encoding), atag.text]', \
-        'TSOA':'[int(atag.encoding), atag.text]', \
-        'TSOC':'[int(atag.encoding), atag.text]', \
-        'TSOP':'[int(atag.encoding), atag.text]', \
-        'TSOT':'[int(atag.encoding), atag.text]', \
-        'TSRC':'[int(atag.encoding), atag.text]', \
-        'TSSE':'[int(atag.encoding), atag.text]', \
-        'TSST':'[int(atag.encoding), atag.text]', \
+    'AENC':_aenc,\
+    'ASPI':_aspi,\
+    'COMM':_comm,\
+    'COMR':_comr,\
+    'ENCR':_encr,\
+    'EQU2':_equ2,\
+    'ETCO':_etco,\
+    'GEOB':_geob,\
+    'GRID':_grid,\
+    'IPLS':_ipls,\
+    'LINK':_link,\
+    'MCDI':_mcdi,\
+    'MLLT':_mllt,\
+    'MVIN':_mvin,\
+    'MVNM':_mvnm,\
+    'OWNE':_owne,\
+    'PCNT':_pcnt,\
+    'PCST':_pcst,\
+    'POPM':_popm,\
+    'POSS':_poss,\
+    'PRIV':_priv,\
+    'RBUF':_rbuf,\
+    'RVA2':_rva2,\
+    'RVAD':_rvad,\
+    'RVRB':_rvrb,\
+    'SEEK':_seek,\
+    'SIGN':_sign,\
+    'SYLT':_sylt,\
+    'SYTC':_sytc,\
+    'TALB':_talb,\
+    'TBPM':_tbpm,\
+    'TCAT':_tcat,\
+    'TCMP':_tcmp,\
+    'TCOM':_tcom,\
+    'TCON':_tcon,\
+    'TCOP':_tcop,\
+    'TDAT':_tdat,\
+    'TDEN':_tden,\
+    'TDES':_tdes,\
+    'TDLY':_tdly,\
+    'TDOR':_tdor,\
+    'TDRC':_tdrc,\
+    'TDRL':_tdrl,\
+    'TDTG':_tdtg,\
+    'TENC':_tenc,\
+    'TEXT':_text,\
+    'TFLT':_tflt,\
+    'TGID':_tgid,\
+    'TIME':_time,\
+    'TIPL':_tipl,\
+    'TIT1':_tit1,\
+    'TIT2':_tit2,\
+    'TIT3':_tit3,\
+    'TKEY':_tkey,\
+    'TKWD':_tkwd,\
+    'TLAN':_tlan,\
+    'TLEN':_tlen,\
+    'TMCL':_tmcl,\
+    'TMED':_tmed,\
+    'TMOO':_tmoo,\
+    'TOAL':_toal,\
+    'TOFN':_tofn,\
+    'TOLY':_toly,\
+    'TOPE':_tope,\
+    'TORY':_tory,\
+    'TOWN':_town,\
+    'TPE1':_tpe1,\
+    'TPE2':_tpe2,\
+    'TPE3':_tpe3,\
+    'TPE4':_tpe4,\
+    'TPOS':_tpos,\
+    'TPRO':_tpro,\
+    'TPUB':_tpub,\
+    'TRCK':_trck,\
+    'TRSN':_trsn,\
+    'TRSO':_trso,\
+    'TSIZ':_tsiz,\
+    'TSO2':_tso2,\
+    'TSOA':_tsoa,\
+    'TSOC':_tsoc,\
+    'TSOP':_tsop,\
+    'TSOT':_tsot,\
+    'TSRC':_tsrc,\
+    'TSSE':_tsse,\
+    'TSST':_tsst,\
+    'TXXX':_txxx,\
+    'TYER':_tyer,\
+    'UFID':_ufid,\
+    'USER':_user,\
+    'USLT':_uslt,\
+    'WCOM':_wcom,\
+    'WCOP':_wcop,\
+    'WOAF':_woaf,\
+    'WOAR':_woar,\
+    'WOAS':_woas,\
+    'WORS':_wors,\
+    'WPAY':_wpay,\
+    'WPUB':_wpub,\
+    'WXXX':_wxxx,\
        }
 
 THE_IDIOT_P = {\
-                'MVNM':'atag.text[0]', \
-                'TALB':'atag.text[0]', \
-                'TCOM':'atag.text[0]', \
-                'TCON':'atag.text[0]', \
-                'TCOP':'atag.text[0]', \
-                'TCMP':'atag.text[0]', \
-                'TDAT':'atag.text[0]', \
-                'TDEN':'atag.text[0]', \
-                'TDES':'atag.text[0]', \
-                'TKWD':'atag.text[0]', \
-                'TCAT':'atag.text[0]', \
-                'TDLY':'atag.text[0]', \
-                'TDOR':'atag.text[0]', \
-                'TDRC':'atag.text[0]', \
-                'TDRL':'atag.text[0]', \
-                'TDTG':'atag.text[0]', \
-                'TENC':'atag.text[0]', \
-                'TEXT':'atag.text[0]', \
-                'TFLT':'atag.text[0]', \
-                'TGID':'atag.text[0]', \
-                'TIME':'atag.text[0]', \
-                'TIT1':'atag.text[0]', \
-                'TIT2':'atag.text[0]', \
-                'TIT3':'atag.text[0]', \
-                'TKEY':'atag.text[0]', \
-                'TLAN':'atag.text[0]', \
-                'TMED':'atag.text[0]', \
-                'TMOO':'atag.text[0]', \
-                'TOAL':'atag.text[0]', \
-                'TOFN':'atag.text[0]', \
-                'TOLY':'atag.text[0]', \
-                'TOPE':'atag.text[0]', \
-                'TOWN':'atag.text[0]', \
-                'TPE1':'atag.text[0]', \
-                'TPE2':'atag.text[0]', \
-                'TPE3':'atag.text[0]', \
-                'TPE4':'atag.text[0]', \
-                'TPRO':'atag.text[0]', \
-                'TPUB':'atag.text[0]', \
-                'TRSN':'atag.text[0]', \
-                'TRSO':'atag.text[0]', \
-                'TSO2':'atag.text[0]', \
-                'TSOA':'atag.text[0]', \
-                'TSOC':'atag.text[0]', \
-                'TSOP':'atag.text[0]', \
-                'TSOT':'atag.text[0]', \
-                'TSRC':'atag.text[0]', \
-                'TSSE':'atag.text[0]', \
-                'TSST':'atag.text[0]', \
-                'TORY':'atag.text[0]', \
-                'TVIM':'atag.text[0]', \
-                'WCOM':'atag.url[0]', \
-                'WCOP':'atag.url[0]', \
-                'WOAF':'atag.url[0]', \
-                'WOAR':'atag.url[0]', \
-                'WOAS':'atag.url[0]', \
-                'WORS':'atag.url[0]', \
-                'WPAY':'atag.url[0]', \
-                'WPUB':'atag.url[0]', \
-                'TPOS':'atag.text[0]', \
-                'TRCK':'atag.text[0]', \
-                'MVIN':'atag.text[0]', \
-                'TBPM':'atag.text[0]', \
-                'TLEN':'atag.text[0]', \
-                'TSIZ':'atag.text[0]', \
-                'TYER':'atag.text[0]', \
-                'COMM':'atag.text[0]', \
+                'MVNM': '',\
+                'TALB': '',\
+                'TCOM': '',\
+                'TCON': '',\
+                'TCOP': '',\
+                'TCMP': '',\
+                'TDAT': '',\
+                'TDEN': '',\
+                'TDES': '',\
+                'TKWD': '',\
+                'TCAT': '',\
+                'TDLY': '',\
+                'TDOR': '',\
+                'TDRC': '',\
+                'TDRL': '',\
+                'TDTG': '',\
+                'TENC': '',\
+                'TEXT': '',\
+                'TFLT': '',\
+                'TGID': '',\
+                'TIME': '',\
+                'TIT1': '',\
+                'TIT2': '',\
+                'TIT3': '',\
+                'TKEY': '',\
+                'TLAN': '',\
+                'TMED': '',\
+                'TMOO': '',\
+                'TOAL': '',\
+                'TOFN': '',\
+                'TOLY': '',\
+                'TOPE': '',\
+                'TOWN': '',\
+                'TPE1': '',\
+                'TPE2': '',\
+                'TPE3': '',\
+                'TPE4': '',\
+                'TPRO': '',\
+                'TPUB': '',\
+                'TRSN': '',\
+                'TRSO': '',\
+                'TSO2': '',\
+                'TSOA': '',\
+                'TSOC': '',\
+                'TSOP': '',\
+                'TSOT': '',\
+                'TSRC': '',\
+                'TSSE': '',\
+                'TSST': '',\
+                'TORY': '',\
+                'TVIM': '',\
+                'WCOM': '',\
+                'WCOP': '',\
+                'WOAF': '',\
+                'WOAR': '',\
+                'WOAS': '',\
+                'WORS': '',\
+                'WPAY': '',\
+                'WPUB': '',\
+                'TPOS': '',\
+                'TRCK': '',\
+                'MVIN': '',\
+                'TBPM': '',\
+                'TLEN': '',\
+                'TSIZ': '',\
+                'TYER': '',\
+                'COMM': '',\
                 }
 
-THIS_VERSION = '0.9.9.20'
+THIS_VERSION = '0.9.9.22'
 
 
 
