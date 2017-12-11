@@ -3,9 +3,9 @@
 History
 -------
 
-0.9.9.20(2017)
+0.9.9.22(2017)
 ------------------
-extensively refactored, json files removed.
+Extensively refactored, json files removed, class and const packages added...
 
 0.9.9.15(2017)
 ------------------
