@@ -1230,8 +1230,12 @@ class GuiCore(Tk):
         #old_mode['idiot'] == 'False', new_mode=0 ==> 1, downgrade
         #old_mode['idiot'] == 'True', new_mode=1 ==> 2, upgrade
         #old_mode['idiot'] == 'False', new_mode=1 ==> 3, no change
-        idiot_case = int(not self.old_mode['idiot'] == 'True') \
+        if 'idiot' in self.old_mode:
+            idiot_case = int(not self.old_mode['idiot'] == 'True') \
                                                 + 2 * int(self.mode.get() == 1)
+        else:
+            idiot_case = 0
+            
         return idiot_case
 
     def _load_project(self, thefile):
@@ -1571,23 +1575,40 @@ class GuiCore(Tk):
         # 3: old project = advanced, current project = idiot => downgrade data
         # 4: old project = advanced, current project = advanced => no change just load
         #print("self.old_mode[idiot]=>{}<".format(self.old_mode['idiot']))
-        if self.old_mode['idiot'] == 'True' and self.mode.get() != 0:
+        if 'idiot' in self.old_mode and self.old_mode['idiot'] == 'True' and self.mode.get() != 0:
             idiot_case = 'upgrade data'
-        elif self.old_mode['idiot'] == 'False' and self.mode.get() == 0:
+        elif 'idiot' in self.old_mode and self.old_mode['idiot'] == 'False' and self.mode.get() == 0:
             idiot_case = 'downgrade data'
         else:
             idiot_case = 'no change'
-        for project_node in etreeparent:
-            #only has one child
-            #load_project_to_tree
-            tree_project = self.tree.insert(treeparent, index='end', \
-                                                values="Type='project'", \
-                                                open=True, \
-                                                text='')
-            last_project_node = project_node
-
-        self._load_children_to_tree(last_project_node, tree_project, idiot_case, \
-                                                                   old_columns)
+        #tree should be empty but
+        if self.tree.get_children():
+            #just in case get rid of any children
+            self.tree.delete(self.tree.get_children())
+        
+        #first have to insert the parent node this sameas name of project
+        vout = ['project', '', '']
+        tree_project = self.tree.insert('', index='end', values=vout, \
+                                    open=True, text=self.ddnCurProject.get())
+        if len(etreeparent) > 0:
+            #is existing project
+            last_project_node = etreeparent[0]
+#        for project_node in etreeparent:
+#            #only has one child
+#            #load_project_to_tree
+#            tree_project = self.tree.insert(treeparent, index='end', \
+#                                                values="Type='project'", \
+#                                                open=True, \
+#                                                text='')
+#            last_project_node = project_node
+#        print(project_node)
+#        self._load_children_to_tree(last_project_node, tree_project, idiot_case, \
+        #etreeparent has only one child 'the project'
+            self._load_children_to_tree(etreeparent[0], tree_project, \
+                                        idiot_case, old_columns)
+        else:
+            #is new project so nothing to load
+            pass
 
     def _list_old_columns(self, old_attrib, new_attrib, lang):
         """list the columnsselceted in the old project"""
