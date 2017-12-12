@@ -26,7 +26,7 @@ Pub2SDwizard can walk you through this process, saving your decisions and enforc
 Pub2Sdwizard-related tools.
 
 * Free software: MIT license
-* Documentation: (COMING SOON!) https://pub2sd.readthedocs.org.
+* Documentation:  https://pub2sd2.readthedocs.org.
 
 Features
 --------
