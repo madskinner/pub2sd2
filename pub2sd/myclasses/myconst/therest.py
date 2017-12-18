@@ -603,7 +603,7 @@ THE_IDIOT_P = {\
                 'COMM': '',\
                 }
 
-THIS_VERSION = '0.9.9.22'
+THIS_VERSION = '0.9.9.23'
 
 
 
