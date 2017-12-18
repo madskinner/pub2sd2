@@ -19,7 +19,7 @@ You can download the Linux binary for ubuntu 16.04 64bit installer (pub2sdwizard
 
 .. _here: https://app.box.com/s/48n2aogs7l8nlcp7fe9babc5n91s2loq
 
-Then just double-click on the ‘.deb’ file, and follow the installers instructions.
+Then just double-click on the '.deb' file, and follow the installers instructions.
 
 Source Code
 _________
