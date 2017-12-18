@@ -6,7 +6,7 @@ Windows
 _______
 
 
-You can download the latest version for Windows 64bit enviroments from here`Pub2SDwizard_0.9.9.23_x64_setup.exe <https://app.box.com/s/q4hkwpaf9gpnkp6e3l97fs367ksqxcjx>` .
+You can download the latest version for Windows 64bit enviroments from here `Pub2SDwizard_0.9.9.23_x64_setup.exe <https://app.box.com/s/q4hkwpaf9gpnkp6e3l97fs367ksqxcjx>` .
 You can download the latest version for Windows 64bit enviroments (Pub2SDwizard_0.9.9.23_x64_setup.exe) from here_.
 
 .. _here: https://app.box.com/s/q4hkwpaf9gpnkp6e3l97fs367ksqxcjx
