@@ -31,7 +31,7 @@ project_root = os.path.dirname(cwd)
 # version is used.
 sys.path.insert(0, project_root)
 
-#from pub2sd.Pub2SDwizard import THIS_VERSION
+#from pub2sd.Pub2SDwizard import THIS_VERSION 
 from pub2sd.myclasses.myconst.therest import THIS_VERSION
 
 # -- General configuration ---------------------------------------------
