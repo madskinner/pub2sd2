@@ -33,7 +33,7 @@ The name of your project?
 
 This can either be entered directly or chosen from the drop-down list. 
 The project settings can be saved at any time and will be held in a '<project name>.prj' file stored in a 
-'Pub2SD' folder under your home folder (i.e. 'C:\Users\<username>\Pub2SD'). 
+'Pub2SD' folder under your home folder (i.e. 'C:\Users\<username>\Pub2SD' for Windows or '~/Pub2SD' on Linux). 
 This project name will also be used as the name of the top level folder on the SD card which will hold your published files.
 
 The type of your project?
@@ -136,7 +136,8 @@ when it is requested.
 
 Click on the 'Next' button to proceed.
 
-Special characters</h2>
+Special characters
+---------------------------
 
 .. image:: images/SpecialCharacters.jpg
    :width: 868
