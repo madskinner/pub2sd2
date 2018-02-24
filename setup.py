@@ -24,5 +24,12 @@ setuptools.setup(
                  'Programming Language :: Python :: 3.5',
                  'Programming Language :: Python :: 3.6'],
     keywords='publish mp3 metadata sdcard',
+    project_urls={  # Optional
+        'Bug Reports': 'https://github.com/madskinner/pub2sd2/issues',
+        'Funding': 'https://donate.pypi.org',
+        'English docs': ' https://pub2sd2.readthedocs.org',
+        'Docs en français': ' https://pub2sd2.readthedocs.org',
+        'Source': 'https://github.com/madskinner/pub2sd2/',
+    },
     include_package_data=True
 )
