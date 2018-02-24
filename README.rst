@@ -5,16 +5,6 @@ Pub2SDwizard
 .. image:: https://travis-ci.org/madskinner/pub2sd2.svg?branch=master
     :target: https://travis-ci.org/madskinner/pub2sd2
 
-.. image:: https://img.shields.io/pypi/v/pub2sd.svg
-        :target: https://pypi.python.org/pypi/pub2sd
-
-.. image:: https://pypip.in/version/<PYPI_PKG_NAME>/badge.svg
-
-    :target: https://pypi.python.org/pypi/<PYPI_PKG_NAME>/
-
-    :alt: Latest Version
-
-
 Why use Pub2SDwizard?
 
 * Just copying your  MP3 files on to an SD card is easy enough, but:
@@ -31,9 +21,9 @@ Pub2SDwizard can walk you through this process, saving your decisions and enforc
 
 Related links:
 
-* Free software MIT license:: https://opensource.org/licenses/MIT
-* Documentation in English:: https://pub2sd2.readthedocs.org.
-* Documentation en français:: https://pub2sd_fr.readthedocs.org.
+* Free software MIT license : https://opensource.org/licenses/MIT
+* Documentation in English : https://pub2sd2.readthedocs.org.
+* Documentation en français : https://pub2sd_fr.readthedocs.org.
 
 Features
 --------
