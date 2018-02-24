@@ -4,7 +4,7 @@ from pub2sd.myclasses.myconst.therest import THIS_VERSION
 setuptools.setup(
     name="pub2sd2",
     version=THIS_VERSION,
-    url="https://github.com/madskinner/pub2sd",
+    url="https://github.com/madskinner/pub2sd2",
     author="Mark Skinner",
     author_email="mark_skinner@sil.org",
     description="Publish MP3 files to SD cards",
