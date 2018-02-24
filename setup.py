@@ -16,7 +16,7 @@ setuptools.setup(
     package_data={'pub2sd': ['*.html', '*.ico', 'images/*.png', 'images/*.jpg', 'images/*.ico']},
     install_requires=["lxml","psutil","mutagen","unidecode"],
     license='MIT',
-    classifiers=['Development Status :: 4 - Beta',
+    classifiers=['Development Status :: 5 - Production/Stable',
                  'Intended Audience :: End Users/Desktop',
                  'License :: OSI Approved :: MIT License',
                  'Programming Language :: Python :: 3',

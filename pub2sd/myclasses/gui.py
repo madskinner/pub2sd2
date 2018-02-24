@@ -523,15 +523,21 @@ class GuiCore(Tk):
         self.ddnPrefChar['text'] = 'Current template:'
         self.ddnPrefChar['justify'] = 'left'
 
-        self.list_PrefChar = []
-        self.list_PrefChar.insert(0, 'Latin1')
-        self.list_PrefChar.insert(1, '')
+        self.list_PrefChar = ['Latin1',]
+        self.list_PrefChar.extend([f[:-4] \
+                                            for f in os.listdir(self.Pub2SD) \
+                                            if f.endswith('.csv')])
+
+        #self.list_PrefChar.insert(0, 'Latin1')
+        #self.list_PrefChar.insert(1, '')
 
         self.ddnPrefChar['values'] = self.list_PrefChar
 
         self.btnSavePref = Button(self.f2, \
                                   text=LOCALIZED_TEXT[lang]["SavePref"], \
-                                  command=self._on_SavePref)
+                                  command=lambda: \
+                            self._on_SavePref('', '', \
+                                self.txtPrefChar.get(0.0, 9999.9999).strip()))
         self.btnSavePref.grid(column=4, row=4, padx=5, pady=5, sticky='news')
 
         self.txtPrefChar = Text(self.f2, height=10, width=60)
@@ -987,50 +993,79 @@ class GuiCore(Tk):
         """The lock unlock SD card tab, to be implemented?"""
         pass
 
-    def _on_loadPrefChar(self, dummy):
+    def _on_loadPrefChar(self, dummy, _prefchar=None, _lst='', _filein=''):
         """load a set of preferred character pairs from LATIN1 constant
                                                  or a utf8 coded  .csv file"""
 
-        lst = self.ddnPrefChar.get()
-
+        lst = _lst if len(_lst) > 0 else self.ddnPrefChar.get()
+        prefchar = _prefchar if _prefchar is not None else self.txtPrefChar
         if lst == 'Latin1':
 #            if len(self.txtPrefChar.get(0.0, 9999.9999).rstrip()) > 0:
-            if self.txtPrefChar.get(0.0, 9999.9999).rstrip():
-                self.txtPrefChar.insert(9999.9999, ', ' + LATIN1)
+            if prefchar.get(0.0, 9999.9999).rstrip():
+                prefchar.insert(9999.9999, ', ' + LATIN1)
             else:
-                self.txtPrefChar.insert(9999.9999, LATIN1)
+                prefchar.insert(9999.9999, LATIN1)
         elif lst == '': #del
-            self.txtPrefChar.delete(0.0, 9999.9999)
+            prefchar.delete(0.0, 9999.9999)
         else: #load txt file
-            filein = os.path.normpath(self.Pub2SD + '/'+ lst + '.csv')
+            if len(_filein) == 0:
+                filein = os.path.normpath(self.Pub2SD + '/'+ lst + '.csv')
+            else:
+                filein = _filein
             fin = codecs.open(filein, mode='r', encoding='utf-8')
             text = fin.read()
 #            if len(self.txtPrefChar.get(0.0, 9999.9999).strip()) > 0:
-            if self.txtPrefChar.get(0.0, 9999.9999).strip():
+            if prefchar.get(0.0, 9999.9999).strip():
                 text = ', ' + text
-            self.txtPrefChar.insert(9999.9999, text)
+            prefchar.insert(9999.9999, text)
             fin.close()
+#            if self.txtPrefChar.get(0.0, 9999.9999).rstrip():
+#                self.txtPrefChar.insert(9999.9999, ', ' + LATIN1)
+#            else:
+#                self.txtPrefChar.insert(9999.9999, LATIN1)
+#        elif lst == '': #del
+#            self.txtPrefChar.delete(0.0, 9999.9999)
+#        else: #load txt file
+#            if len(_filein) == 0:
+#                filein = os.path.normpath(self.Pub2SD + '/'+ lst + '.csv')
+#            else:
+#                filein = _filein
+#            fin = codecs.open(filein, mode='r', encoding='utf-8')
+#            text = fin.read()
+##            if len(self.txtPrefChar.get(0.0, 9999.9999).strip()) > 0:
+#            if self.txtPrefChar.get(0.0, 9999.9999).strip():
+#                text = ', ' + text
+#            self.txtPrefChar.insert(9999.9999, text)
+#            fin.close()
 
-    def _on_SavePref(self):
-        """save your list of preferred character pairs
-                                                 to a utf-8 coded .csv file"""
+    def _on_SavePref(self, _lang='en-US', _fileout='', _text=""):
+        """save your list of preferred character pairs to a utf-8 coded 
+        .csv file. If _fileout is supplied the filedialog
+        will not be called. If _text is supplied self.txtPrefChar will not 
+        be accessed"""
 
-        lang = self.ddnGuiLanguage.get()
+        lang = self.ddnGuiLanguage.get() if len(_lang) == 0 else _lang
 
         fileout = filedialog.asksaveasfilename(\
                         filetypes=[('Preferred characters file', '.csv'), ], \
                                     initialdir=self.Pub2SD, \
                                     initialfile='', \
                                     title=LOCALIZED_TEXT[lang]['SavePref'], \
-                                    defaultextension='.csv')
-        text = self.txtPrefChar.get(0.0, 9999.9999).strip()
-        text = ' '.join(text.split('\n'))
-        text = ' '.join(text.split('\r'))
-        text = ' '.join(text.split('\f'))
-        pairs = [p.strip for p in text.split(',')]
-        fout = codecs.open(fileout, mode='w', encoding='utf-8')
-        fout.write(', '.join(pairs))
-        fout.close()
+                                    defaultextension='.csv') \
+                  if len(_fileout) == 0 else _fileout
+        if len(fileout) != 0: 
+            text = self.txtPrefChar.get(0.0, 9999.9999).strip() \
+                        if len(_text) == 0 else _text
+            text = ' '.join(text.split('\n'))
+            text = ' '.join(text.split('\r'))
+            text = ' '.join(text.split('\f'))
+            if ',' in text:
+                pairs = [p.strip for p in text.split(',')]
+            else:
+                pairs = [text,]
+            fout = codecs.open(fileout, mode='w', encoding='utf-8')
+            fout.write(', '.join(pairs))
+            fout.close()
 
     def _set_default_tags(self):
         """restores the list of selected tags to the default setting"""
@@ -1038,14 +1073,19 @@ class GuiCore(Tk):
         for item in self.recommendedTags:
             self.tagtree.selection_add(item)
 
-    def _on_create_template(self):
+    def _on_create_template(self, _lang='', _template=None, _fileout=''):
         """saves the currently selected combination of tags
                                                to a utf-8 encoded .json file"""
-
-        lang = self.ddnGuiLanguage.get()
-        self.template = {key: '' for key in self.tagtree.selection()}
-
-        fileout = filedialog.asksaveasfilename(\
+        
+        lang = _lang if _lang else self.ddnGuiLanguage.get()
+            
+        a_template = _template if _template is not None \
+                               else {key: '' \
+                                     for key in self.tagtree.selection()}
+            
+#        self.template = {key: '' for key in self.tagtree.selection()}
+        fileout = _fileout if _fileout \
+                           else filedialog.asksaveasfilename(\
                                 filetypes=[('Template file', '.json'), ], \
                                            initialdir=self.Pub2SD, \
                                            initialfile='', \
@@ -1058,6 +1098,7 @@ class GuiCore(Tk):
             j = json.dumps(self.template, indent=4, sort_keys=True)
             output.write(j)
             output.close()
+        return a_template
 
     def _on_load_template(self):
         """loads an existing template file (utf-8, .json) which specifies
@@ -1658,7 +1699,7 @@ class GuiCore(Tk):
         on the 'Edit...' tab and proceed to the 'Special Characters' tab"""
 
         lang = self.ddnGuiLanguage.get()
-        self.ddnPrefChar.current(1)
+        self.ddnPrefChar.current(0)
         self.sf1.clear()
         self.selected_tags = [i for i in self.tagtree.selection()]
         if 'TIT2' not in self.selected_tags:

@@ -6,14 +6,14 @@ Windows
 _______
 
 
-You can download the latest version for Windows 64bit enviroments from here: `Pub2SDwizard_0.9.9.23_x64_setup.exe <https://app.box.com/s/q4hkwpaf9gpnkp6e3l97fs367ksqxcjx>`_ 
+You can download the latest version for Windows 64bit enviroments from here: `Pub2SDwizard_<latest version>_x64_setup.exe <https://app.box.com/s/tkwxb7yv6h7nn291fc5is19iw06x8y89>`_ 
 
 Then just double-click on the '.exe' file, and follow the installers instructions.
 
 Linux
 _____
 
-You can download the Linux binary for the Ubuntu 16.04 64bit installer from here: `pub2sdwizard_0.9.9.23_amd64.deb <https://app.box.com/s/48n2aogs7l8nlcp7fe9babc5n91s2loq>`_ 
+You can download the Linux binary for the Ubuntu 16.04 64bit installer from here: `pub2sdwizard_<latest version>_amd64.deb <https://app.box.com/s/tkwxb7yv6h7nn291fc5is19iw06x8y89>`_ 
 
 Then just double-click on the '.deb' file, and follow the installers instructions.
 

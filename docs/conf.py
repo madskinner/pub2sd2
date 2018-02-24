@@ -61,7 +61,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'pub2sd2'
+project = u'Pub2SDwizard'
 copyright = u'2017, SIL International'
 
 # The version info for the project you're documenting, acts as replacement
