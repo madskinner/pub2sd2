@@ -7,7 +7,8 @@ Pub2SDwizard
 
 Why use Pub2SDwizard?
 
-* Just copying your  MP3 files on to an SD card is easy enough, but:
+Just copying your MP3 files on to an SD card is easy enough, but:
+
 * What order do you wish them to play in?
    - Since different devices and applications will sort them in different ways, how do you force them to play in the order you desire? - While a simple radio can play files from SD cards or USB sticks, the files will probably be sorted solely on their filenames, but mobile phones may sort them on their creation or last modified date or other embedded metadata tags. Which tags are used will depend on the paticular make and model of phone and or the application it's running.
 * How do you organise the files so that a user can navigate to the desired file even on the simplest phone?

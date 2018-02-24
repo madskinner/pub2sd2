@@ -19,5 +19,5 @@ Then just double-click on the '.deb' file, and follow the installers instruction
 Source Code
 _________
 
-Is available in a github repository at `madskinner/pub2sd2<https://github.com/madskinner/pub2sd2>`_ 
+Is available in a github repository at `madskinner/pub2sd2 <https://github.com/madskinner/pub2sd2>`_ 
 
