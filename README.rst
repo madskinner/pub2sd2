@@ -2,17 +2,24 @@
 Pub2SDwizard
 ===============================
 
-.. image:: https://img.shields.io/travis/madskinner/pub2sd2.svg
-        :target: https://travis-ci.org/madskinner/pub2sd2
+.. image:: https://travis-ci.org/madskinner/pub2sd2.svg?branch=master
+    :target: https://travis-ci.org/madskinner/pub2sd2
 
 .. image:: https://img.shields.io/pypi/v/pub2sd.svg
         :target: https://pypi.python.org/pypi/pub2sd
+
+.. image:: https://pypip.in/version/<PYPI_PKG_NAME>/badge.svg
+
+    :target: https://pypi.python.org/pypi/<PYPI_PKG_NAME>/
+
+    :alt: Latest Version
+
 
 Why use Pub2SDwizard?
 
 * Just copying your  MP3 files on to an SD card is easy enough, but:
 * What order do you wish them to play in?
-   - Since different devices and applications will sort them in different ways, how do you force them to play in the order you desire? - While a simple radio can play files from SD cards or USB sticks, the files will probably br sorted solely on their filenames, but mobile phones may sort them on their creation or last modified date or other embedded metadata tags. Which tags are used will depend on the paticular make and model of phone and or the application it's running.
+   - Since different devices and applications will sort them in different ways, how do you force them to play in the order you desire? - While a simple radio can play files from SD cards or USB sticks, the files will probably be sorted solely on their filenames, but mobile phones may sort them on their creation or last modified date or other embedded metadata tags. Which tags are used will depend on the paticular make and model of phone and or the application it's running.
 * How do you organise the files so that a user can navigate to the desired file even on the simplest phone?
 * How do you create playlists that more advanced phones can discover automatically and in what format?
 * Will the device/application be able to display the characters in your filenames?
@@ -22,11 +29,11 @@ Why use Pub2SDwizard?
 
 Pub2SDwizard can walk you through this process, saving your decisions and enforcing your sort orders as well as assisting you to make multiple copies of the resulting SD card at one time.
 
-Pub2Sdwizard-related tools.
+Related links:
 
-* Free software: MIT license
-* Documentation in English  : https://pub2sd2.readthedocs.org.
-* Documentation en français : https://pub2sd_fr.readthedocs.org.
+* Free software MIT license:: https://opensource.org/licenses/MIT
+* Documentation in English:: https://pub2sd2.readthedocs.org.
+* Documentation en français:: https://pub2sd_fr.readthedocs.org.
 
 Features
 --------
