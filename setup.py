@@ -2,7 +2,7 @@ import setuptools
 from pub2sd.myclasses.myconst.therest import THIS_VERSION
 
 setuptools.setup(
-    name="pub2sd2",
+    name="pub2sd",
     version=THIS_VERSION,
     url="https://github.com/madskinner/pub2sd2",
     author="Mark Skinner",
