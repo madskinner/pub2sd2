@@ -5,7 +5,7 @@ History
 
 1.0.1(2018)
 ------------------
-Documetation updated.
+Documentation updated.
 
 1.0.0(2018)
 ------------------
