@@ -42,7 +42,6 @@ def main():
         # we are running in a normal Python environment
         bundle_dir = os.path.dirname(os.path.abspath(__file__))
 
-
     gui = GuiCore(None) # see GuiCore's __init__ method
     gui.title(' Pub2SDwizard v{}'.format(THIS_VERSION))
 
