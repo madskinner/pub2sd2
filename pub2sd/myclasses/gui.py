@@ -5,6 +5,7 @@ Created on Fri Dec  8 04:37:05 2017
 @author: marks
 """
 #import sys
+import fnmatch
 import os
 import platform
 import webbrowser
@@ -1923,14 +1924,17 @@ class GuiCore(Tk):
 
         vout = ['collection', '-', '-']
         vout.extend(['-' for item in self.displayColumns[2:-1]])
-        focus = self.tree.insert(focus if focus else '', \
+#        focus = self.tree.insert(focus if focus else '', \
+        focus = self.tree.insert(focus if focus else self.project_id, \
                                  index='end', values=vout, open=True, \
-                                 text='collection')
+                                 text='empty collection')
+#                                 text='collection')
 #        focus = self.tree.insert(focus if len(focus) > 0 else '', \
 #                                 index='end', values=vout, open=True, \
 #                                 text='collection')
         self._rename_children_of(self.project_id)
         self.tree.see(focus)
+        self.update()
 
 
     def _rename_children_of(self, parent):
@@ -1944,6 +1948,9 @@ class GuiCore(Tk):
         ancestor_name = str(self.tree.set(parent, 'Name')) if parent else ''
 #        ancestor_name = str(self.tree.set(parent, 'Name')) if len(parent) > 0 \
 #                                                           else ''
+#        print("parent=>{}< of {}".format(parent, children))
+#        for achild in children:
+#            print("child text=>{}<".format(self.tree.item(achild)['text']))
         self.tree.item(self.project_id, text=self.ddnCurProject.get())
         my_isalpha = True
 #        if len(ancestor_name) > 0:
@@ -2005,6 +2012,10 @@ class GuiCore(Tk):
                                          ancestor_name, my_num, title))
                 my_num += 1
 
+#    def _splitlist(self, alist):
+#        print(alist)
+#        pass
+
     def _on_add_item(self):
         """ add an item(mp3 file) to the selected collection"""
 
@@ -2019,10 +2030,15 @@ class GuiCore(Tk):
                                     initialdir=os.path.expanduser('~'), \
                                     filetypes=[('MP3 files', '*.mp3'),], \
                                               title="Select MP3 file…")
-                filenames = self._splitlist(full_path)
+#                filenames = self._splitlist(full_path)
+                filenames = full_path
+                self.progbar['maximum'] = len(filenames)
+                self.progbar['value'] = 0
+
                 ff = {}
                 flist = {}
                 for f in filenames:
+#                    print(f)
                     filename = os.path.basename(f)[:-4]
                     lf = sort_key_for_filenames(filename)
                     ff[lf] = filename
@@ -2036,6 +2052,9 @@ class GuiCore(Tk):
                                                     else self._read_mp3_tags(f)
                     self.tree.insert(focus, index='end', values=somevalues, \
                             open=True, text='file')
+                    self.progbar.step()
+                    self.update()
+
         self._rename_children_of(self.project_id)
         self.tree.see(focus)
         self.update()
@@ -2183,6 +2202,15 @@ class GuiCore(Tk):
                 result.extend(['#',])
         return result
 
+    def _count_mp3_files_below(self, adir_path):
+        """counts all mp3 files below given dir including subdirs"""
+#        files = glob.glob(adir_path + '/*.mp3')
+        matches = []
+        for root, dirnames, filenames in os.walk(adir_path):
+            for filename in fnmatch.filter(filenames, '*.mp3'):
+                matches.append(os.path.join(root, filename))
+        return(len(matches))
+#        return(len(files))
 
     def _on_add_folder(self):
         """add folder as collection with its dependants to Treeview widget"""
@@ -2191,7 +2219,10 @@ class GuiCore(Tk):
             focus = self.project_id
         dir_path = filedialog.askdirectory(initialdir=os.path.expanduser('~'),\
                                     title="Select folder…", mustexist=True)
-        self.nos_tracks = 0
+        if dir_path:
+            self.nos_tracks = self._count_mp3_files_below(dir_path)
+        else:
+            self.nos_tracks = 0
         self._count_files_below(focus)
         self.progbar['maximum'] = self.nos_tracks
         self.progbar['value'] = 0
@@ -2215,8 +2246,10 @@ class GuiCore(Tk):
             focus = self.project_id
         dir_path = filedialog.askdirectory(initialdir=os.path.expanduser('~'),\
                                         title="Select folder…", mustexist=True)
-        self.nos_tracks = 0
-        self._count_files_below(focus)
+        if dir_path:
+            self.nos_tracks = self._count_mp3_files_below(dir_path)
+        else:
+            self.nos_tracks = 0
         self.progbar['maximum'] = self.nos_tracks
         self.progbar['value'] = 0
 #        if len(glob.glob(dir_path + '/*.mp3')) == 0:
@@ -2761,13 +2794,29 @@ class GuiCore(Tk):
         elif column == 'TIT2' \
                     and (self.tree.set(focus, 'Type') == 'collection' \
                     or os.path.getsize(self.tree.set(focus, 'Location')) == 0):
-            self.tree.set(focus, column, text)
+            #if 'Advanced' mode need to filter out the [3,[""]] stuff from text!
+            if self.mode.get() == 0:
+                #idiot mode
+                self.tree.set(focus, column, text)
+#                print('renaming to {}'.format(text))
+            else:
+                #advanced mode
+                #[3,[""]]
+                _start = text.find('[', text.find('[') + 1) + 2
+                _end = text.find(']') - 1
+                self.tree.set(focus, column, text[_start:_end])
+#                print('renaming to {}'.format(text[_start:_end]))
+#            self._rename_children_of(self.project_id)
+                            
         else:
             self._set_tag_(focus)
         self.tree.focus(focus)
         self.tree.see(focus)
 
         self._rename_children_of(self.project_id)
+        self.status['text'] = ''
+        self.progbar['value'] = 0
+        self.update()
 
     def _on_promote(self):
         """promote item one level in the heirachy"""
