@@ -224,7 +224,6 @@ class GuiCore(Tk):
                                   command=self._on_read_me)
         self.helpmenu.add_command(label=LOCALIZED_TEXT[lang]['About...'], \
                                   command=on_copyright)
-#                                  command=self._on_copyright)
 
     def _initialize_main_window_notebook(self, lang):
         """initializes notebook widget on main window"""
@@ -419,7 +418,6 @@ class GuiCore(Tk):
                                      if f.endswith('.prj')]
 
         self.ddnCurProject['values'] = sorted(self.list_projects)
-#        if len(self.list_projects) > 0:
         if self.list_projects:
             self.ddnCurProject.set(sorted(self.list_projects)[0])
 
@@ -463,7 +461,6 @@ class GuiCore(Tk):
                     self.listoftags.extend([t])
 
         for t in self.listoftags:
-#            tagtreechild = self.tagtree.insert('', index='end', iid=t, \
             self.tagtree.insert('', index='end', iid=t, open=True, \
                     values=[0], text='({}) {}'.format(t, SET_TAGS[lang][t]))
         if t in self.recommendedTags:
@@ -529,8 +526,6 @@ class GuiCore(Tk):
                                             for f in os.listdir(self.Pub2SD) \
                                             if f.endswith('.csv')])
 
-        #self.list_PrefChar.insert(0, 'Latin1')
-        #self.list_PrefChar.insert(1, '')
 
         self.ddnPrefChar['values'] = self.list_PrefChar
 
@@ -774,12 +769,10 @@ class GuiCore(Tk):
                                         LOCALIZED_TEXT[lang]['entry1_ttp'])
 
         set_tagb = []
-#        for tag in SET_TAGS[lang].keys():
         for tag in SET_TAGS[lang]:
             tagname = SET_TAGS[lang][tag]
             #??? need to ensure tagname is translated to fr and pt
             set_tagb.append('{}:({})'.format(tagname, tag.upper()))
-            #print(set_tagb)
         self.ddnSelectTag = Combobox(self.boxEnter, state='readonly', \
                                      textvariable=self.set_tag, width=70)
         self.ddnSelectTag.bind("<<ComboboxSelected>>", self._on_get)
@@ -974,7 +967,6 @@ class GuiCore(Tk):
         self.btnPub2SD.grid(column=0, row=1, \
                             columnspan=3, padx=5, pady=5, sticky='news')
         project = self.ddnCurProject.get()
-#        if len(project) > 0:
         if project:
             self.btnPub2HD = Button(self.f5, \
                 text=LOCALIZED_TEXT[lang]["Publish to '~\\Pub2SD\\{}_SD'"].\
@@ -1001,7 +993,6 @@ class GuiCore(Tk):
         lst = _lst if len(_lst) > 0 else self.ddnPrefChar.get()
         prefchar = _prefchar if _prefchar is not None else self.txtPrefChar
         if lst == 'Latin1':
-#            if len(self.txtPrefChar.get(0.0, 9999.9999).rstrip()) > 0:
             if prefchar.get(0.0, 9999.9999).rstrip():
                 prefchar.insert(9999.9999, ', ' + LATIN1)
             else:
@@ -1015,29 +1006,10 @@ class GuiCore(Tk):
                 filein = _filein
             fin = codecs.open(filein, mode='r', encoding='utf-8')
             text = fin.read()
-#            if len(self.txtPrefChar.get(0.0, 9999.9999).strip()) > 0:
             if prefchar.get(0.0, 9999.9999).strip():
                 text = ', ' + text
             prefchar.insert(9999.9999, text)
             fin.close()
-#            if self.txtPrefChar.get(0.0, 9999.9999).rstrip():
-#                self.txtPrefChar.insert(9999.9999, ', ' + LATIN1)
-#            else:
-#                self.txtPrefChar.insert(9999.9999, LATIN1)
-#        elif lst == '': #del
-#            self.txtPrefChar.delete(0.0, 9999.9999)
-#        else: #load txt file
-#            if len(_filein) == 0:
-#                filein = os.path.normpath(self.Pub2SD + '/'+ lst + '.csv')
-#            else:
-#                filein = _filein
-#            fin = codecs.open(filein, mode='r', encoding='utf-8')
-#            text = fin.read()
-##            if len(self.txtPrefChar.get(0.0, 9999.9999).strip()) > 0:
-#            if self.txtPrefChar.get(0.0, 9999.9999).strip():
-#                text = ', ' + text
-#            self.txtPrefChar.insert(9999.9999, text)
-#            fin.close()
 
     def _on_SavePref(self, _lang='en-US', _fileout='', _text=""):
         """save your list of preferred character pairs to a utf-8 coded 
@@ -1117,7 +1089,6 @@ class GuiCore(Tk):
             for k in self.template.keys():
                 attributes[k] = self.template[k]
             filein.close()
-#        elif len(self.ddnCurTemplate.get()) == 0:
         elif not self.ddnCurTemplate.get():
             pass
         else:
@@ -1131,7 +1102,7 @@ class GuiCore(Tk):
 
         lang = self.ddnGuiLanguage.get()
         app_dir = get_script_directory()
-        # open an HTML file on my own (Windows) computer
+        # open an HTML file on my own computer
         if lang == 'en-US':
             url = os.path.normpath("file://" + app_dir + "/Read_Me.html")
         elif lang == 'fr-FR':
@@ -1233,7 +1204,6 @@ class GuiCore(Tk):
                   "Help I've been kidnapped by {}.".format(platform.system()))
 
         for i in range(0, 8):
-#            if len(self.tlist[i][0]) > 0:
             if self.tlist[i][0]:
                 if platform.system() == 'Windows':
                     self.cb[i]['text'] = self.tlist[i][0]
@@ -1255,13 +1225,11 @@ class GuiCore(Tk):
 
     def _get_template_and_mode_for_load_project(self, lang):
         """attach temlate if specified and calculateidiot_case"""
-#        if len(self.ddnCurTemplate.get()) > 0:
         if self.ddnCurTemplate.get():
             if self.stemp.text != self.ddnCurTemplate.get():
                 self._on_load_template() #attach new template
         else:
             self.current_project.set(self.stemp.text)
-#        new_mode = self.mode.get()
         self.lblMode['text'] = '{}{}'.format(LOCALIZED_TEXT[lang]['Mode>'], \
                     LOCALIZED_TEXT[lang]['Simple'] \
                                   if self.mode.get() == 0 \
@@ -1288,7 +1256,6 @@ class GuiCore(Tk):
         linesin = list()
         filein = codecs.open(thefile, mode='r', encoding='utf-8')
         for aline in filein.readlines():
-#            if len(aline.strip()) > 0:
             if aline.strip():
                 linesin.extend([aline.strip()])
         filein.close()
@@ -1303,7 +1270,6 @@ class GuiCore(Tk):
         self.trout = self.root.find("tree")
         self.old_mode = dict(self.smode.attrib)
         self.template = dict(self.stemp.attrib)
-        #print('load project self.old_mode=>{}<'.format(self.old_mode))
         idiot_case = self._get_template_and_mode_for_load_project(lang)
         if idiot_case == 1:
             # downgrade
@@ -1381,7 +1347,6 @@ class GuiCore(Tk):
         conf_file = self.ddnCurProject.get()
         self._on_load_template()
 
-#        if len(conf_file) == 0:
         if not conf_file:
             messagebox.showinfo("'{}' {}.".format(\
                                 LOCALIZED_TEXT[lang]['Current Project>'], \
@@ -1418,7 +1383,6 @@ class GuiCore(Tk):
                       self.recommendedTags).intersection(self.template.keys()))
             rest = list(set(\
                         self.template.keys()).difference(self.recommendedTags))
-#            if len(self.template) > 0:
             if self.template:
                 [self.tagtree.selection_add(item) for item in short]
                 [self.tagtree.selection_add(item) for item in rest]
@@ -1430,7 +1394,6 @@ class GuiCore(Tk):
         self.update()
 
 
-#        if len(self.ddnCurProject.get()) > 0:
         if self.ddnCurProject.get():
             self.n.add(self.f1)#show recommended tags
             self.n.select(1)
@@ -1506,7 +1469,6 @@ class GuiCore(Tk):
                                                for the specified file (item)"""
         the_values = list()
         for item in self.columns:
-#            if len(old_columns) > 0:
             if old_columns:
                 if item in old_columns and item in child.attrib.keys():
                     if not (item == 'adummy' or item == 'APIC_') \
@@ -1540,10 +1502,7 @@ class GuiCore(Tk):
 
     def _stick_it_in_the_tree(self, child, treeparent, the_values):
         """loads file data into the Treeview widget on the 'Edit...' tab"""
-        #print("type(child.text) =>{}<".format(type(child.text)))
-#        if type(child.text) != 'NoneType' or len(child.text) == 0:
         if type(child.text) != 'NoneType' or not child.text:
-        #if not isinstance(child.text, None) or len(child.text) == 0:
             treechild = self.tree.insert(treeparent, index='end', \
                                                 values=the_values, \
                                                 open=True, \
@@ -1635,17 +1594,6 @@ class GuiCore(Tk):
         if len(etreeparent) > 0:
             #is existing project
             last_project_node = etreeparent[0]
-#        for project_node in etreeparent:
-#            #only has one child
-#            #load_project_to_tree
-#            tree_project = self.tree.insert(treeparent, index='end', \
-#                                                values="Type='project'", \
-#                                                open=True, \
-#                                                text='')
-#            last_project_node = project_node
-#        print(project_node)
-#        self._load_children_to_tree(last_project_node, tree_project, idiot_case, \
-        #etreeparent has only one child 'the project'
             self._load_children_to_tree(etreeparent[0], tree_project, \
                                         idiot_case, old_columns)
         else:
@@ -1758,10 +1706,6 @@ class GuiCore(Tk):
             self.tree.column('APIC_', minwidth=0, width=0, stretch=NO)
 
         #load project tree into treeview
-#        if len(self.trout) > 0:
-#        if self.trout is not None
-        #print(self.trout)
-        #print("self.trout.keys()=>{}<".format(self.trout.keys()))
         if self.trout is not None:
             self._etree2tree(self.trout, '', old_columns)
             list_of_children = self.tree.get_children('')
@@ -1790,13 +1734,11 @@ class GuiCore(Tk):
         text = ' '.join(text.split('\n'))
         text = ' '.join(text.split('\r'))
         text = ' '.join(text.split('\f'))
-#        if len(text) > 0:
         if text:
             pairs = [c.strip() for c in text.split(',')]
             for p in pairs:
                 p = p.strip()
                 t = p.split('/')
-#                if len(t) == 2 and len(t[0]) > 0:
                 if len(t) == 2 and t[0]:
                     #is valid so...
                     t[0] = de_hex(t[0])
@@ -1883,7 +1825,6 @@ class GuiCore(Tk):
         # trailling '\\' will be removed
         self._childrens_filenames(self.project_id, temp_path, project_path_)
         #test if any files, if not give up now!
-#        if len(self.files) == 0:
         if not self.files:
             messagebox.showwarning(\
                     LOCALIZED_TEXT[lang]['No collections or files found.'], \
@@ -1905,7 +1846,6 @@ class GuiCore(Tk):
         if self.isCoolMusic.get() == 1:
             self.play_list_targets.add('COOL_MUSIC')
         #if list
-#        if len(self.EnterList.get()) > 0:
         if self.EnterList.get():
             self.play_list_targets.update(set(self.EnterList.get().split(',')))
 
@@ -1924,14 +1864,9 @@ class GuiCore(Tk):
 
         vout = ['collection', '-', '-']
         vout.extend(['-' for item in self.displayColumns[2:-1]])
-#        focus = self.tree.insert(focus if focus else '', \
         focus = self.tree.insert(focus if focus else self.project_id, \
                                  index='end', values=vout, open=True, \
                                  text='empty collection')
-#                                 text='collection')
-#        focus = self.tree.insert(focus if len(focus) > 0 else '', \
-#                                 index='end', values=vout, open=True, \
-#                                 text='collection')
         self._rename_children_of(self.project_id)
         self.tree.see(focus)
         self.update()
@@ -1946,14 +1881,8 @@ class GuiCore(Tk):
 
         children = self.tree.get_children(parent)
         ancestor_name = str(self.tree.set(parent, 'Name')) if parent else ''
-#        ancestor_name = str(self.tree.set(parent, 'Name')) if len(parent) > 0 \
-#                                                           else ''
-#        print("parent=>{}< of {}".format(parent, children))
-#        for achild in children:
-#            print("child text=>{}<".format(self.tree.item(achild)['text']))
         self.tree.item(self.project_id, text=self.ddnCurProject.get())
         my_isalpha = True
-#        if len(ancestor_name) > 0:
         if ancestor_name:
             if ancestor_name[-1] == '@':
                 my_name = '@'
@@ -1962,7 +1891,6 @@ class GuiCore(Tk):
                 my_isalpha = ancestor_name[-1].isdecimal()
         else:
             my_name = 1
-#            if len(initial_digit) > 0:
             if initial_digit:
                 my_isalpha = initial_digit[-1].isdecimal()
             else:
@@ -1981,7 +1909,6 @@ class GuiCore(Tk):
                 title = self._my_unidecode(self.tree.set(child, 'TIT2'))
                 #strip out any unapproved punctuation - done in my_unidecode
                 self.tree.set(child, 'Name', ancestor_name + my_str)
-                #print(prefix, ancestor_name, my_str, title)
                 self.tree.item(child, text="{0}{1}{2}-{3}".format(prefix, \
                                ancestor_name, my_str, title))
                 my_name += 1
@@ -2012,10 +1939,6 @@ class GuiCore(Tk):
                                          ancestor_name, my_num, title))
                 my_num += 1
 
-#    def _splitlist(self, alist):
-#        print(alist)
-#        pass
-
     def _on_add_item(self):
         """ add an item(mp3 file) to the selected collection"""
 
@@ -2030,7 +1953,6 @@ class GuiCore(Tk):
                                     initialdir=os.path.expanduser('~'), \
                                     filetypes=[('MP3 files', '*.mp3'),], \
                                               title="Select MP3 file…")
-#                filenames = self._splitlist(full_path)
                 filenames = full_path
                 self.progbar['maximum'] = len(filenames)
                 self.progbar['value'] = 0
@@ -2038,7 +1960,6 @@ class GuiCore(Tk):
                 ff = {}
                 flist = {}
                 for f in filenames:
-#                    print(f)
                     filename = os.path.basename(f)[:-4]
                     lf = sort_key_for_filenames(filename)
                     ff[lf] = filename
@@ -2073,10 +1994,7 @@ class GuiCore(Tk):
             apic_params.extend([str(theParameters)])
             length = int(len(atag.data)/1024 + 0.5)
             theParameters[4] = "b'{}Kb'".format(length)
-            #aresult.extend([str(theParameters)])
         elif k in THE_P:
-#            print("{} >{}<".format(k,THE_P[k]))
-#            theParameters = ast.literal_eval(THE_P[k])
             theParameters = THE_P[k](atag, True)
         else:
             messagebox.showerror(\
@@ -2093,13 +2011,14 @@ class GuiCore(Tk):
             result = ['file', '', filepath]
             apic_params = list()
             for k in self.displayColumns[1:-1]:
+                #list all instances of that tag
                 list_tags = audio.getall(k)
                 aresult = list()
-#                if len(list_tags) > 0:
                 if list_tags:
                     for atag in list_tags:
                         theParameters = \
-                                self._read_mp3_process_atag(atag, k, apic_params, filepath)
+                                self._read_mp3_process_atag(atag, k, \
+                                                        apic_params, filepath)
                         if theParameters != None:
                             aresult.extend([str(theParameters)])
                     result.extend(['|'.join(aresult)])
@@ -2107,8 +2026,6 @@ class GuiCore(Tk):
                     title = os.path.basename(filepath)[:-4]
                     result.extend(['[3, ["{}"]]'.format(title.strip())]\
                                          if k == 'TIT2' else ['-',])
-#                if k in self.template.keys() and len(self.template[k]) > 0 \
-#                                                         and result[-1] == '-':
                 if k in self.template.keys() and self.template[k] \
                                                          and result[-1] == '-':
                     result[-1] = DEFAULT_VALUES['ide3v24'][k].\
@@ -2117,7 +2034,6 @@ class GuiCore(Tk):
             #now add empty string for 'adummy' column
             result.extend(['',])
             #add HIDDEN column to hold full APIC data if present!
-#            if len(apic_params) > 0:
             if apic_params:
                 result.extend(['|'.join(apic_params)])
             for index in range(0, len(self.displayColumns)):
@@ -2168,13 +2084,12 @@ class GuiCore(Tk):
             for k in self.displayColumns[1:-1]:
                 list_tags = audio.getall(k)
                 aresult = list()
-#                if len(list_tags) > 0:
                 if list_tags:
-                    for atag in [list_tags[0],]:
-                        theParameters = self._read_idiot_mp3_process(atag, k, \
+                    atag = list_tags[0]
+                    theParameters = self._read_idiot_mp3_process(atag, k, \
                                                         apic_params, filepath)
-                        if theParameters != None:
-                            aresult.extend([str(theParameters)])
+                    if theParameters != None:
+                        aresult.extend([str(theParameters)])
 
                     result.extend(['|'.join(aresult)])
                 else:
@@ -2186,11 +2101,9 @@ class GuiCore(Tk):
                         result.extend(['-',])
                 if k in self.template.keys() \
                          and self.template[k] and result[-1] == '-':
-#                         and (len(self.template[k]) > 0 and result[-1]) == '-':
                     result[-1] = self.template[k]
             #insert empty string for adummy column
             result.extend(['',])
-#            if len(apic_params) > 0:
             if apic_params:
                 result.extend(['|'.join(apic_params)])
         else: #zero length file No Tags!
@@ -2201,16 +2114,6 @@ class GuiCore(Tk):
             else:
                 result.extend(['#',])
         return result
-
-    def _count_mp3_files_below(self, adir_path):
-        """counts all mp3 files below given dir including subdirs"""
-#        files = glob.glob(adir_path + '/*.mp3')
-        matches = []
-        for root, dirnames, filenames in os.walk(adir_path):
-            for filename in fnmatch.filter(filenames, '*.mp3'):
-                matches.append(os.path.join(root, filename))
-        return(len(matches))
-#        return(len(files))
 
     def _on_add_folder(self):
         """add folder as collection with its dependants to Treeview widget"""
@@ -2247,20 +2150,16 @@ class GuiCore(Tk):
         dir_path = filedialog.askdirectory(initialdir=os.path.expanduser('~'),\
                                         title="Select folder…", mustexist=True)
         if dir_path:
-            self.nos_tracks = self._count_mp3_files_below(dir_path)
+            self.nos_tracks = _count_mp3_files_below(dir_path)
         else:
             self.nos_tracks = 0
         self.progbar['maximum'] = self.nos_tracks
         self.progbar['value'] = 0
-#        if len(glob.glob(dir_path + '/*.mp3')) == 0:
         if not glob.glob(dir_path + '/*.mp3'):
             #dir_path holds no bare MP3 files
             self._add_tree(focus, dir_path, True)
         else:
             #dir_path holds bare mp3 files
-#            if len([child \
-#                    for child in self.tree.get_children(self.project_id) \
-#                    if self.tree.set(focus, 'Type') is 'collection']) == 0:
             if not [child \
                     for child in self.tree.get_children(self.project_id) \
                     if self.tree.set(focus, 'Type') == 'collection']:
@@ -2307,8 +2206,8 @@ class GuiCore(Tk):
 
         #now list all 'mp3' files in this directory (with their full path)
 
-        _ff = {}
-        flist = {}
+        _ff = dict()
+        flist = dict()
         #step through a list of filepaths for all mp3 files in current dir only
         for f_ in [forward_slash_path(afile) \
                    for afile in glob.glob(adir_path + '/*.mp3')]:
@@ -2318,6 +2217,8 @@ class GuiCore(Tk):
 
         for _ll in sorted(_ff):
             f_ = flist[_ff[_ll]]
+            self.status['text'] = LOCALIZED_TEXT[lang]['Unpacking'] + f_
+            self.update()
             somevalues = self._read_idiot_mp3_tags(f_) \
                                         if self.mode.get() == 0 \
                                         else self._read_mp3_tags(f_)
@@ -2336,13 +2237,6 @@ class GuiCore(Tk):
                                 if int(4*self.maxcolumnwidths[v]/5) > 75 \
                                 else 75 \
                                 for v in range(0, len(self.maxcolumnwidths))]
-#            imagetk = None #???
-#            if imagetk is not None:
-#                self.tree.insert(thisdir, index='end', values=somevalues, \
-#                                 open=True, text='file', image=imagetk)
-#            else:
-#                self.tree.insert(thisdir, index='end', values=somevalues, \
-#                                 open=True, text='file')
             self.tree.insert(thisdir, index='end', values=somevalues, \
                                  open=True, text='file')
             self.progbar.step()
@@ -2403,7 +2297,6 @@ class GuiCore(Tk):
     def _on_delete(self):
         """delete the current item selected in Treeview widget"""
         list_of_items = self.tree.selection()
-#        if len(list_of_items) > 0:
         if list_of_items:
             for focus in list_of_items:
                 if self.tree.set(focus, 'Type') != 'project':
@@ -2423,7 +2316,6 @@ class GuiCore(Tk):
     def _on_del_project(self):
         """Delete current project"""
         project = self.ddnCurProject.get()
-#        if len(project) > 0:
         if project:
             if '.prj' not in project:
                 project += '.prj'
@@ -2432,7 +2324,6 @@ class GuiCore(Tk):
                                   for f in os.listdir(self.Pub2SD) \
                                                      if f.endswith('.prj')]
             self.ddnCurProject['values'] = self.list_projects
-#            if len(self.list_projects) > 0:
             if self.list_projects:
                 self.ddnCurProject.set(self.list_projects[0])
             else:
@@ -2471,7 +2362,6 @@ class GuiCore(Tk):
         #                               idiot                  not idiot
         self.smode.attrib['idiot'] = 'True' \
                          if self.mode.get() == 0 else 'False'
-        #print("self.smode.attrib['idiot']=>{}<".format(self.smode.attrib['idiot']))
         self.old_mode['idiot'] = self.smode.attrib['idiot']
         self.smode.attrib['preferred'] = 'False' \
                          if self.preferred.get() == 0 else 'True'
@@ -2482,7 +2372,6 @@ class GuiCore(Tk):
 
         self.stemp.text = self.ddnCurTemplate.get() \
                                 if self.ddnCurTemplate.get() else ''
-#                                if len(self.ddnCurTemplate.get()) > 0 else ''
 
         self.sf4.set('folderList', self.etrList.get())
         self.sf4.attrib['is_copy_playlists_to_top'] = \
@@ -2492,7 +2381,6 @@ class GuiCore(Tk):
         if os.path.exists(fileout):
             os.remove(fileout)
 
-#        if len(fileout) > 0:
         if fileout:
             output = codecs.open(fileout, mode='w', encoding='utf-8')
             self._list_children_of('', self.trout)
@@ -2520,7 +2408,6 @@ class GuiCore(Tk):
         textParams = ast.literal_eval(text)
         #test all frames have same length as text, flag error and return false
         for aFrame in currentFrames:
-#            if len(aFrame) > 0:
             if aFrame:
                 frameParams = ast.literal_eval(aFrame)
                 if len(frameParams) != len(textParams):
@@ -2600,7 +2487,6 @@ class GuiCore(Tk):
             if self.tree.set(child, 'Type') in ['collection', 'project']:
                 self._set_tracks(child, tp0, tp1, trest)
             else:
-#                if len(tp1) > 0:
                 if tp1:
                     newtrack = ['{}/{}'.format(self.next_track, tp1),]
                     for nt in trest:
@@ -2699,7 +2585,6 @@ class GuiCore(Tk):
                                 if self.mode.get() == 0 \
                                 else tempstr[1:])
             else: #is file so…
-#                if len(tp[1]) > 0:
                 if tp[1]:
                     newtrack = ['"{}/{}"'.\
                                 format(self.next_track, tp[1]),]
@@ -2731,7 +2616,6 @@ class GuiCore(Tk):
         if res[0] in ['http', 'https', 'ftp', 'ftps', 'finger', 'news', \
                       'NNTP', 'local'] \
                       and '.' in res[1] and res[2]:
-#                      and '.' in res[1] and len(res[2]) > 0:
             if self.tree.set(focus, 'Type') in ['collection', 'project']:
                 self._set_tag_(focus)
             else: #is file, so...
@@ -2768,7 +2652,6 @@ class GuiCore(Tk):
         #test if right nos parameters for this tag
         #- compare length with HAS_TAG_ON
         list_of_items = self.tree.selection()
-#        focus = list_of_items[0] if len(list_of_items) > 0 else self.project_id
         focus = list_of_items[0] if list_of_items else self.project_id
         if self.mode.get() != 0:
             for test in text.split('|'):
@@ -2798,15 +2681,12 @@ class GuiCore(Tk):
             if self.mode.get() == 0:
                 #idiot mode
                 self.tree.set(focus, column, text)
-#                print('renaming to {}'.format(text))
             else:
                 #advanced mode
                 #[3,[""]]
                 _start = text.find('[', text.find('[') + 1) + 2
                 _end = text.find(']') - 1
                 self.tree.set(focus, column, text[_start:_end])
-#                print('renaming to {}'.format(text[_start:_end]))
-#            self._rename_children_of(self.project_id)
                             
         else:
             self._set_tag_(focus)
@@ -2822,7 +2702,6 @@ class GuiCore(Tk):
         """promote item one level in the heirachy"""
         focus = self.tree.focus()
         father = self.tree.parent(focus)
-#        if len(father) > 0 and father != self.project_id:
         if father and father != self.project_id:
             #not root so promote
             grandfather = self.tree.parent(father)
@@ -2835,7 +2714,6 @@ class GuiCore(Tk):
     def _on_demote(self):
         """demote item one level in the heirachy"""
         list_of_items = self.tree.selection()
-#        if len(list_of_items) > 0 and self.project_id not in list_of_items:
         if list_of_items and self.project_id not in list_of_items:
             focus = list_of_items[0]
             index = self.tree.index(focus)
@@ -2863,7 +2741,6 @@ class GuiCore(Tk):
                 self.tree.detach(focus)
                 self.tree.move(focus, son, 'end')
                 self.tree.see(focus)
-#            if len(father) > 0:
             if father:
                 #is not root so make father of son
                 self.tree.detach(son)
@@ -2884,9 +2761,6 @@ class GuiCore(Tk):
         elif to_strip == TRIM_TAG[lang]["Leading alphanumerics"]:
             prefix = FIND_LEADING_ALPHANUM.findall(title)[0] \
                             if FIND_LEADING_ALPHANUM.findall(title) else ''
-#                            if len(FIND_LEADING_ALPHANUM.findall(title)) > 0 \
-#                            else ''
-#            if len(prefix) > 0:
             if prefix:
                 prefix = prefix.split('_')[0]
                 title = title[len(prefix):]
@@ -2983,7 +2857,6 @@ class GuiCore(Tk):
         list_of_items = self.tree.selection()
         _picture_type = PICTURE_TYPE[self.ddnPictureType.get()]
         _desc = self.etrDescription.get()
-#        if len(list_of_items) > 0:
         if list_of_items:
             fart = filedialog.askopenfilename(\
                         initialdir=os.path.expanduser('~'), \
@@ -2992,7 +2865,6 @@ class GuiCore(Tk):
                           title="Select PNG or JPG file…")
             #now replace windows backslashes with forward slashes
             fart = forward_slash_path(fart)
-#            if len(fart) > 0:
             if fart:
                 for focus in list_of_items:
                     if self.mode.get() == 0:
@@ -3057,7 +2929,6 @@ class GuiCore(Tk):
                 messagebox.showwarning('', \
                         LOCALIZED_TEXT[lang]['MultpleFileIcons'].\
                         format(self.files[child][0]))
-#                break
             else:
                 picture_type_1_2 = True
         _desc = param[3]
@@ -3070,9 +2941,6 @@ class GuiCore(Tk):
             if para[4] in self.hashed_graphics:
                 _data = \
                 self.hashed_graphics[para[4]]
-            else:
-#                break
-                pass
         else:
             _data = open(\
         os.path.normpath(param[4]), 'rb').read()
@@ -3108,30 +2976,10 @@ class GuiCore(Tk):
             for atag in thetags:
                 if atag != '-':
                     # is not empty so add it!
-#                    if self.mode.get() != 0:
-#                        param = ast.literal_eval(atag)
-#                        print(k, 3, param[1])
-                    # if parameters include byte data do I need
-                    # to have explicit command for each? probably!
-                    # Hmm, can break into groups like read_mp3_tag
-                    #so...
                     if k in AUDIO:
                         atuple = (audio, atag, (self.mode.get() != 0), \
                                   list_owners, lang, self.files[child][0])
                         AUDIO[k](atuple)
-#                    if k in TF_TAGS:
-#                        exec('audio.add({}(3,"{}"))'.format(k, atag) \
-#                                        if self.mode.get() == 0 \
-#                                            else 'audio.add({}({}))'.\
-#                                                format(k, str(param)[1:-1]))
-#                    elif k in ['WCOM', 'WCOP', 'WOAF', 'WOAR', 'WOAS', \
-#                               'WORS', 'WPAY', 'WPUB']: #url frame
-#                        exec('audio.add({}("{}"))'.format(k, atag) \
-#                                        if self.mode.get() == 0 \
-#                                                else 'audio.add({}({}))'.\
-#                                                        format(k, str(param)))
-#                    elif k in PF:
-#                        exec(PF[k])
                     else:
                         messagebox.showerror(\
                                              'Error in on_prepare_files()', \
@@ -3204,7 +3052,6 @@ class GuiCore(Tk):
         self.progbar['value'] = 0
         self.progbar.start()
         for atarget in self.output_to:
-#            if len(atarget) > 0:
             if atarget:
                 if os.path.exists(atarget):
                     target = atarget
@@ -3290,7 +3137,6 @@ class GuiCore(Tk):
                 LOCALIZED_TEXT[lang]["Needed {}Mb, but only {}Mb available"].\
                               format(needed, free))
             return
-        #os.makedirs(tp, mode=0o777, exist_ok=True)
         self.status['text'] = \
                    LOCALIZED_TEXT[lang]['Making project directories...']
         self.update()
@@ -3357,7 +3203,6 @@ class GuiCore(Tk):
                 self.update()
         #now in list
         for tt in self.play_list_targets:
-#            if len(tt) > 0:
             if tt:
                 os.makedirs(target + tt, mode=0o777, exist_ok=True)
                 for pp in playlists:
@@ -3430,8 +3275,6 @@ class GuiCore(Tk):
         self.status['text'] = LOCALIZED_TEXT[lang]['Creating playlists...']
         self.progbar['value'] = 0
         self.update()
-        #list_children split list into file_children and coll_children
-        # for each coll child
         project_path_ = '../{}/'.format(self.project)
         project_file_list = list()
         self._create_play_list(self.project_id, project_path_, \
@@ -3647,7 +3490,6 @@ class GuiCore(Tk):
         self.btnPub2HD['text'] = \
             LOCALIZED_TEXT[lang]["Publish to '~\\Pub2SD\\{}_SD'"].\
                           format(project if project else "<project>")
-#                          format(project if len(project) > 0 else "<project>")
         self.n.tab(self.f0, text=LOCALIZED_TEXT[lang]['Project name'])
         self.n.tab(self.f1, \
                    text=LOCALIZED_TEXT[lang]['Commonly used MP3 tags'])
@@ -3699,28 +3541,18 @@ class GuiCore(Tk):
         """normalize strings to avoid unicode character which won't display
            correctly or whose use in filenames may crash filesystem"""
         l = list()
-        #print(self.pref)
         if self.preferred.get() != 1:
             self.pref = list()
         #fix eng/Eng 'bug' in unidecode
-#        if ['ŋ', 'ng', re.compile('ŋ')] not in self.pref:
         if 'ŋ' not in [v[0] for v in self.pref]:
             self.pref.append(['ŋ', 'ng', re.compile('ŋ')])
-#        if ['Ŋ', 'Ng', re.compile('Ŋ')] not in self.pref:
         if 'Ŋ' not in [v[0] for v in self.pref]:
             self.pref.append(['Ŋ', 'Ng', re.compile('Ŋ')])
- #        if self.preferred.get() == 1:
-#            #scan list of preffered character/string pairs
-#            for kv in self.pref:# in range(0,len(text)):
-#                #build list of all hits in text
-#                l.extend([[m.start(), len(kv[0]), kv[1]] \
-#                           for m in kv[2].finditer(text)])
         #scan list of preffered character/string pairs
         for kv in self.pref:# in range(0,len(text)):
             #build list of all hits in text
             l.extend([[m.start(), len(kv[0]), kv[1]] \
                        for m in kv[2].finditer(text)])
-#        if len(l) > 0:
         if l:
             #now sort list of hits into sequence order
             l = sorted(l, key=lambda student: student[0])
@@ -3743,6 +3575,14 @@ class GuiCore(Tk):
             return ''.join([c if c.isalnum() or c in self.pref_char else '_' \
                             for c in unidecode(text)])
 
+def _count_mp3_files_below(adir_path):
+    """counts all mp3 files below given dir including subdirs"""
+    matches = []
+    for root, dirnames, filenames in os.walk(adir_path):
+        for filename in fnmatch.filter(filenames, '*.mp3'):
+            matches.append(os.path.join(root, filename))
+    return(len(matches))
+
 def sort_key_for_filenames(filename):
     """build the sort key for imported file names, attempting to guess
        which order is implied by various numbering schemes
@@ -3753,13 +3593,8 @@ def sort_key_for_filenames(filename):
         digits = FIND_LEADING_DIGITS.findall(filename)[0]
         postfix = FIND_TRAILING_DIGITS.findall(filename)[0] \
                         if FIND_TRAILING_DIGITS.findall(filename) else ''
-#                             if len(FIND_TRAILING_DIGITS.findall(filename)) \
-#                                  else ''
         name = filename[len(digits):len(postfix)] \
                         if postfix else filename[len(digits):]
-#                            if len(postfix) > 0 else filename[len(digits):]
-        #print('\t>{}<,>{}<,>{}<'.format(digits, name, postfix))
-#            if len(postfix) == 0:
         if not postfix:
             lf = "{:05d}{}".format(int(digits), name)
         else:
@@ -3767,35 +3602,23 @@ def sort_key_for_filenames(filename):
     elif filename[0].isalpha():
         word = FIND_LEADING_ALPHANUM.findall(filename)[0] \
                     if FIND_LEADING_ALPHANUM.findall(filename) else ''
-#                        if len(FIND_LEADING_ALPHANUM.findall(filename)) > 0 \
-#                        else ''
         word = word.split('_')[0]
         #grab trailing digits in word[0]
         digits = FIND_TRAILING_DIGITS.findall(word)[0] \
                         if FIND_TRAILING_DIGITS.findall(word) else ''
-#                            if len(FIND_TRAILING_DIGITS.findall(word)) > 0 \
-#                            else ''
-#            prefix = word[:-len(digits)] if len(digits) > 0 else word
         prefix = word[:-len(digits)] if digits else word
         postfix = FIND_TRAILING_DIGITS.findall(filename)[0] \
                     if FIND_TRAILING_DIGITS.findall(filename) else ''
-#                        if len(FIND_TRAILING_DIGITS.findall(filename)) > 0 \
-#                        else ''
-#            name = filename[len(word):-len(postfix)] if len(postfix) > 0 \
         name = filename[len(word):-len(postfix)] if postfix \
                                                else filename[len(word):]
-#            if len(digits) > 0:
         if digits:
             lf = "{}{:05d}{}{:05d}".format(prefix, int(digits), name, \
                                                           int(postfix)) \
                       if postfix \
                         else "{}{:05d}{}".format(prefix, int(digits), name)
-#                          if len(postfix) > 0 \
-#                            else "{}{:05d}{}".format(prefix, int(digits), name)
         else:
             lf = "{}{}{:05d}".format(prefix, name, int(postfix)) \
                   if postfix else "{}{}".format(prefix, name)
-#                      if len(postfix) > 0 else "{}{}".format(prefix, name)
     else:
         #only get here if filename starts with non alphanum '_' etc...
         lf = filename
