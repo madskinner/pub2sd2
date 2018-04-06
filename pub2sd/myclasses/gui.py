@@ -1011,6 +1011,46 @@ class GuiCore(Tk):
             prefchar.insert(9999.9999, text)
             fin.close()
 
+    def _set_tabs(self, astate="normal"):
+        #mo
+        self.btnImportContents["state"] = astate
+        self.btnImportHierarchy["state"] = astate
+        self.btnMoveUpM0["state"] = astate
+        self.btnMoveDownM0["state"] = astate
+        self.btnTrimTitle["state"] = astate
+        self.btnF3M0Next["state"] = astate
+        #m1
+        self.btnDeleteItem["state"] = astate
+        self.btnF3M1Next["state"] = astate
+        #m2
+        self.btnGet["state"] = astate
+        self.btnSet["state"] = astate
+        self.btnGetDefault["state"] =astate
+        self.btnSelectArtwork["state"] = astate
+        self.btnF3M2Next["state"] = astate
+
+        if self.mode.get() != 0:
+            #Advanced mode
+            #m0
+            self.btnAddCollection["state"] = astate
+            self.btnAddFiles["state"] = astate
+            #m1
+            self.btnPromote["state"] = astate
+            self.btnDemote["state"] = astate
+            self.btnMoveUp["state"] = astate
+            self.btnMoveDown["state"] = astate
+            #m2
+        self.btnImportContents.focus_set()
+
+        self.update()
+        
+    def _enable_tabs(self):
+        self._set_tabs("normal")
+
+            
+    def _disable_tabs(self):
+        self._set_tabs("disable")
+            
     def _on_SavePref(self, _lang='en-US', _fileout='', _text=""):
         """save your list of preferred character pairs to a utf-8 coded 
         .csv file. If _fileout is supplied the filedialog
@@ -1862,12 +1902,16 @@ class GuiCore(Tk):
         """add a collection to treeview widget at the current focus"""
         focus = self.tree.focus()
 
+        self._disable_tabs()
+
         vout = ['collection', '-', '-']
         vout.extend(['-' for item in self.displayColumns[2:-1]])
         focus = self.tree.insert(focus if focus else self.project_id, \
                                  index='end', values=vout, open=True, \
                                  text='empty collection')
         self._rename_children_of(self.project_id)
+        self._enable_tabs()
+
         self.tree.see(focus)
         self.update()
 
@@ -1921,7 +1965,7 @@ class GuiCore(Tk):
                     #fetch location, trim off path and '.mp3' extension,
                     #transliterate unicode(utf-8) to 7-bit ascii or Latin-1?
                     title = self._my_unidecode(os.path.basename(\
-                                            self.tree.set(child, 'Location')))
+                                            self.tree.set(child, 'Location')[:-4]))
                     #transliterate unicode(utf-8) to 7-bit ascii or Latin-1?
                     #replace spaces and punctuation  - done in my_unidecode
                     self.tree.set(child, 'Name', ancestor_name + my_str)
@@ -1956,6 +2000,7 @@ class GuiCore(Tk):
                 filenames = full_path
                 self.progbar['maximum'] = len(filenames)
                 self.progbar['value'] = 0
+                self._disable_tabs()
 
                 ff = {}
                 flist = {}
@@ -1973,10 +2018,12 @@ class GuiCore(Tk):
                                                     else self._read_mp3_tags(f)
                     self.tree.insert(focus, index='end', values=somevalues, \
                             open=True, text='file')
+
                     self.progbar.step()
                     self.update()
 
         self._rename_children_of(self.project_id)
+        self._enable_tabs()
         self.tree.see(focus)
         self.update()
 
@@ -2076,13 +2123,13 @@ class GuiCore(Tk):
 
     def _read_idiot_mp3_tags(self, filepath):
         """read the mp3 tags of file in idiot mode"""
-
         if os.path.getsize(filepath) > 0:
             audio = ID3(filepath)
             result = ['file', '', filepath]
             apic_params = list()
             for k in self.displayColumns[1:-1]:
                 list_tags = audio.getall(k)
+                #print(k, len(list_tags))
                 aresult = list()
                 if list_tags:
                     atag = list_tags[0]
@@ -2129,12 +2176,14 @@ class GuiCore(Tk):
         self._count_files_below(focus)
         self.progbar['maximum'] = self.nos_tracks
         self.progbar['value'] = 0
+        self._disable_tabs()
         self._add_tree(focus, dir_path, False)
         #now set column widths using self.maxcolumnwidths?
         self.tree.see(focus)
         self._rename_children_of(self.project_id)
 
-        self.status['text'] = ''
+        self._enable_tabs()
+        self.status['text'] = LOCALIZED_TEXT[lang]["Unpacking complete."]
         self.progbar['value'] = 0
         self.update()
 
@@ -2157,6 +2206,7 @@ class GuiCore(Tk):
         self.progbar['value'] = 0
         if not glob.glob(dir_path + '/*.mp3'):
             #dir_path holds no bare MP3 files
+            self._disable_tabs()
             self._add_tree(focus, dir_path, True)
         else:
             #dir_path holds bare mp3 files
@@ -2177,11 +2227,14 @@ class GuiCore(Tk):
                         LOCALIZED_TEXT[lang]["Add the Contents of Folder"], \
                         LOCALIZED_TEXT[lang]['bareMP3selectCreateCollection'])
                 else:
+                    self._disable_tabs()
                     self._add_tree(focus, dir_path, True)
         #now set column widths using self.maxcolumnwidths?
         self.tree.see(focus)
         self._rename_children_of(self.project_id)
-        self.status['text'] = ''
+
+        self._enable_tabs()
+        self.status['text'] = LOCALIZED_TEXT[lang]["Unpacking complete."]
         self.progbar['value'] = 0
         self.update()
 

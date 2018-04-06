@@ -559,6 +559,7 @@ LOCALIZED_TEXT = { \
             'MultpleFileIcons':"Icônes de fichiers multiples dans la balise APIC, seul le premier sera écrit à {}", \
             "Get default":"Get default", \
             "Only the first frame with this owner will be written to {}":"Only the first frame with this owner will be written to {}.", \
+            "Unpacking complete.":"Unpacking completed.", \
             }, \
         'fr-FR':{ \
             'Copying all source files to a working directory...':"Copiando todos os arquivos de origem para um diretório de trabalho ...",\
@@ -780,6 +781,7 @@ LOCALIZED_TEXT = { \
             'MultpleFileIcons':"Plusieurs icônes de fichier dans la tag APIC, seul le premier sera écrit sur {}", \
             "Get default":"Obtenir un défaut", \
             "Only the first frame with this owner will be written to {}":"Seul le premier cadre avec ce propriétaire sera écrit sur {}.", \
+            "Unpacking complete.":"Déballage terminé.", \
             }, \
         'pt-PT':{ \
             'Copying all source files to a working directory...':"Copiando todos os arquivos de origem para um diretório de trabalho ...",\
@@ -1021,6 +1023,7 @@ LOCALIZED_TEXT = { \
             'MultpleFileIcons':"Vários ícones de arquivos na tag APIC, apenas o primeiro será escrito para {}", \
             "Get default":"Obter padrão", \
             "Only the first frame with this owner will be written to {}":"Somente o primeiro quadro com este proprietário será gravado em {}.", \
+            "Unpacking complete.":"Desembalagem concluída.", \
             }
         }
 

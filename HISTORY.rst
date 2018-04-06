@@ -3,6 +3,10 @@
 History
 -------
 
+1.0.4(2018)
+------------------
+'Edit...' tab buttons are disabled while 'Unpacking' is in progress.
+
 1.0.3(2018)
 ------------------
 Statusbar is updated to show the name of each MP3 file being 'unpacked'. Rather than just the folder being 'unpacked', it's marginally slower but gives more feedback to the user.
