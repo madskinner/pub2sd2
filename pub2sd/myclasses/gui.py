@@ -466,7 +466,7 @@ class GuiCore(Tk):
         if t in self.recommendedTags:
             self.tagtree.selection_add(t)
         self.tagtree.see('')
-        self.update()
+        self.update_idletasks()
 
         self.btnDefaultTags = Button(self.f1, \
                                text=LOCALIZED_TEXT[lang]["Set default tags"], \
@@ -1042,7 +1042,7 @@ class GuiCore(Tk):
             #m2
         self.btnImportContents.focus_set()
 
-        self.update()
+        self.update_idletasks()
         
     def _enable_tabs(self):
         self._set_tabs("normal")
@@ -1134,8 +1134,8 @@ class GuiCore(Tk):
         else:
             messagebox.showerror(\
                     LOCALIZED_TEXT[lang]['Template file not found!'], \
-                    LOCALIZED_TEXT[lang]["Can't find {} template, prior \
-                    settings unchanged."].format(self.ddnCurTemplate.get()))
+                    LOCALIZED_TEXT[lang]["Can't find {} template, prior " + \
+                    "settings unchanged."].format(self.ddnCurTemplate.get()))
 
     def _on_read_me(self):
         """calls the appropriate 'help' file from the menubar"""
@@ -1170,6 +1170,7 @@ class GuiCore(Tk):
                                         + self.project)) / (1024.0 * 1024.0)
 
         for i in range(0, 8):
+            self.update_idletasks()
             if (self.cb[i]['state'] == 'normal') \
                                                 and (self.cbv[i].get() == 't'):
                 if needed < self.tlist[i][1]:
@@ -1190,7 +1191,7 @@ class GuiCore(Tk):
                             for t in self.output_to]).split(', , '))
         else:
             pass
-        self.update()
+        self.update_idletasks()
 
     def _on_refresh_drives(self):
         '''Linux not seeing usb/SD drives'''
@@ -1431,7 +1432,7 @@ class GuiCore(Tk):
                 [self.tagtree.selection_add(item) \
                                             for item in self.recommendedTags]
         self.tagtree.see('')
-        self.update()
+        self.update_idletasks()
 
 
         if self.ddnCurProject.get():
@@ -1852,15 +1853,18 @@ class GuiCore(Tk):
         #walk down tree creating filenames
         # and opening them in pairs iid:filename
         temp_path = os.path.normpath(self.Pub2SD + '/Temp/' + self.project)
-        try:
-            delete_folder(temp_path)
-        except:
-            messagebox.showerror(\
-                LOCALIZED_TEXT[lang]['Error in on_click_f4_next()'], \
-                LOCALIZED_TEXT[lang]["Folder <{}> may be in use by another \
-                program. Close all other programs \
-                and try again.".format(temp_path)])
-            return
+        if os.path.isdir(temp_path):
+            self.status['text'] = LOCALIZED_TEXT[lang]['Deleting old temporary folder.']
+            self.update_idletasks()
+            try:
+                delete_folder(temp_path)
+            except:
+                messagebox.showerror(\
+                    LOCALIZED_TEXT[lang]['Error in on_click_f4_next()'], \
+                    LOCALIZED_TEXT[lang]["Folder <{}> may be in use by another \
+                    program. Close all other programs \
+                    and try again.".format(temp_path)])
+                return
         project_path_ = os.path.normpath(self.project)
         # trailling '\\' will be removed
         self._childrens_filenames(self.project_id, temp_path, project_path_)
@@ -1873,10 +1877,10 @@ class GuiCore(Tk):
             return
         self._on_prepare_files()
         self.n.select(4)
-        self.update()
+        self.update_idletasks()
         self._on_generate_playlists()
         self.n.select(4)
-        self.update()
+        self.update_idletasks()
         self.lblOutputSize['text'] = "{:0.1f} MB".format( \
             folder_size(\
     os.path.normpath(self.Pub2SD + '/Temp/' + self.project))/(1024.0 * 1024.0))
@@ -1944,6 +1948,7 @@ class GuiCore(Tk):
 
         nos_digits = (len(str(len(children)))-1) \
                      if my_name == 1 and not my_isalpha else 0
+        self.update_idletasks()
         for child in children:
             the_format = '{0:0' + '{}'.format(nos_digits) + 'd}'
             #bullet proofed in to_aplpha() so not exceed limit of single digit
@@ -1982,6 +1987,7 @@ class GuiCore(Tk):
                                    text="{0}{1}-{2:02d}-{3}".format(prefix, \
                                          ancestor_name, my_num, title))
                 my_num += 1
+            self.update_idletasks()
 
     def _on_add_item(self):
         """ add an item(mp3 file) to the selected collection"""
@@ -2020,7 +2026,7 @@ class GuiCore(Tk):
                             open=True, text='file')
 
                     self.progbar.step()
-                    self.update()
+                    self.update_idletasks()
 
         self._rename_children_of(self.project_id)
         self._enable_tabs()
@@ -2078,6 +2084,7 @@ class GuiCore(Tk):
                     result[-1] = DEFAULT_VALUES['ide3v24'][k].\
                                     replace('[""]', '["{}"]'.\
                                             format(self.template[k]))
+                self.update_idletasks()
             #now add empty string for 'adummy' column
             result.extend(['',])
             #add HIDDEN column to hold full APIC data if present!
@@ -2094,6 +2101,7 @@ class GuiCore(Tk):
                 result.extend(['[3, ["{}"]]'.format(\
                                      os.path.basename(filepath)[:-4])] \
                                      if k == 'TIT2' else ['#',])
+        self.update_idletasks()
         return result
 
     def _read_idiot_mp3_process(self, atag, k, apic_params, filepath):
@@ -2164,13 +2172,14 @@ class GuiCore(Tk):
 
     def _on_add_folder(self):
         """add folder as collection with its dependants to Treeview widget"""
+        lang = self.ddnGuiLanguage.get()
         focus = self.tree.focus()
         if focus == '':
             focus = self.project_id
         dir_path = filedialog.askdirectory(initialdir=os.path.expanduser('~'),\
                                     title="Select folder…", mustexist=True)
         if dir_path:
-            self.nos_tracks = self._count_mp3_files_below(dir_path)
+            self.nos_tracks = count_mp3_files_below(dir_path)
         else:
             self.nos_tracks = 0
         self._count_files_below(focus)
@@ -2199,7 +2208,7 @@ class GuiCore(Tk):
         dir_path = filedialog.askdirectory(initialdir=os.path.expanduser('~'),\
                                         title="Select folder…", mustexist=True)
         if dir_path:
-            self.nos_tracks = _count_mp3_files_below(dir_path)
+            self.nos_tracks = count_mp3_files_below(dir_path)
         else:
             self.nos_tracks = 0
         self.progbar['maximum'] = self.nos_tracks
@@ -2246,7 +2255,7 @@ class GuiCore(Tk):
 
         lang = self.ddnGuiLanguage.get()
         self.status['text'] = LOCALIZED_TEXT[lang]['Unpacking'] + adir_path
-        self.update()
+        self.update_idletasks()
         vout = ['collection', '-', '-']
         if 'TIT2' in self.displayColumns:
             vout.extend([self._my_unidecode(os.path.split(adir_path)[-1]),])
@@ -2271,7 +2280,7 @@ class GuiCore(Tk):
         for _ll in sorted(_ff):
             f_ = flist[_ff[_ll]]
             self.status['text'] = LOCALIZED_TEXT[lang]['Unpacking'] + f_
-            self.update()
+            self.update_idletasks()
             somevalues = self._read_idiot_mp3_tags(f_) \
                                         if self.mode.get() == 0 \
                                         else self._read_mp3_tags(f_)
@@ -2293,7 +2302,7 @@ class GuiCore(Tk):
             self.tree.insert(thisdir, index='end', values=somevalues, \
                                  open=True, text='file')
             self.progbar.step()
-            self.update()
+            self.update_idletasks()
         # recurse through sub-dirs
         for adir in sorted([os.path.normpath(adir_path + '/' + d) \
                             for d in os.listdir(adir_path) \
@@ -2852,7 +2861,7 @@ class GuiCore(Tk):
                         self._stripping(self.tree.set(child, 'TIT2').strip(), \
                                                                    to_strip))
                 self._strip_children_of(child)
-        #self.update()
+        #self.update_idletask()
 
     def _on_strip_leading_numbers(self):
         """applys to_strip to file or a collections dependants"""
@@ -3051,10 +3060,10 @@ class GuiCore(Tk):
         #copy all file to Temp workarea
         self.status['text'] = LOCALIZED_TEXT[lang]['Copying all source ' +\
                                             'files to a working directory...']
-        self.update()
+        self.update_idletasks()
         for child in sorted(self.files.keys()):
             self.status['text'] = self.files[child][1]
-            self.update()
+            self.update_idletasks()
             #   copy            from                  to
             shutil.copyfile(self.files[child][1], self.files[child][0])
             if int(os.path.getsize(self.files[child][1])) > 0:
@@ -3082,10 +3091,10 @@ class GuiCore(Tk):
                 audio_len = MP3(self.files[child][0])
                 self.files[child][4] = int(audio_len.info.length +0.5)
             self.progbar.step()
-            self.update()
+            self.update_idletasks()
         self.progbar['value'] = 0
         self.status['text'] = ''
-        self.update()
+        self.update_idletasks()
 
         #move on to playlists
         self.n.add(self.f2)
@@ -3119,7 +3128,7 @@ class GuiCore(Tk):
                     self.status['text'] = \
                                LOCALIZED_TEXT[lang]['{} Threads active'].\
                            format(threading.activeCount()-currentThreadsActive)
-                    self.update()
+                    self.update_idletasks()
                 else:
                     messagebox.showerror(\
                                         LOCALIZED_TEXT[lang]["Invalid path"], \
@@ -3129,7 +3138,7 @@ class GuiCore(Tk):
         while threading.activeCount() > currentThreadsActive:
             self.status['text'] = LOCALIZED_TEXT[lang]['{} Threads active'].\
                        format(threading.activeCount()-currentThreadsActive)
-            self.update()
+            self.update_idletasks()
         self.progbar.stop()
         [athread.join() for athread in threads]
 
@@ -3148,7 +3157,7 @@ class GuiCore(Tk):
         self.progbar['value'] = 0
         self.status['text'] = \
                    LOCALIZED_TEXT[lang]["Output to HD in progress..."]
-        self.update()
+        self.update_idletasks()
         self._on_publish_files(target)
         self.status['text'] = LOCALIZED_TEXT[lang]["Output to HD completed."]
         self.update()
@@ -3165,7 +3174,7 @@ class GuiCore(Tk):
         lang = self.ddnGuiLanguage.get()
         self.status['text'] = \
                    LOCALIZED_TEXT[lang]['Removing any old project files...']
-        self.update()
+        self.update_idletasks()
         if target[1:] != ':\\' and \
                  os.path.exists(os.path.normpath(target + '/' + self.project)):
             # remove if exists
@@ -3178,7 +3187,7 @@ class GuiCore(Tk):
         #decide if space avaialable on target - abort if not with error message
         self.status['text'] = \
                    LOCALIZED_TEXT[lang]['Calculating needed space...']
-        self.update()
+        self.update_idletasks()
         _, _, free = shutil.disk_usage(os.path.normpath(target))
         needed = folder_size(\
                     os.path.normpath(self.Pub2SD + '/Temp/'+self. project)) / \
@@ -3192,7 +3201,7 @@ class GuiCore(Tk):
             return
         self.status['text'] = \
                    LOCALIZED_TEXT[lang]['Making project directories...']
-        self.update()
+        self.update_idletasks()
         #now open all files at once to make create dates the same
         fileId = {}
         listpaths = []
@@ -3204,44 +3213,48 @@ class GuiCore(Tk):
                 listpaths.extend([final_path])
             #self.status['text'] = final_path
             self.progbar.step()
-            self.update()
+            self.update_idletasks()
         self.status['text'] = LOCALIZED_TEXT[lang]['Opening target files...']
-        self.update()
+        self.update_idletasks()
         for child in self.files:
             fileId[child] = open(target + self.files[child][3], mode='wb')
             self.progbar.step()
-            self.update()
+            self.update_idletasks()
         self.status['text'] = \
                    LOCALIZED_TEXT[lang]['Copying to target files...']
-        self.update()
+        self.update_idletasks()
         for child in self.files:
             filein = open(self.files[child][0], mode='rb')
             fileId[child].write(filein.read())
             filein.close()
             self.progbar.step()
-            self.update()
+            self.update_idletasks()
         self.status['text'] = LOCALIZED_TEXT[lang]['Closing target files...']
-        self.update()
+        self.update_idletasks()
         for child in self.files:
             fileId[child].close()
             self.progbar.step()
-            self.update()
+            self.update_idletasks()
         self._on_copy_playlists(target)
 
     def _on_copy_playlists(self, target):
         """copy playlists to target, at locatons specified in
                                                          play_list_targets"""
+        lang = self.ddnGuiLanguage.get()
         source = os.path.normpath(self.Pub2SD + '/Temp/'+ self.project + '/')
         playlists = [p for p in os.listdir(source) \
                      if p.endswith('.M3U8') or p.endswith('M3U')]
+        self.status['text'] = LOCALIZED_TEXT[lang]['Copying playlists...']
         #main playlists
         for pp in playlists:
             shutil.copyfile(os.path.normpath(source + '/' + pp), \
                             os.path.normpath(target + self.project + '/' + pp))
             self.progbar.step()
-            self.update()
+            self.update_idletasks()
         #now top level?
         if self.is_copy_playlists_to_top.get() == 1:
+            self.status['text'] = LOCALIZED_TEXT[lang]\
+                                        ['Copying playlists to top folder...']
             for pp in playlists:
                 encode = 'utf-8' if pp.endswith('.M3U8') else 'cp1252'
                 fin = codecs.open(os.path.normpath(source + '/'+ pp),\
@@ -3253,16 +3266,18 @@ class GuiCore(Tk):
                 fin.close()
                 fout.close()
                 self.progbar.step()
-                self.update()
+                self.update_idletasks()
         #now in list
         for tt in self.play_list_targets:
             if tt:
+                self.status['text'] = LOCALIZED_TEXT[lang]\
+                                    ['Copying playlists to target folders...']
                 os.makedirs(target + tt, mode=0o777, exist_ok=True)
                 for pp in playlists:
                     shutil.copyfile(os.path.normpath(source + '/' + pp), \
                                     os.path.normpath(target + tt + '/' + pp))
                     self.progbar.step()
-                    self.update()
+                    self.update_idletasks()
 
     def _make_filename(self, child):
         """make mp3 title = filename after appropriate normalization"""
@@ -3274,6 +3289,10 @@ class GuiCore(Tk):
 
     def _childrens_filenames(self, parent, temp_path, project_path_):
         '''form childrens file names'''
+        lang = self.ddnGuiLanguage.get()
+        self.status['text'] = LOCALIZED_TEXT[lang]['Building list of files...']
+        self.update_idletasks()
+
         children = self.tree.get_children(parent)
         for child in children:
             new_dir = self.tree.item(child)['text']
@@ -3306,7 +3325,7 @@ class GuiCore(Tk):
                 self.status['text'] = thispath
                 #now step update progessbar
                 self.progbar.step()
-                self.update()
+                self.update_idletasks()
 
     def _count_nodes(self, parent):
         '''count nodes'''
@@ -3327,14 +3346,14 @@ class GuiCore(Tk):
         self.progbar['value'] = 0
         self.status['text'] = LOCALIZED_TEXT[lang]['Creating playlists...']
         self.progbar['value'] = 0
-        self.update()
+        self.update_idletasks()
         project_path_ = '../{}/'.format(self.project)
         project_file_list = list()
         self._create_play_list(self.project_id, project_path_, \
                                                           project_file_list)
         self.status['text'] = ''
         self.progbar['value'] = 0
-        self.update()
+        self.update_idletasks()
 
     def _create_play_list(self, pid, ploc, glist):
         """create play list
@@ -3343,9 +3362,13 @@ class GuiCore(Tk):
                glist = ancestors list/index to plists
                plistid index to plists which holds all play lists in
                               form [[name, [list/set of targetfilepaths]],]"""
+        lang = self.ddnGuiLanguage.get()
+
         this_list = list() #list for this pid
         self.progbar.step()
-
+        self.status['text'] = LOCALIZED_TEXT[lang]['Creating playlist for {}']\
+                                            .format(self.tree.item(pid)['text'])
+        self.update_idletasks()
         for child in self.tree.get_children(pid):
             if self.tree.set(child, 'Type') in ['collection', 'project']:
                 cloc = ploc + self.tree.item(child)['text'] + '/'
@@ -3628,7 +3651,7 @@ class GuiCore(Tk):
             return ''.join([c if c.isalnum() or c in self.pref_char else '_' \
                             for c in unidecode(text)])
 
-def _count_mp3_files_below(adir_path):
+def count_mp3_files_below(adir_path):
     """counts all mp3 files below given dir including subdirs"""
     matches = []
     for root, dirnames, filenames in os.walk(adir_path):

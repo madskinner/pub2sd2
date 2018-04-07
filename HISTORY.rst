@@ -3,6 +3,10 @@
 History
 -------
 
+1.0.5(2018)
+------------------
+'Updating of main window hardened to improve reliability.'
+
 1.0.4(2018)
 ------------------
 'Edit...' tab buttons are disabled while 'Unpacking' is in progress.

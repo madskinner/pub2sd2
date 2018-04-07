@@ -304,6 +304,12 @@ SET_TAGS = {\
 
 LOCALIZED_TEXT = { \
         'en-US':{ \
+            "Copying playlists...":"Copying playlists...", \
+            "Copying playlists to top folder...":"Copying playlists to top folder...", \
+            "Copying playlists to target folders...":"Copying playlists to target folders...", \
+            "Creating playlist for {}":"Creating playlist for {}", \
+            "Building list of files...":"Building list of files...", \
+            'Deleting old temporary folder.':'Deleting old temporary folder.', \
             'Copying all source files to a working directory...':\
                         "Copying all source files to a working directory...",\
             'Gb':'Gb', \
@@ -562,6 +568,12 @@ LOCALIZED_TEXT = { \
             "Unpacking complete.":"Unpacking completed.", \
             }, \
         'fr-FR':{ \
+            "Copying playlists...":"Copier des playlists ...", \
+            "Copying playlists to top folder...":"Copier des playlists dans le dossier supérieur ...", \
+            "Copying playlists to target folders...":"Copier des playlists dans des dossiers cibles ...", \
+            "Creating playlist for {}":"Créer une playlist pour {}", \
+            "Building list of files...":"Construire la liste des fichiers ...", \
+            'Deleting old temporary folder.':"Suppression de l'ancien dossier temporaire.", \
             'Copying all source files to a working directory...':"Copiando todos os arquivos de origem para um diretório de trabalho ...",\
             'Gb':'Go', \
             'Mb':'Mo', \
@@ -784,6 +796,12 @@ LOCALIZED_TEXT = { \
             "Unpacking complete.":"Déballage terminé.", \
             }, \
         'pt-PT':{ \
+            "Copying playlists...":"Copiando playlists ...", \
+            "Copying playlists to top folder...":"Copiando playlists para a pasta principal ...", \
+            "Copying playlists to target folders...":"Copiando playlists para pastas de destino ...", \
+            "Creating playlist for {}":"Criando playlist para {}", \
+            "Building list of files...":"Criando lista de arquivos ...", \
+            'Deleting old temporary folder.':'Excluindo pasta temporária antiga.', \
             'Copying all source files to a working directory...':"Copiando todos os arquivos de origem para um diretório de trabalho ...",\
             'Gb':'Gb', \
             'Mb':'Mb', \
