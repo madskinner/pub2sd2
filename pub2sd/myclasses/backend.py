@@ -238,6 +238,7 @@ class Backend(threading.Thread):
 
         #finally copy all file to final destination):
 #        lang = self.ddnGuiLanguage.get()
+        self.qr.put(('PROGMAX', len(self.files) * 4))
         self.qr.put(('STATUS', 'Removing any old project files...'))
 #        self.status['text'] = \
 #                   LOCALIZED_TEXT[lang]['Removing any old project files...']
@@ -1258,12 +1259,12 @@ class Backend(threading.Thread):
         for atag in thetags:
             if atag != '-' and atag != '#':
                 # is not empty so add it!
-                if self.mode == 0:
-                    _encoding, _mime, _type, _desc, _data = \
-                        self._preparing_file_scaning_for_tags_idiot_mode(\
-                                                    atag, child)
-                else:
-                    _encoding, _mime, _type, _desc, _data = \
+#                if self.mode == 0:
+#                    _encoding, _mime, _type, _desc, _data = \
+#                        self._preparing_file_scaning_for_tags_idiot_mode(\
+#                                                    atag, child)
+#                else:
+                _encoding, _mime, _type, _desc, _data = \
                        self._preparing_file_scaning_for_tags_advanced_mode(\
                             atag, child, picture_type_1_2, thetags)
                 audio.add(APIC(_encoding, _mime, _type, \
@@ -1273,7 +1274,7 @@ class Backend(threading.Thread):
         """process tag for on_prepare_files"""
 
         if k == "APIC":
-            print('in _preparing_file_scaning_for_tags APIC ={}'.format(child.attrib[k]))
+#            print('in _preparing_file_scaning_for_tags APIC ={}'.format(child.attrib[k]))
             self._p_f_s_f_t_process_apic(child, audio, thetags)
         else:
             list_owners = list()
@@ -1500,23 +1501,38 @@ class Backend(threading.Thread):
         self.qr.put(('UNLOCKGUI', None))
     
     def _on_demote(self, focus):
-        """demote one level in the hierachy"""
+        """demote one level in the hierachy, \
+        requires that there be a collection under parent but below child"""
         self.qr.put(('LOCKGUI', None))
         e_child = self.trout.find(".//" + focus)
         found = False
         if etree.iselement(e_child):
-            e_parent = e_child.getparent()
-            child_index = e_parent.index(e_child)
-            if child_index < len(list(e_parent[:-1])):
-                children = e_parent.getchildren()
-                for a_child in children[child_index + 1:]:
-                    if a_child.attrib['Type'] is 'collection':
-                        a_child.append(e_child)
-                        found = True
-                        break
-                if not found:
-                    #error message or insert collection and put e_child in it
-                    pass
+            if e_child.attrib['Type'] is 'project':
+                self.qr.put(('MESSAGEBOXSHOWERRORIN', \
+                             ("Can't demote", "Can't demote project.")))
+            else:
+                e_parent = e_child.getparent()
+                if etree.iselement(e_parent):
+                    child_index = e_parent.index(e_child)
+                    if child_index < len(list(e_parent[:-1])):
+                        children = e_parent.getchildren()
+                        for a_child in children[child_index + 1:]:
+                            if a_child.attrib['Type'] is 'collection':
+                                a_child.append(e_child)
+                                found = True
+                                break
+                    if not found:
+                        #cant find collection below child
+                        self.qr.put(('MESSAGEBOXSHOWERRORIN', \
+                                 ("Can't demote", \
+                                  "Can't find collection below child.")))
+                else:
+                    #cant find parent
+                    self.qr.put(('MESSAGEBOXSHOWERRORIN', \
+                             ("Can't demote", "Can't find parent.")))
+        else:
+            self.qr.put(('MESSAGEBOXSHOWERRORIN', \
+                         ("Can't demote", "Can't find child.")))
         self._on_reload_tree()
         self.qr.put(('UNLOCKGUI', None))
     
@@ -1525,17 +1541,47 @@ class Backend(threading.Thread):
         self.qr.put(('LOCKGUI', None))
         e_child = self.trout.find(".//" + focus)
         if etree.iselement(e_child):
+#            print('child is {}'.format(e_child.tag))
             e_parent = e_child.getparent()
             if etree.iselement(e_parent):
+#                print('parent is {}'.format(e_parent.tag))
                 e_grandparent = e_parent.getparent()
                 if etree.iselement(e_grandparent):
-                    if e_grandparent.attrib['Type'] is 'collection':
+#                    print('grandparent is {}'.format(e_grandparent.tag))
+                    if self._is_promotable(e_grandparent.attrib['Type'],  \
+                                           e_parent.attrib['Type'], \
+                                           e_child.attrib['Type']):
                         e_grandparent.append(e_child)
+                        self._on_reload_tree()
                     else:
                         #error message
-                        pass
-        self._on_reload_tree()
+                        self.qr.put(('MESSAGEBOXSHOWERRORIN', \
+                                     ("Can't promote", \
+                                      "Can't place file directly under project.")))
+                else:
+                    self.qr.put(('MESSAGEBOXSHOWERRORIN', \
+                                 ("Can't promote", "Can't find grandparent.")))
+            else:
+                self.qr.put(('MESSAGEBOXSHOWERRORIN', \
+                             ("Can't promote", "Can't find parent.")))
+        else:
+            self.qr.put(('MESSAGEBOXSHOWERRORIN', \
+                         ("Can't promote", "Can't find child.")))
+                    
         self.qr.put(('UNLOCKGUI', None))
+
+    def _is_promotable(self,gp,p,c):
+        if (gp in ['project', 'collection']) and \
+                    (p in ['collection',]) and \
+                    (c in ['collection',]):
+            return True
+        elif (gp in ['collection',]) and \
+                    (p in ['collection']) and \
+                    (c in ['collection','file']):
+            return True
+        else:
+            return False
+            
 
     def _on_load_tree_from_trout(self):
         self.qr.put(('HASHEDGRAPHICS', self.hashed_graphics))

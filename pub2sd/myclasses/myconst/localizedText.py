@@ -304,6 +304,13 @@ SET_TAGS = {\
 
 LOCALIZED_TEXT = { \
         'en-US':{ \
+            "Can't promote.":"Can't promote.", \
+            "Can't demote.":"Can't demote.", \
+            "Can't find child.":"Can't find child.", \
+            "Can't find parent.":"Can't find parent.", \
+            "Can't find grandparent.":"Can't find grandparent.", \
+            "Can't place file directly under project.":"Can't place file directly under project.", \
+            "Can't find collection below child.":"Can't find collection below child.", \
             "Files prepared.":"Files prepared.", \
             "Please select a collection.":"Please select a collection.", \
             "Renaming nodes...":"Renaming nodes...", \
@@ -573,6 +580,13 @@ LOCALIZED_TEXT = { \
             "Preparing =>{}":"Preparing =>{}", \
             }, \
         'fr-FR':{ \
+            "Can't promote.":"Je ne peux pas promouvoir.", \
+            "Can't demote.":"Je ne peux pas rétrograder.", \
+            "Can't find child.":"Impossible de trouver l'enfant.", \
+            "Can't find parent.":"Impossible de trouver le parent.", \
+            "Can't find grandparent.":"Impossible de trouver le grand-père.", \
+            "Can't place file directly under project.":"Impossible de placer le fichier directement sous le projet.", \
+            "Can't find collection below child.":"Impossible de trouver la collection ci-dessous enfant.", \
             "Files prepared.":"Fichiers préparés.", \
             "Preparing =>{}":"En train de préparer =>{}", \
             "Please select a collection.":"Veuillez sélectionner une collection.", \
@@ -806,6 +820,13 @@ LOCALIZED_TEXT = { \
             "Unpacking complete.":"Déballage terminé.", \
             }, \
         'pt-PT':{ \
+            "Can't promote.":"Não pode promover.", \
+            "Can't demote.":"Não pode rebaixar.", \
+            "Can't find child.":"Não consegue encontrar criança.", \
+            "Can't find parent.":"Não é possível encontrar pai.", \
+            "Can't find grandparent.":"Não consigo encontrar o avô.", \
+            "Can't place file directly under project.":"Não é possível colocar o arquivo diretamente no projeto.", \
+            "Can't find collection below child.":"Não é possível encontrar a coleção abaixo do filho.", \
             "Files prepared.":"Arquivos preparados.", \
             "Preparing =>{}":"Preparando =>{}", \
             "Please select a collection.":"Por favor, selecione uma coleção.", \

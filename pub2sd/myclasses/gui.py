@@ -1237,16 +1237,21 @@ class GuiCore(Tk):
                   if len(_fileout) == 0 else _fileout
         if len(fileout) != 0: 
             text = self.txtPrefChar.get(0.0, 9999.9999).strip() \
-                        if len(_text) == 0 else _text
+                        if not _text else _text
+#            print(text)
             text = ' '.join(text.split('\n'))
             text = ' '.join(text.split('\r'))
             text = ' '.join(text.split('\f'))
             if ',' in text:
-                pairs = [p.strip for p in text.split(',')]
+                pairs = [p.strip() for p in text.split(',')]
+#                print(pairs)
+                astr = ', '.join(pairs)
+            elif text:
+                astr = text
             else:
-                pairs = [text,]
+                astr = ' '
             fout = codecs.open(fileout, mode='w', encoding='utf-8')
-            fout.write(', '.join(pairs))
+            fout.write(astr)
             fout.close()
 
     def _on_save_project(self):
@@ -1994,10 +1999,10 @@ class GuiCore(Tk):
         target = os.path.normpath(self.Pub2SD + '/' + \
                                   self.ddnCurProject.get() + '_SD')
         
-        self.progbar['maximum'] = len(self.files)*4
-        self.progbar['value'] = 0
-        self.status['text'] = \
-                   LOCALIZED_TEXT[lang]["Output to HD in progress..."]
+#        self.progbar['maximum'] = len(self.files)*4
+#        self.progbar['value'] = 0
+#        self.status['text'] = \
+#                   LOCALIZED_TEXT[lang]["Output to HD in progress..."]
         self.update_idletasks()
         qcommand.put(('PUBLISHFILES', target))
         self.status['text'] = LOCALIZED_TEXT[lang]["Output to HD completed."]
