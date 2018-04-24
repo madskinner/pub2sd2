@@ -304,9 +304,7 @@ SET_TAGS = {\
 
 LOCALIZED_TEXT = { \
         'en-US':{ \
-            "Files prepared.":"Files prepared.", \
-            "Please select a collection.":"Please select a collection.", \
-            "Renaming nodes...":"Renaming nodes...", \
+            "Renaming files...":"Renaming files...", \
             "Copying playlists...":"Copying playlists...", \
             "Copying playlists to top folder...":"Copying playlists to top folder...", \
             "Copying playlists to target folders...":"Copying playlists to target folders...", \
@@ -399,7 +397,7 @@ LOCALIZED_TEXT = { \
                                 "However with existing projects this may add additional tags, " + \
                                 "but will not remove any tags.", \
             'UseTemplate>':"Select template:", \
-            'CreateTemplate':"Save as template", \
+            'CreateTemplate':"Save template", \
             'Or':"Or", \
             'Mode>':"Mode: ", \
             'Confirm Upgrade?':'Confirm Upgrade?', \
@@ -493,7 +491,6 @@ LOCALIZED_TEXT = { \
             'No ID3 tags found in':'No ID3 tags found in', \
             "so it's not a valid MP3 file.":"so it's not a valid MP3 file.", \
             'Unpacking':'Unpacking => ', \
-            'Unpacking{}':'Unpacking => {}', \
             'dropdown5_ttp':'Select leading characters to be trimed from the Title. ' + \
                         "In addition leading '-', '_' and whitespace will always be removed.", \
             'labelf1':'By default these tags are selected for display. ' + \
@@ -570,13 +567,9 @@ LOCALIZED_TEXT = { \
             "Get default":"Get default", \
             "Only the first frame with this owner will be written to {}":"Only the first frame with this owner will be written to {}.", \
             "Unpacking complete.":"Unpacking completed.", \
-            "Preparing =>{}":"Preparing =>{}", \
             }, \
         'fr-FR':{ \
-            "Files prepared.":"Fichiers préparés.", \
-            "Preparing =>{}":"En train de préparer =>{}", \
-            "Please select a collection.":"Veuillez sélectionner une collection.", \
-            "Renaming nodes...":"Renommer des nœuds ...", \
+            "Renaming files...":"Renommer des fichiers ...", \
             "Copying playlists...":"Copier des playlists ...", \
             "Copying playlists to top folder...":"Copier des playlists dans le dossier supérieur ...", \
             "Copying playlists to target folders...":"Copier des playlists dans des dossiers cibles ...", \
@@ -644,7 +637,7 @@ LOCALIZED_TEXT = { \
             "Can't find {} template, prior settings unchanged.":"Impossible de trouver le modèle {}, les paramètres précédents inchangés.", \
             'CurTemplate_ttp':"Un modèle spécifie une liste de tags qui seront sélectionnées pour l'affichage et la modification. Avec de nouveaux projets, cela sélectionne les tags par défaut à utiliser. Cependant, avec les projets existants, cela peut ajouter des tags supplémentaires, mais ne supprime pas les tags.", \
             'UseTemplate>':"Sélectionnez le modèle:", \
-            'CreateTemplate':"Enregistrer en tant que modèle", \
+            'CreateTemplate':"Enregistrer le modèle", \
             'Or':"Ou", \
             'Mode>':"Mode: ", \
             'Confirm Upgrade?':'Confirmer la mise à jour??', \
@@ -739,7 +732,6 @@ LOCALIZED_TEXT = { \
             'No ID3 tags found in':'Aucune étiquette ID3 trouvée dans', \
             "so it's not a valid MP3 file.":"donc ce n'est pas un fichier MP3 valide.", \
             'Unpacking':'Déballage => ', \
-            'Unpacking{}':'Déballage => {}', \
             'dropdown5_ttp':'Sélectionnez les caractères initiaux à découper dans le titre.\n' + \
                         "En outre, les caractères initiaux '-', '_' et les espaces blancs seront toujours supprimés.", \
             'Get':'Obtenir', \
@@ -806,10 +798,7 @@ LOCALIZED_TEXT = { \
             "Unpacking complete.":"Déballage terminé.", \
             }, \
         'pt-PT':{ \
-            "Files prepared.":"Arquivos preparados.", \
-            "Preparing =>{}":"Preparando =>{}", \
-            "Please select a collection.":"Por favor, selecione uma coleção.", \
-            "Renaming nodes...":"Renomeando nós ...", \
+            "Renaming files...":"Renomeando arquivos ...", \
             "Copying playlists...":"Copiando playlists ...", \
             "Copying playlists to top folder...":"Copiando playlists para a pasta principal ...", \
             "Copying playlists to target folders...":"Copiando playlists para pastas de destino ...", \
@@ -880,7 +869,7 @@ LOCALIZED_TEXT = { \
                                 "No entanto, com projetos existentes, isso pode adicionar tags adicionais, " + \
                                 "mas não removerá quaisquer tags.", \
             'UseTemplate>':"Selecionar modelo:", \
-            'CreateTemplate':"Guardar como modelo", \
+            'CreateTemplate':"Salvar modelo", \
             'Or':"Ou", \
             'Mode>':"Modo: ", \
             'Confirm Upgrade?':'Confirmar atualização?', \
@@ -978,7 +967,6 @@ LOCALIZED_TEXT = { \
             'No ID3 tags found in':'Nenhuma tag ID3 encontrada em', \
             "so it's not a valid MP3 file.":"Por isso não é um arquivo MP3 v¡lido.", \
             'Unpacking':'Desembalando => ', \
-            'Unpacking{}':'Desembalando => {}', \
             'dropdown5_ttp':'Selecione os caracteres iniciais a serem aparados a partir do título.\n' + \
                         "Além disso, os caracteres iniciais '-', '_' e espaços em branco serão sempre removidos.", \
             'Get':'Obter', \

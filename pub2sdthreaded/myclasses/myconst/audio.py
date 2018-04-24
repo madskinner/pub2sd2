@@ -24,7 +24,7 @@ from .localizedText import LOCALIZED_TEXT
 
 #RVA2, PRIV not implemented?
 def _audio_mvnm(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(MVNM(3, param[1]))
@@ -32,7 +32,7 @@ def _audio_mvnm(atuple):
         audio.add(MVNM(3, atag))
 
 def _audio_talb(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TALB(3, param[1]))
@@ -40,7 +40,7 @@ def _audio_talb(atuple):
         audio.add(TALB(3, atag))
 
 def _audio_tcom(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TCOM(3, param[1]))
@@ -48,7 +48,7 @@ def _audio_tcom(atuple):
         audio.add(TCOM(3, atag))
 
 def _audio_tcon(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TCON(3, param[1]))
@@ -56,7 +56,7 @@ def _audio_tcon(atuple):
         audio.add(TCON(3, atag))
 
 def _audio_tcop(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TCOP(3, param[1]))
@@ -64,7 +64,7 @@ def _audio_tcop(atuple):
         audio.add(TCOP(3, atag))
 
 def _audio_tcmp(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TCMP(3, param[1]))
@@ -72,7 +72,7 @@ def _audio_tcmp(atuple):
         audio.add(TCMP(3, atag))
 
 def _audio_tdat(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TDAT(3, param[1]))
@@ -80,7 +80,7 @@ def _audio_tdat(atuple):
         audio.add(TDAT(3, atag))
 
 def _audio_tden(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TDEN(3, param[1]))
@@ -88,7 +88,7 @@ def _audio_tden(atuple):
         audio.add(TDEN(3, atag))
 
 def _audio_tdes(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TDES(3, param[1]))
@@ -96,7 +96,7 @@ def _audio_tdes(atuple):
         audio.add(TDES(3, atag))
 
 def _audio_tkwd(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TKWD(3, param[1]))
@@ -104,7 +104,7 @@ def _audio_tkwd(atuple):
         audio.add(TKWD(3, atag))
 
 def _audio_tcat(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TCAT(3, param[1]))
@@ -112,7 +112,7 @@ def _audio_tcat(atuple):
         audio.add(TCAT(3, atag))
 
 def _audio_tdly(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TDLY(3, param[1]))
@@ -120,7 +120,7 @@ def _audio_tdly(atuple):
         audio.add(TDLY(3, atag))
 
 def _audio_tdor(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TDOR(3, param[1]))
@@ -128,7 +128,7 @@ def _audio_tdor(atuple):
         audio.add(TDOR(3, atag))
 
 def _audio_tdrc(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TDRC(3, param[1]))
@@ -136,7 +136,7 @@ def _audio_tdrc(atuple):
         audio.add(TDRC(3, atag))
 
 def _audio_tdrl(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TDRL(3, param[1]))
@@ -144,7 +144,7 @@ def _audio_tdrl(atuple):
         audio.add(TDRL(3, atag))
 
 def _audio_tdtg(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TDTG(3, param[1]))
@@ -152,7 +152,7 @@ def _audio_tdtg(atuple):
         audio.add(TDTG(3, atag))
 
 def _audio_tenc(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TENC(3, param[1]))
@@ -160,7 +160,7 @@ def _audio_tenc(atuple):
         audio.add(TENC(3, atag))
 
 def _audio_text(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TEXT(3, param[1]))
@@ -168,7 +168,7 @@ def _audio_text(atuple):
         audio.add(TEXT(3, atag))
 
 def _audio_tflt(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TFLT(3, param[1]))
@@ -176,7 +176,7 @@ def _audio_tflt(atuple):
         audio.add(TFLT(3, atag))
 
 def _audio_tgid(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TGID(3, param[1]))
@@ -184,7 +184,7 @@ def _audio_tgid(atuple):
         audio.add(TGID(3, atag))
 
 def _audio_time(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TIME(3, param[1]))
@@ -192,7 +192,7 @@ def _audio_time(atuple):
         audio.add(TIME(3, atag))
 
 def _audio_tit1(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TIT1(3, param[1]))
@@ -200,7 +200,7 @@ def _audio_tit1(atuple):
         audio.add(TIT1(3, atag))
 
 def _audio_tit2(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TIT2(3, param[1]))
@@ -208,7 +208,7 @@ def _audio_tit2(atuple):
         audio.add(TIT2(3, atag))
 
 def _audio_tit3(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TIT3(3, param[1]))
@@ -216,7 +216,7 @@ def _audio_tit3(atuple):
         audio.add(TIT3(3, atag))
 
 def _audio_tkey(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TKEY(3, param[1]))
@@ -224,7 +224,7 @@ def _audio_tkey(atuple):
         audio.add(TKEY(3, atag))
 
 def _audio_tlan(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TLAN(3, param[1]))
@@ -232,7 +232,7 @@ def _audio_tlan(atuple):
         audio.add(TLAN(3, atag))
 
 def _audio_tmed(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TMED(3, param[1]))
@@ -240,7 +240,7 @@ def _audio_tmed(atuple):
         audio.add(TMED(3, atag))
 
 def _audio_tmoo(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TMOO(3, param[1]))
@@ -248,7 +248,7 @@ def _audio_tmoo(atuple):
         audio.add(TMOO(3, atag))
 
 def _audio_toal(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TOAL(3, param[1]))
@@ -256,7 +256,7 @@ def _audio_toal(atuple):
         audio.add(TOAL(3, atag))
 
 def _audio_tofn(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TOFN(3, param[1]))
@@ -264,7 +264,7 @@ def _audio_tofn(atuple):
         audio.add(TOFN(3, atag))
 
 def _audio_toly(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TOLY(3, param[1]))
@@ -272,7 +272,7 @@ def _audio_toly(atuple):
         audio.add(TOLY(3, atag))
 
 def _audio_tope(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TOPE(3, param[1]))
@@ -280,7 +280,7 @@ def _audio_tope(atuple):
         audio.add(TOPE(3, atag))
 
 def _audio_town(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TOWN(3, param[1]))
@@ -288,7 +288,7 @@ def _audio_town(atuple):
         audio.add(TOWN(3, atag))
 
 def _audio_tpe1(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TPE1(3, param[1]))
@@ -296,7 +296,7 @@ def _audio_tpe1(atuple):
         audio.add(TPE1(3, atag))
 
 def _audio_tpe2(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TPE2(3, param[1]))
@@ -304,7 +304,7 @@ def _audio_tpe2(atuple):
         audio.add(TPE2(3, atag))
 
 def _audio_tpe3(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TPE3(3, param[1]))
@@ -312,7 +312,7 @@ def _audio_tpe3(atuple):
         audio.add(TPE3(3, atag))
 
 def _audio_tpe4(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TPE4(3, param[1]))
@@ -320,7 +320,7 @@ def _audio_tpe4(atuple):
         audio.add(TPE4(3, atag))
 
 def _audio_tpro(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TPRO(3, param[1]))
@@ -328,7 +328,7 @@ def _audio_tpro(atuple):
         audio.add(TPRO(3, atag))
 
 def _audio_tpub(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TPUB(3, param[1]))
@@ -336,7 +336,7 @@ def _audio_tpub(atuple):
         audio.add(TPUB(3, atag))
 
 def _audio_trsn(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TRSN(3, param[1]))
@@ -344,7 +344,7 @@ def _audio_trsn(atuple):
         audio.add(TRSN(3, atag))
 
 def _audio_trso(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TRSO(3, param[1]))
@@ -352,7 +352,7 @@ def _audio_trso(atuple):
         audio.add(TRSO(3, atag))
 
 def _audio_tso2(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TSO2(3, param[1]))
@@ -360,7 +360,7 @@ def _audio_tso2(atuple):
         audio.add(TSO2(3, atag))
 
 def _audio_tsoa(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TSOA(3, param[1]))
@@ -368,7 +368,7 @@ def _audio_tsoa(atuple):
         audio.add(TSOA(3, atag))
 
 def _audio_tsoc(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TSOC(3, param[1]))
@@ -376,7 +376,7 @@ def _audio_tsoc(atuple):
         audio.add(TSOC(3, atag))
 
 def _audio_tsop(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TSOP(3, param[1]))
@@ -384,7 +384,7 @@ def _audio_tsop(atuple):
         audio.add(TSOP(3, atag))
 
 def _audio_tsot(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TSOT(3, param[1]))
@@ -392,7 +392,7 @@ def _audio_tsot(atuple):
         audio.add(TSOT(3, atag))
 
 def _audio_tsrc(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TSRC(3, param[1]))
@@ -400,7 +400,7 @@ def _audio_tsrc(atuple):
         audio.add(TSRC(3, atag))
 
 def _audio_tsse(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TSSE(3, param[1]))
@@ -408,7 +408,7 @@ def _audio_tsse(atuple):
         audio.add(TSSE(3, atag))
 
 def _audio_tsst(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TSST(3, param[1]))
@@ -416,7 +416,7 @@ def _audio_tsst(atuple):
         audio.add(TSST(3, atag))
 
 def _audio_tpos(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TPOS(3, param[1]))
@@ -424,7 +424,7 @@ def _audio_tpos(atuple):
         audio.add(TPOS(3, atag))
 
 def _audio_trck(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TRCK(3, param[1]))
@@ -432,7 +432,7 @@ def _audio_trck(atuple):
         audio.add(TRCK(3, atag))
 
 def _audio_mvin(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(MVIN(3, param[1]))
@@ -440,7 +440,7 @@ def _audio_mvin(atuple):
         audio.add(MVIN(3, atag))
 
 def _audio_tbpm(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TBPM(3, param[1]))
@@ -448,7 +448,7 @@ def _audio_tbpm(atuple):
         audio.add(TBPM(3, atag))
 
 def _audio_tlen(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TLEN(3, param[1]))
@@ -456,7 +456,7 @@ def _audio_tlen(atuple):
         audio.add(TLEN(3, atag))
 
 def _audio_tory(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TORY(3, param[1]))
@@ -464,7 +464,7 @@ def _audio_tory(atuple):
         audio.add(TORY(3, atag))
 
 def _audio_tsiz(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TSIZ(3, param[1]))
@@ -472,7 +472,7 @@ def _audio_tsiz(atuple):
         audio.add(TSIZ(3, atag))
 
 def _audio_tyer(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TYER(3, param[1]))
@@ -480,7 +480,7 @@ def _audio_tyer(atuple):
         audio.add(TYER(3, atag))
 
 def _audio_tipl(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TIPL(3, param[1]))
@@ -488,7 +488,7 @@ def _audio_tipl(atuple):
         audio.add(TIPL(3, atag))
 
 def _audio_tmcl(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(TMCL(3, param[1]))
@@ -496,7 +496,7 @@ def _audio_tmcl(atuple):
         audio.add(TMCL(3, atag))
 
 def _audio_ipls(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(IPLS(3, param[1]))
@@ -504,149 +504,149 @@ def _audio_ipls(atuple):
         audio.add(IPLS(3, atag))
 
 def _audio_wcom(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(WCOM(3, param[1]))
 
 def _audio_wcop(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(WCOP(3, param[1]))
 
 def _audio_woaf(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(WOAF(3, param[1]))
 
 def _audio_woar(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(WOAR(3, param[1]))
 
 def _audio_woas(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(WOAS(3, param[1]))
 
 def _audio_wors(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(WORS(3, param[1]))
 
 def _audio_wpay(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(WPAY(3, param[1]))
 
 def _audio_wpub(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(WPUB(3, param[1]))
 
 def _audio_mcdi(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(MCDI(bytes(param[0])))
 
 def _audio_seek(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(SEEK(param[0]))
 
 def _audio_sign(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(SIGN(param[0], bytes(param[1])))
 
 def _audio_aspi(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(ASPI(param[0], param[1], param[2], param[3], param[4]))
 
 def _audio_priv(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(ASPI(param[0], bytes(param[1])))
 
 def _audio_comr(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(COMR(param[0], param[1], param[2], param[3], bytes(param[4]), \
                    param[5], param[6], param[7], param[8]))
 
 def _audio_owne(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(OWNE(param[0], param[1], param[2], param[3]))
 
 def _audio_user(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(USER(param[0], param[1], param[2]))
 
 def _audio_ufid(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(UFID(param[0], bytes(param[1])))
 
 def _audio_poss(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(POSS(param[0], param[1]))
 
 def _audio_link(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(LINK(param[0], param[1], bytes(param[2])))
 
 def _audio_aenc(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(AENC(param[0], param[1], param[2], bytes(param[3])))
 
 def _audio_rbuf(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(RBUF(param[0], param[1], param[2]))
 
 def _audio_geob(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(GEOB(param[0], param[1], param[2], param[3], bytes(param[4])))
 
 def _audio_popm(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(POPM(param[0], param[1])) #, param[2]))
 
 def _audio_pcst(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(PCST(param[0]))
 
 def _audio_pcnt(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(PCNT(param[0]))
 
 def _audio_rvrb(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(RVRB(param[0], param[1], param[2], param[3], param[4], \
                    param[5], param[6], param[7], param[8], param[9]))
 
 def _audio_rvad(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(RVAD(param[0]))
 
 def _audio_equ2(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(EQU2(param[0], param[1], param[2]))
 
 def _audio_comm(atuple):
-    audio, atag, advanced, _, _ = atuple
+    audio, atag, advanced, _, _, _ = atuple
     if advanced:
         param = ast.literal_eval(atag)
         audio.add(COMM(param[0], param[1], param[2], param[3]))
@@ -654,59 +654,60 @@ def _audio_comm(atuple):
         audio.add(COMM(3, 'XXX', '', atag))
 
 def _audio_sylt(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(SYLT(param[0], param[1], param[2], param[3], param[4], \
                                                              bytes(param[5])))
 
 def _audio_uslt(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(USLT(param[0], param[1], param[2], param[3]))
 
 def _audio_sytc(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(SYTC(param[0], bytes(param[1])))
 
 def _audio_mllt(atuple):
-    audio, atag, _, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(MLLT(param[0], param[1], param[2], param[3], param[4], \
                                                            bytes(param[5])))
 
 def _audio_etco(atuple):
-    audio, atag, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(ETCO(param[0], bytes(param[1])))
 
 def _audio_wxxx(atuple):
-    audio, atag, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(WXXX(param[0], param[1], param[2]))
 
 def _audio_txxx(atuple):
-    audio, atag, _, _ = atuple
+    audio, atag, _, _, _, _ = atuple
     param = ast.literal_eval(atag)
     audio.add(TXXX(param[0], param[1], param[2]))
 
 def _audio_encr(atuple):
-    audio, atag, _, list_owners, filechild = atuple
+    audio, atag, _, list_owners, lang, filechild = atuple
     param = ast.literal_eval(atag)
     if param[0] in list_owners:
-        pass
+        messagebox.showwarning('ENCR', LOCALIZED_TEXT[lang][\
+                "Only the first frame with this owner will be written to {}"].\
+                format(filechild))
     else:
         list_owners.extend([param[0]])
         audio.add(ENCR(param[0], param[1], bytes(param[2])))
 
 def _audio_grid(atuple):
-    audio, atag, _, list_owners, filechild = atuple
+    audio, atag, _, list_owners, lang, filechild = atuple
     param = ast.literal_eval(atag)
     if param[0] in list_owners:
-#        messagebox.showwarning('GRID', LOCALIZED_TEXT[lang][\
-#                "Only the first frame with this owner will be written to {}"].\
-#                format(filechild))
-        pass
+        messagebox.showwarning('GRID', LOCALIZED_TEXT[lang][\
+                "Only the first frame with this owner will be written to {}"].\
+                format(filechild))
     else:
         list_owners.extend([param[0]])
         audio.add(GRID(param[0], param[1], bytes(param[2])))

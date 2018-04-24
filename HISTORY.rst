@@ -3,6 +3,10 @@
 History
 -------
 
+1.1.0alpha(2018/04)
+____________
+Code refactored to separate the gui thread from file processing for increased speed and reliability.
+
 1.0.5(2018)
 ------------------
 'Updating of main window hardened to improve reliability.'

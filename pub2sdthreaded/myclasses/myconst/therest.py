@@ -603,7 +603,7 @@ THE_IDIOT_P = {\
                 'COMM': '',\
                 }
 
-THIS_VERSION = '1.1.0alpha'
+THIS_VERSION = '1.0.5'
 
 
 
@@ -611,5 +611,3 @@ RECOMMENDED_COLUMNS = ['Type', 'Name', 'Location', 'TIT2', 'TALB', 'TPE1', \
                       'TPE2', 'TCOP', 'APIC', 'TDRC', 'TRCK', 'TPOS', 'COMM', \
                       'TCON', 'TCOM', 'adummy']
  
-URL_TAGS = ['WCOM', 'WCOP', 'WOAF', 'WOAR', 'WOAS', 'WORS', 'WPAY', 'WPUB']
-SORT_TAGS = ['TSOA', 'TSOC', 'TSOP', 'TSOT', 'TSO2']
