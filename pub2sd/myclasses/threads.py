@@ -5,12 +5,14 @@ Created on Fri Dec  8 04:16:33 2017
 @author: marks
 """
 import threading
+import queue
+
 from .myconst.localizedText import LOCALIZED_TEXT
 
 class MyThread(threading.Thread):
     """handle copying to multiple SD cards"""
     def __init__(self, target, lang, pub2sd, project, \
-                play_list_targets, is_copy_playlists_to_top, files):
+                play_list_targets, is_copy_playlists_to_top, files, aqr):
         threading.Thread.__init__(self)
         self.target = target
         self.lang = lang
@@ -19,6 +21,7 @@ class MyThread(threading.Thread):
         self.play_list_targets = play_list_targets
         self.is_copy_playlists_to_top = is_copy_playlists_to_top
         self.files = files
+        self.aqr = aqr
 
     def run(self):
         """run the thread"""

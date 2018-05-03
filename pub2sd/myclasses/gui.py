@@ -69,6 +69,8 @@ def get_script_directory():
 SCRIPT_DIR = get_script_directory()
 qcommand = queue.Queue()
 qreport = queue.Queue()
+aqr = [queue.Queue(), queue.Queue(), queue.Queue(), queue.Queue(), \
+       queue.Queue(), queue.Queue(), queue.Queue(), queue.Queue()]
 threadlock = threading.Lock()
 
 
@@ -83,7 +85,7 @@ class GuiCore(Tk):
         """initialize the GuiCore"""
 #        print('Create new threads')
         self.threadlock = threading.Lock()
-        backendthread = Backend(qcommand, qreport, self.threadlock)
+        backendthread = Backend(qcommand, qreport, aqr, self.threadlock)
         backendthread.start()
         
         self._initialize_variables()
@@ -163,7 +165,8 @@ class GuiCore(Tk):
                                      values=vout, open=True, text='file')
                 elif 'ADD_ITEMS' in areport:
 #                    print("areport = {}".format(areport))
-                    for iid in areport[1].keys():
+                    #sort list of items to insert into ascending order
+                    for iid in sorted(areport[1].keys()):
 #                        focus = v[0],iid =v[1],vout = v[2],text = v[3]
                         v = areport[1][iid]
                         focus = v[0]
@@ -200,10 +203,12 @@ class GuiCore(Tk):
                     self.ddnCurProject['values'] = self.list_projects
                     self.ddnCurProject.set(areport[1])
                 elif 'STATUS' in areport:
-                    self.status['text'] = LOCALIZED_TEXT[lang][areport[1]]
+                    self.status['text'] = LOCALIZED_TEXT[lang][areport[1]] \
+                                                        if areport[1] else ''
                 elif 'STATUS{}' in areport:
                     self.status['text'] = LOCALIZED_TEXT[lang][areport[1][0]].\
-                                                        format(areport[1][1])
+                                                        format(areport[1][1]) \
+                                                        if areport[1] else ''
                 elif 'MESSAGEBOXASKOKCANCEL' in areport:
 #                    print('got question')
                     result = messagebox.askokcancel(areport[1][0],areport[1][1])
@@ -256,7 +261,10 @@ class GuiCore(Tk):
                     messagebox.showerror('', areport[1])
                 elif 'PROGSTEP' in areport:
                     self.progbar.step(areport[1])
-                    self.update()
+#                    self.update()
+                elif 'PROGSTOP' in areport:
+                    self.progbar.stop()
+#                    self.update()
                 elif 'PROGMAX' in areport:
                     self.progbar['maximum'] = areport[1]
                     self.progbar['value'] = 0
@@ -271,6 +279,7 @@ class GuiCore(Tk):
                     self._enable_tabs()
                     self.update()
                 elif 'FOLDERSIZE' in areport:
+                    self.needed = areport[1]
                     self.lblOutputSize['text'] = \
                                                 "{:0.1f} MB".format(areport[1])
                 elif 'TXTPREFCHARDEL' in areport:
@@ -290,6 +299,15 @@ class GuiCore(Tk):
                 else:
                     print('Unknown report >{}<'.format(areport))
                 qreport.task_done()
+                #now scan queues from pub to SD threads
+                for i in range(0, 8):
+                    if not aqr[i].empty():
+                        aqreport = aqr[i].get()
+                        if 'PROGSTEP' in aqreport:
+                            self.progbar.step(1)
+                            aqr[i].task_done()
+                        else:
+                            pass
 #                print('in gui, finished task')
                 self.update_idletasks()
         self.lblProject.after(200, self._process_report_queue)
@@ -331,8 +349,9 @@ class GuiCore(Tk):
                             [chr(0x7F), '"', '*', '/', ':', '<', '>', \
                                                               '?', '\\', '|']
 
-        self.output_to = []
-        self.play_list_targets = []
+        self.output_to = set()
+        self.play_list_targets = set()
+        self.needed = 0 #in Mb
 
         #define all StringVar(), BooleanVar(), etc… needed to hold info
         self.selected_lang = StringVar()
@@ -1338,21 +1357,21 @@ class GuiCore(Tk):
 
         self.output_to = []
         self.lblOutputTo['text'] = ''
-        needed = folder_size(os.path.normpath(self.Pub2SD + '/Temp/' \
-                                        + self.project)) / (1024.0 * 1024.0)
+#        needed = folder_size(os.path.normpath(self.Pub2SD + '/Temp/' \
+#                                        + self.project)) / (1024.0 * 1024.0)
 
         for i in range(0, 8):
             self.update_idletasks()
             if (self.cb[i]['state'] == 'normal') \
                                                 and (self.cbv[i].get() == 't'):
-                if needed < self.tlist[i][1]:
+                if self.needed < self.tlist[i][1]:
                     self.output_to.append(self.tlist[i][0].split(',')[0])
                 else:
                     messagebox.showerror(\
                      LOCALIZED_TEXT[lang]['Insufficent space on {}'].\
                         format(self.tlist[i][0].split(',')[0]), \
                      LOCALIZED_TEXT[lang]["Needs {}Mb, has {}Mb free space."].\
-                        format(needed, self.tlist[i][1] / (1024.0 * 1024.0)))
+                        format(self.needed, self.tlist[i][1] / (1024.0 * 1024.0)))
                     self.output_to = []
                     return
         if platform.system() == 'Windows':
@@ -1375,6 +1394,7 @@ class GuiCore(Tk):
                       ['', 0], ['', 0], ['', 0], ['', 0]]
         i = 0
         if platform.system() == 'Linux':
+            print("I'm running on Linux, yipee!")
             for part in psutil.disk_partitions():
                 if ('vfat' in part.fstype or 'fuseblk' in part.fstype) \
                           and 'rw' in part.opts \
@@ -1393,6 +1413,7 @@ class GuiCore(Tk):
                     self.tlist[i] = ['{}, {}, {}, {}, {}'.\
                         format(part.mountpoint, total, used, free, percent), \
                               usage.free]
+                    print(self.tlist[i])
                     i += 1
         elif platform.system() == 'Windows':
             for part in psutil.disk_partitions():
@@ -1717,15 +1738,19 @@ class GuiCore(Tk):
         # trailling '\\' will be removed
         qcommand.put(('CHILDRENS_FILENAMES', (self.project_id, \
                                                temp_path, project_path_)))
-        self._on_prepare_files()
-        self.update_idletasks()
-        qcommand.put(('FOLDERSIZE', temp_path))
         self.play_list_targets = set()
         if self.isCoolMusic.get() == 1:
             self.play_list_targets.add('COOL_MUSIC')
         #if list
         if self.EnterList.get():
             self.play_list_targets.update(set(self.EnterList.get().split(',')))
+        qcommand.put(('SETCOPYPLAYLISTS', (self.play_list_targets, \
+                                           self.is_copy_playlists_to_top.get())))
+        qcommand.put(('M3UorM3U8', self.M3UorM3U8.get()))
+
+        self._on_prepare_files()
+        self.update_idletasks()
+        qcommand.put(('FOLDERSIZE', temp_path))
 
     def _on_click_f5_next(self):
         """waiting on lock/unlock SD card software!"""
@@ -1788,10 +1813,25 @@ class GuiCore(Tk):
             focus = self.project_id
         dir_path = filedialog.askdirectory(initialdir=os.path.expanduser('~'),\
                                         title="Select folder…", mustexist=True)
+        #if mp3 files in top level of dir path arrrgh
+#        print('project_id =>{}'.format(self.project_id))
+#        print('focus =>{}'.format(focus))
+#        print('dir_path =>{}'.format(dir_path))
+#        l = os.listdir(dir_path)
+#        print("list dir_path=>{}".format(l))
+#        print("mp3 files =>{}".format([f for f in l if f[-4:] in ['.mp3', '.MP3']]))
+        
         if dir_path:
-            self._disable_tabs()
-            self.status['text'] = LOCALIZED_TEXT[lang]["Unpacking"] + dir_path
-            qcommand.put(('ADD_CONTENTS', (focus, dir_path)))
+            if focus in ['', 'I00001'] and \
+                            [f for f in os.listdir(dir_path) \
+                             if f[-4:] in ['.mp3', '.MP3']]:
+                messagebox.showerror(\
+                LOCALIZED_TEXT[lang]["Project can't hold '.mp3' files directly."], \
+                LOCALIZED_TEXT[lang]["Add a collection first or use 'Add Folder...'."])
+            else:
+                self._disable_tabs()
+                self.status['text'] = LOCALIZED_TEXT[lang]["Unpacking"] + dir_path
+                qcommand.put(('ADD_CONTENTS', (focus, dir_path)))
         self.update()
 
 
@@ -1954,44 +1994,53 @@ class GuiCore(Tk):
         self.progbar['maximum'] = len(self.files)*4*len(self.output_to)
         self.progbar['value'] = 0
 
-        i = 1
-        currentThreadsActive = threading.activeCount()
-        self.progbar['value'] = 0
-        self.progbar.start()
-        for atarget in self.output_to:
-            if atarget:
-                if os.path.exists(atarget):
-                    target = atarget
-                    threads.append(MyThread(target, \
-                                            self.ddnGuiLanguage.get(), \
-                                            self.Pub2SD, self.project, \
-                                            self.play_list_targets, \
-                                            self.is_copy_playlists_to_top.get(), \
-                                                                self.files))
-                    i += 1
-                    threads[-1].start()
-                    self.status['text'] = \
-                               LOCALIZED_TEXT[lang]['{} Threads active'].\
-                           format(threading.activeCount()-currentThreadsActive)
-                    self.update_idletasks()
-                else:
-                    messagebox.showerror(\
-                                        LOCALIZED_TEXT[lang]["Invalid path"], \
-                                        LOCALIZED_TEXT[lang]["Can't find {}"].\
-                                                      format(atarget))
+        qcommand.put(('PUBLISH_TO_SD', (self.output_to,)))
+#        i = 1
+#        currentThreadsActive = threading.activeCount()
+#        self.progbar['value'] = 0
+#        self.progbar.start()
+#        for atarget in self.output_to:
+#            if atarget:
+#                if os.path.exists(atarget):
+#                    target = atarget
+#                    threads.append(MyThread(target, \
+#                                            self.ddnGuiLanguage.get(), \
+#                                            self.Pub2SD, self.project, \
+#                                            self.play_list_targets, \
+#                                            self.is_copy_playlists_to_top.get(), \
+#                                                                self.files))
+#                    i += 1
+#                    threads[-1].start()
+#                    self.status['text'] = \
+#                               LOCALIZED_TEXT[lang]['{} Threads active'].\
+#                           format(threading.activeCount()-currentThreadsActive)
+#                    self.update_idletasks()
+#                else:
+#                    messagebox.showerror(\
+#                                        LOCALIZED_TEXT[lang]["Invalid path"], \
+#                                        LOCALIZED_TEXT[lang]["Can't find {}"].\
+#                                                      format(atarget))
+#
+#        while threading.activeCount() > currentThreadsActive:
+#            self.status['text'] = LOCALIZED_TEXT[lang]['{} Threads active'].\
+#                       format(threading.activeCount()-currentThreadsActive)
+#            self.update_idletasks()
+#        self.progbar.stop()
+#        [athread.join() for athread in threads]
+#
+#        self.progbar['value'] = 0
+#        self.status['text'] = \
+#                   LOCALIZED_TEXT[lang]["Output to SD('s) completed."]
+        self.update()
 
-        while threading.activeCount() > currentThreadsActive:
-            self.status['text'] = LOCALIZED_TEXT[lang]['{} Threads active'].\
-                       format(threading.activeCount()-currentThreadsActive)
-            self.update_idletasks()
-        self.progbar.stop()
-        [athread.join() for athread in threads]
-
+    def _on_publish_to_SD_continued(self):
+        """feedback completed"""
+        lang = self.ddnGuiLanguage.get()
         self.progbar['value'] = 0
         self.status['text'] = \
                    LOCALIZED_TEXT[lang]["Output to SD('s) completed."]
         self.update()
-
+        
     def _on_publish_to_HD(self):
         """publish files and playlists to your HD"""
 
@@ -2226,21 +2275,19 @@ def de_hex(tin):
             i += 1
     tout += tin[i:]
     return tout
-#    t = tin
-#    tout = ''
-#    i = 0
-#    while i < len(tin):
-#        if (len(tin) - i) > 5 and is_hex(tin[i: i + 6]):
-#            tout += chr(int(t[i:i + 6], 16))
-#            i += 6
-#        else:
-#            tout += tin[i]
-#            i += 1
-#    return tout
 
 def delete_folder(path):
     '''if folder exists remove it'''
     if os.path.exists(path):
         # remove if exists
         shutil.rmtree(path)
+
+#def folder_size(top):
+#    '''return size used by folder in bytes'''
+#    this_folder_size = 0
+#    for (path, dirs, files) in os.walk(top):
+#        for file in files:
+#            filename = os.path.join(path, file)
+#            this_folder_size += os.path.getsize(filename)
+#    return this_folder_size
         

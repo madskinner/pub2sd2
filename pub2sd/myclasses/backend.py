@@ -8,6 +8,7 @@ Created on Mon Apr  9 13:09:42 2018
 import fnmatch
 import threading
 import os
+import platform
 import glob
 import hashlib
 import codecs
@@ -53,12 +54,13 @@ from .myconst.audio import AUDIO
 class Backend(threading.Thread):
     """handle processing files"""
 
-    def __init__(self, qc, qr, tl):
+    def __init__(self, qc, qr, aqr, tl):
         threading.Thread.__init__(self)
         self.threadID = 1
         self.name = 'backend'
         self.qc = qc
         self.qr = qr
+        self.aqr = aqr
         self.threadlock = tl
         self.exitFlag = 0
         self.mode = 0
@@ -81,13 +83,20 @@ class Backend(threading.Thread):
         self.to_be_renamed = dict()
         self.initial_digit = ''
         self.prefix = ''
-        self.Pub2SD = os.path.expanduser('~') + '/Pub2SD'
+        
+        #bodge to get past WinPython....
+        self.Pub2SD = os.path.normpath(os.path.expanduser('~') + '/Pub2SD')
+        if platform.system() == 'Windows':
+            temp = self.Pub2SD.split('\\')
+            self.Pub2SD = '\\'.join(temp[:3]) + '\\Pub2SD'
+
         self.selected_tags = list()
         self.project = ''
         self.next_track = 0
         self.nos_tracks = 0
         self.ishide = 0
         self.files = dict()
+        self.M3UorM3U8 = 2
 
 
 #        self.maxcolumnwidths = [0, 0, 0, ]
@@ -95,11 +104,9 @@ class Backend(threading.Thread):
     def run(self):
         while not self.exitFlag:
             acommand = self.qc.get()
-#            print("in backend acommand is >{}<\n".format(acommand[0]))
             if 'EXIT' in acommand:
                 self.exitFlag = 1
-                self.qc.task_done()
-#                self.destroy()
+                self.qc.task_done()#                self.destroy()
                 # self.exitFlag can be set by error condition in backend
             elif 'MODE' in acommand:
                 self.mode = acommand[1]
@@ -116,12 +123,8 @@ class Backend(threading.Thread):
                 self.template = acommand[1]
                 self.qc.task_done()
             elif 'LOADTREEFROMTROUT' in acommand:
-#                self._on_load_tree_from_trout()
                 self._on_reload_tree()
                 self.qc.task_done()
-#            elif 'IIDS' in acommand:
-#                self.iids = acommand[1]
-#                self.qc.task_done()
             elif 'SELFPREF' in acommand:
                 self.pref = acommand[1][0]
                 self.pref_char = acommand[1][1]
@@ -131,7 +134,6 @@ class Backend(threading.Thread):
             elif 'DISPLAYCOLUMNS' in acommand:
                 self.displayColumns, self.columns = acommand[1]
                 self.qc.task_done()
-#                self.qr.put(('PRINT',self.displayColumns))
             elif 'SELECTED_TAGS' in acommand:
                 map(self.sf1.attrib.pop, self.sf1.attrib.keys())
                 #put tag state into xml
@@ -139,7 +141,6 @@ class Backend(threading.Thread):
                 for i in range(0, len(self.selected_tags)):
                     self.sf1.attrib[self.selected_tags[i]] = 'show'
             elif 'STRIPTITLE' in acommand:
-#                print(acommand[1])
                 to_strip, focus = acommand[1]
                 self._on_strip(to_strip, focus)
                 self.to_be_renamed = dict()
@@ -161,6 +162,9 @@ class Backend(threading.Thread):
                 self.qc.task_done()
             elif 'ADD_CONTENTS' in acommand:
                 the_focus, adir_path = acommand[1]
+                #if the_focus is I00001 then any .mp3 files in current folder
+                # would be directly below project. Need to have at least one
+                # collection in way
                 self.qr.put(('LOCKGUI', None))
                 self.qr.put(('PROGMAX', count_mp3_files_below(adir_path) * 2))
                 self.to_be_inserted = dict()
@@ -190,6 +194,7 @@ class Backend(threading.Thread):
                 self.qc.task_done()
             elif 'CHILDRENS_FILENAMES' in acommand:
                 self.project_id, temp_path, project_path_ = acommand[1]
+                #self.project_id should be set to 'I00001', but for safety
                 self._childrens_filenames(self.trout.find(".//I00001"), temp_path, project_path_)
             elif 'FOLDERSIZE' in acommand:
                 size_in_Mb = folder_size(os.path.normpath(\
@@ -202,7 +207,6 @@ class Backend(threading.Thread):
                 self._on_prepare_files()
                 self.qr.put(('UNLOCKGUI', None))
             elif 'ONSAVEPROJECT' in acommand:
-#                print(acommand)
                 self._on_save_project(acommand[1])
             elif 'DELETE' in acommand:
                 self._on_delete(acommand[1])
@@ -221,126 +225,13 @@ class Backend(threading.Thread):
                 focus, _picture_type, _desc, fart = acommand[1]
                 self._attach_artwork_to(focus, _picture_type, _desc, fart)
                 self._on_reload_tree()
+            elif 'SETCOPYPLAYLISTS' in acommand:
+                self.play_list_targets, self.is_copy_playlists_to_top = acommand[1]
+            elif 'M3UorM3U8' in acommand:
+                self.M3UorM3U8 = acommand[1]
             else:
                 print('backend lost, acommand was {}'.format(acommand))
                 self.qc.task_done()
-#            print('in qcommand, finished task')
-        #now close/exit backend!
-#        self.destroy()
-
-    def _on_publish_files(self, target):
-        """copy files to final destination,
-        opening all files,
-        copying all files
-        then closing all files.
-        To ensure same creation date and last modified date for all files.
-        So that they will only sort in the order specified."""
-
-        #finally copy all file to final destination):
-#        lang = self.ddnGuiLanguage.get()
-        self.qr.put(('PROGMAX', len(self.files) * 4))
-        self.qr.put(('STATUS', 'Removing any old project files...'))
-#        self.status['text'] = \
-#                   LOCALIZED_TEXT[lang]['Removing any old project files...']
-#        self.update_idletasks()
-        if target[1:] != ':\\' and \
-                 os.path.exists(os.path.normpath(target + '/' + self.project)):
-            # remove if exists
-            shutil.rmtree(os.path.normpath(target + '/' + self.project))
-
-        tp = os.path.normpath(target + '/' + self.project)
-        os.makedirs(tp, mode=0o777, exist_ok=True)
-        target += '/'
-        target = forward_slash_path(target)
-        #decide if space avaialable on target - abort if not with error message
-        self.qr.put(('STATUS', 'Calculating needed space...'))
-#        self.status['text'] = \
-#                   LOCALIZED_TEXT[lang]['Calculating needed space...']
-#        self.update_idletasks()
-        _, _, free = shutil.disk_usage(os.path.normpath(target))
-        needed = folder_size(\
-                os.path.normpath(self.Pub2SD + '/Temp/' + self. project)) / \
-                             (1024.0 * 1024.0)
-        free = free / (1024.0 * 1024.0)
-        if needed > free:
-            self.qr.put(('MESSAGEBOXERROR', ("Insufficent space on target!", \
-                                    "Needed {}Mb, but only {}Mb available", \
-                                                                needed, free)))
-            return
-        self.qr.put(('STATUS', 'Making project directories...'))
-        #now open all files at once to make create dates the same
-        fileId = {}
-        listpaths = []
-        for child in self.files:
-            final_path = os.path.normpath(target + \
-                                '/'.join(self.files[child][3].split('/')[:-1]))
-            if final_path not in listpaths:
-                os.makedirs(final_path, mode=0o777, exist_ok=True)
-                listpaths.extend([final_path])
-            #self.status['text'] = final_path
-            self.qr.put(('PROGSTEP', 1))
-        self.qr.put(('STATUS', 'Opening target files...'))
-        for child in self.files:
-            fileId[child] = open(target + self.files[child][3], mode='wb')
-            self.qr.put(('PROGSTEP', 1))
-        self.qr.put(('STATUS', 'Copying to target files...'))
-        for child in self.files:
-            filein = open(self.files[child][0], mode='rb')
-            fileId[child].write(filein.read())
-            filein.close()
-            self.qr.put(('PROGSTEP', 1))
-        self.qr.put(('STATUS', 'Closing target files...'))
-        for child in self.files:
-            fileId[child].close()
-            self.qr.put(('PROGSTEP', 1))
-        self._on_copy_playlists(target)
-
-    def _on_copy_playlists(self, target):
-        """copy playlists to target, at locatons specified in
-                                                         play_list_targets"""
-#        lang = self.ddnGuiLanguage.get()
-        source = os.path.normpath(self.Pub2SD + '/Temp/'+ self.project + '/')
-        playlists = [p for p in os.listdir(source) \
-                     if p.endswith('.M3U8') or p.endswith('M3U')]
-        self.qr.put(('STATUS', 'Copying playlists...'))
-        #main playlists
-        for pp in playlists:
-            shutil.copyfile(os.path.normpath(source + '/' + pp), \
-                            os.path.normpath(target + self.project + '/' + pp))
-            self.qr.put(('PROGSTEP', 1))
-        #now top level?
-        if self.is_copy_playlists_to_top.get() == 1:
-            self.qr.put(('STATUS', 'Copying playlists to top folder...'))
-            for pp in playlists:
-                encode = 'utf-8' if pp.endswith('.M3U8') else 'cp1252'
-                fin = codecs.open(os.path.normpath(source + '/'+ pp),\
-                                          mode='r', encoding=encode)
-                fout = codecs.open(os.path.normpath(target + pp), mode='w', \
-                                   encoding=encode)
-
-                fout.write(fin.read().replace('../', './'))
-                fin.close()
-                fout.close()
-                self.qr.put(('PROGSTEP', 1))
-        #now in list
-        for tt in self.play_list_targets:
-            if tt:
-                self.qr.put(('STATUS', 'Copying playlists to target folders...'))
-                os.makedirs(target + tt, mode=0o777, exist_ok=True)
-                for pp in playlists:
-                    shutil.copyfile(os.path.normpath(source + '/' + pp), \
-                                    os.path.normpath(target + tt + '/' + pp))
-                    self.qr.put(('PROGSTEP', 1))
-
-#    def _make_filename(self, child):
-#        """make mp3 title = filename after appropriate normalization"""
-#        title = str(self.tree.set(child, 'TIT2'))
-#        title = self._my_unidecode(title) \
-#                        if self.mode.get() == 0 \
-#                        else self._my_unidecode(title[5:-2].split(',')[0][1:-1])
-#        return ''.join([c if self._approved_char(c) else '_' for c in title])
-#
-
 
     def _load_conf_file(self, aconf_file):
         """loads the old project file into etree tree"""
@@ -355,24 +246,12 @@ class Backend(threading.Thread):
         while True:
             if not self.qc.empty():
                 aresponce = self.qc.get()
-#                print('responce is', aresponce)
                 if 'OKCANCEL' in aresponce:
                     return  aresponce[1]
-#                self.qr.task_done()
                 self.qc.task_done()
                 
     def _get_idiot_case_mode_for_load_project(self):
-        """attach temlate if specified and calculateidiot_case"""
-#        if self.ddnCurTemplate.get():
-#            if self.stemp.text != self.ddnCurTemplate.get():
-#                self._on_load_template() #attach new template
-#        else:
-#            self.current_project.set(self.stemp.text)
-#        self.lblMode['text'] = '{}{}'.format(LOCALIZED_TEXT[lang]['Mode>'], \
-#                    LOCALIZED_TEXT[lang]['Simple'] \
-#                                  if self.mode.get() == 0 \
-#                                  else LOCALIZED_TEXT[lang]['Advanced'])
-#        map(self.tagtree.delete, self.tagtree.get_children())
+        """calculate idiot_case"""
         #idiot_case
         #old_mode['idiot'] == 'True', new_mode=0  ==> 0, no change
         #old_mode['idiot'] == 'False', new_mode=0 ==> 1, downgrade
@@ -412,22 +291,18 @@ class Backend(threading.Thread):
             self.sf4 = self.settings.find("f4")
             self.trout = self.root.find("tree")
             self._fix_old_proj_iid(self.trout)
-#            for child in list(self.trout):
-#                child.tag = 'I{:05X}'.format(int(child.tag[1:], 16))
                 
             self.old_mode = dict(self.smode.attrib)
         idiot_case = self._get_idiot_case_mode_for_load_project()
         if idiot_case == 1:
             # downgrade
             self.mode = 0
-#            print('ask ok/cancel')
             self.qr.put(('MESSAGEBOXASKOKCANCEL', ('Confirm Downgrade?', \
                         "This will downgrade this project from 'Advanced' " \
                         + "to 'Simple'. Some data may be lost." )))
             #if not OK give up
             if not self._wait_for_responce():
                 return False
-#            print('said ok')
             #do downgrade!
             #remove all non idiot tags
             self.list_of_tags = set()
@@ -440,19 +315,15 @@ class Backend(threading.Thread):
             pass
         elif idiot_case == 2:
             # upgrade:
-#            self.threadlock.acquire(0)
-#            print('waiting for upgrade answer')
             self.qr.put(('MESSAGEBOXASKOKCANCEL', ('Confirm Upgrade?', \
                         "This will upgrade this project from 'Simple' to " \
                         + "'Advanced'." )))
             #if not OK give up
             if not self._wait_for_responce():
                 return False
-#            print('said ok')
             self.mode = 1
             self._upgrade_child_of(self.trout)
         else:
-            #self.mode.set(0)
             pass
         self.template = dict(self.stemp.attrib)
         
@@ -464,7 +335,6 @@ class Backend(threading.Thread):
                                         .difference(set(IDIOT_TAGS.keys())))
 #            self._pdup_state('disabled')
         else:
-            #self.mode.get() == 1
             self.smode.attrib['Idiot'] = 'False'
             self.list_of_tags = self.list_of_tags.union(\
                                                 set(SET_TAGS['en-US'].keys()))
@@ -473,10 +343,8 @@ class Backend(threading.Thread):
                                     difference(set(SET_TAGS['en-US'].keys())))
 #            self._pdup_state('normal')
         self.preferred = int(self.smode.attrib['preferred'] == 'True')
-#        self.txtPrefChar.delete(0.0, 9999.9999)
         self.qr.put(('TXTPREFCHARDEL', (0.0, 9999.9999)))
         if self.sf2.text != None:
-#            self.txtPrefChar.insert(9999.9999, self.sf2.text)
             self.qr.put(('TXTPREFCHARINSERT', (9999.9999, self.sf2.text)))
 
         #clear tagtree
@@ -484,7 +352,6 @@ class Backend(threading.Thread):
         self.qr.put(('INSERTTAGTREETAGS', all_tags))
         self.qr.put(('SETTAGTREE', 'TIT2'))
         #now select tags
-#        print(self.sf1.attrib.keys())
         for item in self.sf1.attrib.keys():
             self.qr.put(('SELECTIONTAGTREE', item))
         #now add any additional tags in template
@@ -524,37 +391,17 @@ class Backend(threading.Thread):
             N.B. this is for display purposes only!"""
         #by default data is unchanged unless is a file
         the_value = child.attrib[item]
-#        print(item, the_value)
         if item in ['Type', 'Name', 'Location',]:
             return child.attrib[item]
         if child.attrib['Type'] in ['file',]:
-#            print('is file')
             #is file so process
             #idiot mode so split into frames on '|' and 
             # pick last frame read for this tag
-#            print("{} => {}".format(item, child.attrib[item]))
             this_frame = child.attrib[item].split('|')[-1]
-#            print('last frame =>{}'.format(this_frame))
-#            self.qr.put(('PRINT', (item, child.attrib[item], this_frame)))
             if this_frame not in ['-', '']:
                 #not an 'empty' frame
-                if item in IDIOT_TAGS: # or item == 'APIC_':
-#                    print('{} is idiot tag'.format(item))
-#                    if item == 'APIC_':
-#                        param = this_frame[1:-1].split(', ')
-#                        param[0] = int(param[0])
-#                        param[1] = param[1][1:-1]
-#                        param[2] = int(param[2][param[2].\
-#                                                   find(':')+1:-1].strip()) \
-#                                            if '<PictureType.' in param[2] \
-#                                            else int(param[2].strip())
-#                        param[3] = param[3][1:-1]
-#                        param[4] = ast.literal_eval(param[4])
-#                    else:
+                if item in IDIOT_TAGS: 
                     param = ast.literal_eval(str(this_frame))
-#                    print('param={}'.format(param))
-#                    for i in range(0,len(param)):
-#                        print(param[i])
                     if item == 'APIC':
                         return param[-1]
                     elif item in TF_TAGS or item == 'COMM':
@@ -562,7 +409,6 @@ class Backend(threading.Thread):
                     elif item in ['WCOM', 'WCOP', 'WOAF', 'WOAR', 'WOAS', \
                                   'WORS', 'WPAY', 'WPUB', 'WXXX']:
                         return param[-1]
-#                    print('so output =>{}<'.format(this_frame))
                     return this_frame
                 else:
                     #not idiot tag so discard 'advanced' data
@@ -571,13 +417,6 @@ class Backend(threading.Thread):
                 return this_frame
         return the_value
 
-#    def _upgrade_child_of(self, parent):
-#        for child in parent.getchildren():
-#            if child.attrib['Type'] not in ['project', 'collection']:
-#                for tag in child.attrib.keys():
-#                    self.list_of_tags.add(tag)
-#                    child.attrib[tag] = self._upgrade_data(tag, child)
-#            self._upgrade_child_of(child)
                 
     def _upgrade_data(self, item, child):
         """smarten data up from simple(idiot) mode to advanced with encoding
@@ -671,14 +510,11 @@ class Backend(threading.Thread):
         self.smode.attrib['preferred'] = 'False' \
                          if self.preferred == 0 else 'True'
         self.old_mode = dict(self.smode.attrib)
-#            self.template = dict(self.stemp.attrib)
-#        self.old_mode['idiot'] = self.smode.attrib['idiot']
 
         if self.mode == 0:
             self.list_of_tags = self.list_of_tags.union(set(IDIOT_TAGS.keys()))
 #            self._pdup_state('disabled')
         else:
-            #self.mode.get() == 1
             self.list_of_tags = self.list_of_tags.union(\
                                                 set(SET_TAGS['en-US'].keys()))
         self.qr.put(('INSERTTAGTREETAGS', self.list_of_tags))
@@ -705,31 +541,18 @@ class Backend(threading.Thread):
             parent = tree.tag
         if len(tree):
             for child in tree.getchildren():
-#                newtag = 'I{' + str(int(child.tag[1:])).zfill(5)
-#                print(child.tag, child.attrib)
-#                vout = [v for k,v in attributes]
                 vout= list()
-#                print('in self.columns', child.tag, child.attrib)
-#                print('self.columns=>{}'.format(self.columns))
                 for k in self.columns:
                     if k not in ['adummy', '_APIC'] and k in child.attrib:
-#                        print('in self.columns', child.tag, k, child.attrib[k])
                         if self.mode: #is advanced
-#                            print('is advanced', child.tag, k, child.attrib[k])
                             vout.append(child.attrib[k])
-#                            print(vout)
                         else: #is idiot
                             data = self._downgrade_data(k, child)
-#                            print('is simple at {}, tag {}, was {}, becomes {}'.format(child.tag, k, child.attrib[k], data))
                             vout.append(data)
-#                            print(vout)
                     else:
                         vout.append('-')
-#                print('vout=>{}'.format(vout))
                 self.to_be_inserted[child.tag] = (parent, vout, child.text if child.text else '')
                 self._load_tree_from(child.tag)
-#        else:
-#            self.qr.put(('PRINT', "Can't find {} in trout".format(_trout)))
 
 
     def _on_save_project(self, aproject):
@@ -740,7 +563,6 @@ class Backend(threading.Thread):
 
         if aproject:
             output = codecs.open(aproject, mode='w', encoding='utf-8')
-#            self._list_children_of('', self.trout)
             output.write(etree.tostring(self.root, encoding='unicode', \
                                          pretty_print=True))
             output.close()
@@ -773,25 +595,16 @@ class Backend(threading.Thread):
 
     def _add_a_file(self, afile, e_parent):
         """loads a file into e_parent within self.trout"""
-#        somevalues = self._read_idiot_mp3_tags(afile) \
-#                                    if self.mode == 0 \
-#                                    else self._read_mp3_tags(afile)
         #always hold data in advanced form, only choose to diplay as idiot
+#        print('add=>{}< to >{}<'.format(afile, e_parent.tag))
         somevalues = self._read_mp3_tags(afile)
         iid = "I{:05X}".format(self.next_iid)
         self.next_iid += 1
         self.to_be_inserted[iid] = (e_parent.tag, somevalues, 'file')
         e_child = etree.SubElement(e_parent, iid)
         e_child.text = 'file'
-#            e_child['values'] = str(vout)
-#        print(e_child.tag)
-#        print(self.columns)
-#        print(somevalues)
         for c,v in zip(self.columns, somevalues):
             e_child.attrib[c] = v
-#            print('{} => {}'.format(c, e_child.attrib[c]))
-#            if c is '_APIC':
-#                print('_APIC', v)
 
     def _add_tree(self, the_focus, adir_path, noTop=False):
         """add folder and dependants, with or without creating a new
@@ -808,14 +621,12 @@ class Backend(threading.Thread):
             vout.extend(['-' for item in self.displayColumns[2:-1]])
             iid = "I{:05X}".format(self.next_iid)
             self.next_iid += 1
-#            self.qr.put(('INSERT', (the_focus, 'end', iid, vout, True, 'collection')))
             self.to_be_inserted[iid] = (the_focus, vout, 'collection')
             thisdir = iid
             e_focus = self.trout.find(".//" + the_focus)
             e_parent = etree.SubElement(e_focus, iid)
             e_parent.text = 'collection'
             for c,v in zip(self.columns, vout):
-#                print(c, v)
                 e_parent.attrib[c] = v
 
         _ff = dict()
@@ -823,6 +634,8 @@ class Backend(threading.Thread):
         #step through a list of filepaths for all mp3 files in current dir only
         for f_ in [forward_slash_path(afile) \
                    for afile in glob.glob(adir_path + '/*.mp3')]:
+#            print('sort key =>{}<, for {}'.format(sort_key_for_filenames(os.path.basename(f_)[:-4]), \
+#                                                    os.path.basename(f_)[:-4]))
             _ff[sort_key_for_filenames(os.path.basename(f_)[:-4])] = \
                                                     os.path.basename(f_)[:-4]
             flist[os.path.basename(f_)[:-4]] = f_
@@ -836,7 +649,6 @@ class Backend(threading.Thread):
                                 if os.path.isdir(adir_path + '/' + d) \
                                             and len(d) > 0]):
             self.qr.put(('STATUS{}', ('Unpacking{}', adir)))
-#            print('Unpacking =>{}'.format(adir))
             self._add_tree(thisdir, adir)
 
     def _rename_children_of(self, parent):
@@ -845,13 +657,10 @@ class Backend(threading.Thread):
         #rename all branches
         e_parent = self.trout.find(".//" + parent)
         if e_parent is None:
-#            print("can't find {} in lxml tree.".format(parent))
             return
-#        print('Renaming children of {}'.format(e_parent.tag))
         parent_attribs = e_parent.attrib
         children = list(e_parent)
         ancestor_name = parent_attribs['Name']
-#        self.tree.item(self.project_id, text=self.ddnCurProject.get())
         my_isalpha = True
         if ancestor_name:
             if ancestor_name[-1] == '@':
@@ -867,25 +676,24 @@ class Backend(threading.Thread):
                 my_name = 1
                 my_isalpha = False
         my_num = 1
+#        if my_isalpha:
+#            nos_chars = len(to_alpha(len(children)))
+#            pass
+#        else:
+#            nos_digits = (len(str(len(children)))-1) \
+#                     if my_name == 1 else 0
+        nos_chars = len(to_alpha(len(children))) if my_name == 1 else 0
+        nos_digits = (len(str(len(children)))-1) if my_name == 1 else 0
 
-        nos_digits = (len(str(len(children)))-1) \
-                     if my_name == 1 and not my_isalpha else 0
-#        self.update_idletasks()
+        the_format = '{0:0' + '{}'.format(nos_digits) + 'd}'
+        alpha_format = '{0:A>' + '{}'.format(nos_chars) + 's}'
+                         
         for child in children:
             self.qr.put(('PROGSTEP', 1))
-#            self.progbar.step()
-            the_format = '{0:0' + '{}'.format(nos_digits) + 'd}'
             #bullet proofed in to_aplpha() so not exceed limit of single digit
-            my_str = to_alpha(my_name) \
+            my_str = alpha_format.format(to_alpha(my_name - 1)) \
                              if my_isalpha else the_format.format(my_name)
-#            if self.tree.set(child, 'Type') == 'collection':
-#            vout = str([child.attrib[cat] for cat in child.attrib.keys() \
-#                        if cat not in ['adummy', '_APIC']][:-1])
-            #create list of 'column name, column value' pairs
-#            vout = [[cat, child.attrib[cat]] for cat in child.attrib.keys() \
-#                        if cat not in ['adummy', '_APIC']][:-1]
             vout = list()
-#            print(vout)
             if child.attrib['Type'] == 'collection':
                 title = self._my_unidecode(child.attrib['TIT2'])
                 #strip out any unapproved punctuation - done in my_unidecode
@@ -914,10 +722,6 @@ class Backend(threading.Thread):
                 else: #idiot/not idiot always downgrade TIT2 to form title
                     tit2 = self._downgrade_data('TIT2', child)
                     title = self._my_unidecode(tit2)
-#                    title = self._my_unidecode(child.attrib['TIT2']) \
-#                                if self.mode == 0 \
-#                                else self._my_unidecode(\
-#                             child.attrib['TIT2'][5:-2].split(',')[0][1:-1])
                     child.attrib['Name'] = "{0}-{1:02d}".format(\
                                                      ancestor_name, my_num)
                     child.text="{0}{1}-{2:02d}-{3}".format(self.prefix, \
@@ -927,11 +731,9 @@ class Backend(threading.Thread):
                                                ['TIT2', child.attrib['TIT2']]]
                     else: #simple
                         vout = [['Name', child.attrib['Name']],['TIT2', tit2]]
-#                vout = [['Name', child.attrib['Name']], ['TIT2', title]]
                 self.to_be_renamed[child.tag] = [vout, child.text]
                 my_num += 1
             self.qr.put(('PROGSTEP', 1))
-#            self.update_idletasks()
 
 
     def _my_unidecode(self, text):
@@ -998,7 +800,7 @@ class Backend(threading.Thread):
 
     def _read_mp3_tags(self, filepath):
         """read in an mp3 files tags to Treeview wiget"""
-
+#        print('in read mp3 tags')
         if os.path.getsize(filepath) > 0:
             audio = ID3(filepath)
             result = ['file', '', filepath]
@@ -1024,7 +826,6 @@ class Backend(threading.Thread):
                     result[-1] = DEFAULT_VALUES['ide3v24'][k].\
                                     replace('[""]', '["{}"]'.\
                                             format(self.template[k]))
-#                self.update_idletasks()
             #now add empty string for 'adummy' column
             result.extend(['',])
             #add HIDDEN column to hold full APIC data if present!
@@ -1037,11 +838,13 @@ class Backend(threading.Thread):
                               self.template[self.displayColumns[index]])
         else: #zero length file No Tags!
             result = ['file', '', filepath]
-            if 'TIT2' in self.displayColumns[2:-1]:
+#            print('full display columns is {}'.format(self.displayColumns))
+#            print('zero length file, with display columns {}'.format(self.displayColumns[2:-1]))
+#            if 'TIT2' in self.displayColumns[2:-1]:
+            if 'TIT2' in self.displayColumns[1:-1]:
                 result.extend(['[3, ["{}"]]'.format(\
-                                     os.path.basename(filepath)[:-4])] \
-                                     if k == 'TIT2' else ['#',])
-#        self.update_idletasks()
+                                     os.path.basename(filepath)[:-4])])
+#        print(result)
         return result
 
 #    def _read_idiot_mp3_process(self, atag, k, apic_params, filepath):
@@ -1112,7 +915,6 @@ class Backend(threading.Thread):
 
     def _childrens_filenames(self, e_parent, temp_path, project_path_):
         '''form childrens file names'''
-#        e_parent = self.trout.find(".//" + parent)
         children = e_parent.getchildren()
         for e_child in children:
             new_dir = e_child.text
@@ -1126,8 +928,10 @@ class Backend(threading.Thread):
             else: #is file
                 title = e_child.text.strip()
                 thispath = os.path.normpath(temp_path + '/' + title + '.mp3')
-                thatpath = os.path.normpath(project_path_ + '/' + title + '.mp3')
-                if 'APIC' in self.displayColumns:
+                thatpath = os.path.normpath(project_path_ + '/' + \
+                                            self._my_unidecode(title) + '.mp3')
+                if ('APIC' in self.displayColumns) and ('APIC' in attributes.keys()):# and \
+#                           (int(os.path.getsize(thispath)) > 0):
                     #                   [temp path,
                     #                   source path,
                     #                   Apic,
@@ -1139,23 +943,26 @@ class Backend(threading.Thread):
                                           thatpath, '', \
                                           attributes['TIT2']]
                 else:
-                    self.files[child] = [thispath, \
+                    self.files[e_child.tag] = [thispath, \
                                           attributes['Location'], \
                                           '', \
-                                          self._my_unidecode(thatpath), \
+                                          thatpath, \
                                           '', \
-                                          attributes['TIT2']]
+                                          attributes['TIT2'] \
+                                          if 'TIT2' in attributes.keys() \
+                                          else os.path.basename(attributes['Location'])[:-4]]
 
 
     def _on_prepare_files(self):
         '''prepare files in temp folder'''
 
         self.qr.put(('PROGMAX', len(self.files)))
+#        print('in on prepare files, display columns =>{}<'.format(self.displayColumns))
         for child in [self.trout.find(".//" + c) \
                       for c in sorted(self.files.keys())]:
             self.qr.put(('STATUS{}', ('Preparing =>{}', \
                          self.files[child.tag][1])))
-            #   copy            from                  to
+            #   copy            from source location           to temp location
             shutil.copyfile(self.files[child.tag][1], self.files[child.tag][0])
             if int(os.path.getsize(self.files[child.tag][1])) > 0:
                 #load mp3 tags
@@ -1182,8 +989,11 @@ class Backend(threading.Thread):
                 #now discover length
                 audio_len = MP3(self.files[child.tag][0])
                 self.files[child.tag][4] = int(audio_len.info.length +0.5)
+            else:
+                print('{} is a zero length file! So...'.format(self.files[child.tag][1]))
             self.qr.put(('PROGSTEP', 1))
         self.qr.put(('STATUS', 'Files prepared.'))
+        self._on_generate_playlists()
         self.qr.put(('FILES_PREPARED', None))
         self.qr.put(('UNLOCKGUI', None))
         
@@ -1193,7 +1003,7 @@ class Backend(threading.Thread):
         if atag[0:2] in ["b'", 'b"']:
             #is bytes
             apic_params = child.attrib['APIC_'].split('|')
-            print('in idiot, apic_params ={}'.format(apic_params))
+#            print('in idiot, apic_params ={}'.format(apic_params))
             para = ast.literal_eval(apic_params[0])
             _encoding = 3
             _mime = para[1]
@@ -1259,11 +1069,6 @@ class Backend(threading.Thread):
         for atag in thetags:
             if atag != '-' and atag != '#':
                 # is not empty so add it!
-#                if self.mode == 0:
-#                    _encoding, _mime, _type, _desc, _data = \
-#                        self._preparing_file_scaning_for_tags_idiot_mode(\
-#                                                    atag, child)
-#                else:
                 _encoding, _mime, _type, _desc, _data = \
                        self._preparing_file_scaning_for_tags_advanced_mode(\
                             atag, child, picture_type_1_2, thetags)
@@ -1274,7 +1079,6 @@ class Backend(threading.Thread):
         """process tag for on_prepare_files"""
 
         if k == "APIC":
-#            print('in _preparing_file_scaning_for_tags APIC ={}'.format(child.attrib[k]))
             self._p_f_s_f_t_process_apic(child, audio, thetags)
         else:
             list_owners = list()
@@ -1305,11 +1109,7 @@ class Backend(threading.Thread):
         So that they will only sort in the order specified."""
 
         #finally copy all file to final destination):
-#        lang = self.ddnGuiLanguage.get()
         self.qr.put(('STATUS', 'Removing any old project files...' ))
-#        self.status['text'] = \
-#                   LOCALIZED_TEXT[lang]['Removing any old project files...']
-#        self.update_idletasks()
         if target[1:] != ':\\' and \
                  os.path.exists(os.path.normpath(target + '/' + self.project)):
             # remove if exists
@@ -1321,9 +1121,6 @@ class Backend(threading.Thread):
         target = forward_slash_path(target)
         #decide if space avaialable on target - abort if not with error message
         self.qr.put(('STATUS', 'Calculating needed space...' ))
-#        self.status['text'] = \
-#                   LOCALIZED_TEXT[lang]['Calculating needed space...']
-#        self.update_idletasks()
         _, _, free = shutil.disk_usage(os.path.normpath(target))
         needed = folder_size(\
                     os.path.normpath(self.Pub2SD + '/Temp/'+self. project)) / \
@@ -1332,78 +1129,57 @@ class Backend(threading.Thread):
         if needed > free:
             self.qr.put(('MESSAGEBOXSHOWERRORINSUFFICENT', \
                          ("Insufficent space on target!", \
-                          "Needed {}Mb, but only {}Mb available", needed, free)))
-#            messagebox.showerror(\
-#                LOCALIZED_TEXT[lang]["Insufficent space on target!"], \
-#                LOCALIZED_TEXT[lang]["Needed {}Mb, but only {}Mb available"].\
-#                              format(needed, free))
+                        "Needed {}Mb, but only {}Mb available", needed, free)))
             return
         self.qr.put(('STATUS', 'Making project directories...'))
-#        self.status['text'] = \
-#                   LOCALIZED_TEXT[lang]['Making project directories...']
-#        self.update_idletasks()
-        #now open all files at once to make create dates the same
         fileId = {}
         listpaths = []
-        for child in self.files:
-            final_path = os.path.normpath(target + \
-                                '/'.join(self.files[child][3].split('/')[:-1]))
+        for child in sorted(self.files.keys()):
+#            final_path = os.path.normpath(target + \
+#                                '/'.join(self.files[child][3].split('/')[:-1]))
+            final_path = os.path.dirname(\
+                            os.path.normpath(target + self.files[child][3]))
             if final_path not in listpaths:
                 os.makedirs(final_path, mode=0o777, exist_ok=True)
                 listpaths.extend([final_path])
-            #self.status['text'] = final_path
             self.qr.put(('PROGSTEP', 1))
-#            self.progbar.step()
-#            self.update_idletasks()
+        #now open all files at once to make create dates the same
         self.qr.put(('STATUS', 'Opening target files...'))
-#        self.status['text'] = LOCALIZED_TEXT[lang]['Opening target files...']
-#        self.update_idletasks()
         for child in self.files:
-            fileId[child] = open(target + self.files[child][3], mode='wb')
-            self.progbar.step()
-            self.update_idletasks()
+            fileId[child] = open(os.path.normpath(target + \
+                                              self.files[child][3]), mode='wb')
+            self.qr.put(('PROGSTEP', 1))
         self.qr.put(('STATUS', 'Copying to target files...'))
-#        self.status['text'] = \
-#                   LOCALIZED_TEXT[lang]['Copying to target files...']
-#        self.update_idletasks()
-        for child in self.files:
-            filein = open(self.files[child][0], mode='rb')
+        for child in sorted(self.files.keys()):
+            filein = open(os.path.normpath(self.files[child][0]), mode='rb')
             fileId[child].write(filein.read())
             filein.close()
             self.qr.put(('PROGSTEP', 1))
-#            self.progbar.step()
-#            self.update_idletasks()
+        #close all files at once to make modified dates the same
         self.qr.put(('STATUS', 'Closing target files...'))
-#        self.status['text'] = LOCALIZED_TEXT[lang]['Closing target files...']
-#        self.update_idletasks()
-        for child in self.files:
+        for child in sorted(self.files.keys()):
             fileId[child].close()
             self.qr.put(('PROGSTEP', 1))
-#            self.progbar.step()
-#            self.update_idletasks()
         self._on_copy_playlists(target)
+        self.qr.put(('PROGMAX', 0))
+        self.qr.put(('STATUS', "Publishing completed."))
 
     def _on_copy_playlists(self, target):
         """copy playlists to target, at locatons specified in
                                                          play_list_targets"""
-#        lang = self.ddnGuiLanguage.get()
+        self.qr.put(('STATUS', 'Copying playlists...'))
         source = os.path.normpath(self.Pub2SD + '/Temp/'+ self.project + '/')
         playlists = [p for p in os.listdir(source) \
                      if p.endswith('.M3U8') or p.endswith('M3U')]
-        self.qr.put(('STATUS', 'Copying playlists...'))
-#        self.status['text'] = LOCALIZED_TEXT[lang]['Copying playlists...']
+        self.qr.put(('PROGMAX', len(playlists) * ( 1 + self.is_copy_playlists_to_top + len(self.play_list_targets))))
         #main playlists
         for pp in playlists:
             shutil.copyfile(os.path.normpath(source + '/' + pp), \
                             os.path.normpath(target + self.project + '/' + pp))
             self.qr.put(('PROGSTEP', 1))
-#            self.progbar.step()
-#            self.update_idletasks()
         #now top level?
-        if self.is_copy_playlists_to_top.get() == 1:
+        if self.is_copy_playlists_to_top:
             self.qr.put(('STATUS', 'Copying playlists to top folder...'))
-#            self.status['text'] = LOCALIZED_TEXT[lang]\
-#                                        ['Copying playlists to top folder...']
             for pp in playlists:
                 encode = 'utf-8' if pp.endswith('.M3U8') else 'cp1252'
                 fin = codecs.open(os.path.normpath(source + '/'+ pp),\
@@ -1415,21 +1191,15 @@ class Backend(threading.Thread):
                 fin.close()
                 fout.close()
                 self.qr.put(('PROGSTEP', 1))
-#                self.progbar.step()
-#                self.update_idletasks()
         #now in list
         for tt in self.play_list_targets:
             if tt:
                 self.qr.put(('STATUS', 'Copying playlists to target folders...'))
-#                self.status['text'] = LOCALIZED_TEXT[lang]\
-#                                    ['Copying playlists to target folders...']
                 os.makedirs(target + tt, mode=0o777, exist_ok=True)
                 for pp in playlists:
                     shutil.copyfile(os.path.normpath(source + '/' + pp), \
                                     os.path.normpath(target + tt + '/' + pp))
                     self.qr.put(('PROGSTEP', 1))
-#                    self.progbar.step()
-#                    self.update_idletasks()
 
     def _make_filename(self, child):
         """make mp3 title = filename after appropriate normalization"""
@@ -1443,7 +1213,6 @@ class Backend(threading.Thread):
 
     def _on_strip(self, to_strip, focus):
         parent = self.trout.find(".//" + focus)
-#        print('found {} going to {}'.format(parent.tag, to_strip))
         if to_strip in STRIPPERS:
             if len(parent):
                 for child in parent.getchildren():
@@ -1541,13 +1310,10 @@ class Backend(threading.Thread):
         self.qr.put(('LOCKGUI', None))
         e_child = self.trout.find(".//" + focus)
         if etree.iselement(e_child):
-#            print('child is {}'.format(e_child.tag))
             e_parent = e_child.getparent()
             if etree.iselement(e_parent):
-#                print('parent is {}'.format(e_parent.tag))
                 e_grandparent = e_parent.getparent()
                 if etree.iselement(e_grandparent):
-#                    print('grandparent is {}'.format(e_grandparent.tag))
                     if self._is_promotable(e_grandparent.attrib['Type'],  \
                                            e_parent.attrib['Type'], \
                                            e_child.attrib['Type']):
@@ -1589,9 +1355,6 @@ class Backend(threading.Thread):
         self.to_be_inserted = dict()
         self._load_tree_from('')
         self.qr.put(('ADD_ITEMS', self.to_be_inserted))
-#        self.to_be_renamed = dict()
-#        self._rename_children_of(list(self.trout)[0].tag)
-#        self.qr.put(('RENAME_CHILDREN', self.to_be_renamed))
 
     def _on_reload_tree(self):
         self.qr.put(('CLEARTREE', None))
@@ -1625,19 +1388,13 @@ class Backend(threading.Thread):
         elif column == 'TIT2' \
                     and (focus_item.attrib['Type'] is 'collection' \
                     or os.path.getsize(location) == 0):
-            #if 'Advanced' mode need to filter out the [3,[""]] stuff from text!
-#            item = self.trout.find(".//" + focus)
             if self.mode == 0:
                 #idiot mode
-#                focus_item.attrib[column] = text
                 #so need to fill in advanced stuff
                 focus_item.attrib[column] = '[3,["' + text + '"]]'
             else:
                 #advanced mode
                 #[3,[""]]
-#                _start = text.find('[', text.find('[') + 1) + 2
-#                _end = text.find(']') - 1
-#                focus_item.attrib[column] = text[_start:_end]
                 #is advanced so what you see is what you get
                 focus_item.attrib[column] = text
         else:
@@ -1664,15 +1421,11 @@ class Backend(threading.Thread):
             self.qr.put(('MESSAGEBOXWARNTRACK', ('', 'Set', \
                                             ' TRCK, >{}< {}'.format(text, \
                                         "doesn't contain a valid integer."))))
-#            messagebox.showwarning('', \
-#              LOCALIZED_TEXT[lang]['Set'] + ' TRCK, >{}< {}'.format(text, \
-#                LOCALIZED_TEXT[lang]["doesn't contain a valid integer."]))
 
     def _is_track_of_tracks(self, tp, tempstr, focus_item, text):
         """track specified as 1/10 format so set for this file or all
            dependants of a collection. Where 0/0 count dependants and
            set as n/count."""
-#        focus_item = self.trout.find(".//" + focus)
 
         if tp[0].isdecimal and tp[1].isdecimal: #is track / of tracks
             self.next_track = int(tp[0])
@@ -1703,14 +1456,9 @@ class Backend(threading.Thread):
                     focus_item.attrib['TRCK'] = '[3,[{}]]'.\
                                                     format(','.join(newtrack))
                 self.next_track += 1
-#                self.tree.see(focus)
         else: #invalid track or set of
             self.qr.put(('MESSAGEBOXWARNTRACK', ('', 'Set',' TRCK, >{}< {}', \
                 text, "'track in/set_of' doesn't contain a valid integers.")))
-#            messagebox.showwarning('', \
-#                    LOCALIZED_TEXT[lang]['Set'] + ' TRCK, >{}< {}'\
-#                    .format(text, LOCALIZED_TEXT[lang][\
-#            "'track in/set_of' doesn't contain a valid integers."]))
 
     def _count_files_below(self, focus_item):
         '''count nos of files below this point'''
@@ -1794,8 +1542,6 @@ class Backend(threading.Thread):
     def _set_tag_(self, parent, column, text):
         """set tag specified in column with value in text, for current
            item or it's dependants"""
-#        column = self.ddnSelectTag.get().split(':')[0]
-#        text = self.etrTagValue.get()
         if parent.attrib['Type'] in ['collection', 'project']:
             children = parent.getchildren()
             for child in children:
@@ -1858,25 +1604,17 @@ class Backend(threading.Thread):
 
         # this is where all labels changed modify for new prog
         # - just kept as example
-#        lang = self.ddnGuiLanguage.get()
-        self.nodes = 0
-        self._count_nodes('')
+#        self.nodes = 0
+        self.nodes = len(self.trout.find(".//I00001").xpath(".//*"))
+#        self._count_nodes('')
         self.qr.put(('PROGMAX', self.nodes))
-#        self.progbar['maximum'] = self.nodes
-#        self.progbar['value'] = 0
         self.qr.put(('STATUS', 'Creating playlists...'))
-#        self.status['text'] = LOCALIZED_TEXT[lang]['Creating playlists...']
-#        self.progbar['value'] = 0
-#        self.update_idletasks()
         project_path_ = '../{}/'.format(self.project)
         project_file_list = list()
         e_project = self.trout.find(".//I00001")
         self._create_play_list(e_project, project_path_, \
                                                           project_file_list)
         self.qr.put(('STATUS', ''))
-#        self.status['text'] = ''
-#        self.progbar['value'] = 0
-#        self.update_idletasks()
 
     def _create_play_list(self, pid_item, ploc, glist):
         """create play list
@@ -1885,82 +1623,84 @@ class Backend(threading.Thread):
                glist = ancestors list/index to plists
                plistid index to plists which holds all play lists in
                               form [[name, [list/set of targetfilepaths]],]"""
-#        lang = self.ddnGuiLanguage.get()
-#        pid_item = self.trout.find(".//" + pid)
 
         this_list = list() #list for this pid
         self.qr.put(('PROGSTEP', 1))
         self.qr.put(('STATUS{}', ('Creating playlist for {}', pid_item.text)))
-#        self.progbar.step()
-#        self.status['text'] = LOCALIZED_TEXT[lang]['Creating playlist for {}']\
-#                                            .format(self.tree.item(pid)['text'])
-#        self.update_idletasks()
         for child in pid_item.getchildren():
             if child.attrib['Type'] in ['collection', 'project']:
                 cloc = ploc + child.text + '/'
                 self._create_play_list(child, cloc, this_list)
-            else:
-                #is file so...
-                this_list.append([os.path.normpath(self.files[child][3]), \
+            elif os.path.getsize(os.path.normpath(self.files[child.tag][0])) > 0:
+                #is real mp3 file so...
+                this_list.append([os.path.normpath(self.files[child.tag][3]), \
                                                 child.attrib['TIT2'], \
                                                 child.attrib['TALB'], \
                                                 str(self.files[child.tag][4])])
+            else:
+                #is zero length file so...
+                pass
         #found all of my children so copy this list upto glist
-        glist.extend(this_list)
-        #now make playlist for this collection
-        playlist = ['#EXTM3U',]
-        #write out to self.Pub2SD +/Temp/+ self.project/ collection name
-        if self.M3UorM3U8.get() == 2:
-            #is utf-8
-            for item in this_list:#   secs,alb,title,location
-                playlist.append('#EXTINF:{},{}-{}\r\n../{}'.\
-                                format(item[3], item[2], item[1], \
-                                       forward_slash_path(item[0])))
-            filepath = os.path.normpath('{}/Temp/{}/{}.M3U8'.\
-                                        format(self.Pub2SD, self.project, \
-                                               pid_item.text))
-            fileout = codecs.open(filepath, mode='w', encoding='utf-8')
-            fileout.write('\r\n'.join(playlist))
-            fileout.close()
-        elif self.M3UorM3U8.get() == 1:
-            #is legacy
-            for item in this_list:
-                playlist.append('#EXTINF:{},{}-{}\r\n../{}'.\
-                                format(item[3], self._my_unidecode(item[2]), \
-                                       self._my_unidecode(item[1]), \
-                                                forward_slash_path(item[0])))
-            filepath = os.path.normpath('{}/Temp/{}/{}.M3U'.\
-                                        format(self.Pub2SD, self.project, \
-                                               pid_item.text))
-            fileout = codecs.open(filepath, mode='w', encoding='cp1252')
-            fileout.write('\r\n'.join(playlist))
-            fileout.close()
-        else:
-            #is both
-            utf8list = ['#EXTM3U',]
+        if this_list:
+            glist.extend(this_list)
+            #now make playlist for this collection
             playlist = ['#EXTM3U',]
-            for item in this_list:#   secs,alb,title,location
-                utf8list.append('#EXTINF:{},{}-{}\r\n../{}'.\
-                                format(item[3], item[2], item[1], \
-                                       forward_slash_path(item[0])))
-                playlist.append('#EXTINF:{},{}-{}\r\n../{}'.\
-                                format(item[3], self._my_unidecode(item[2]), \
-                                       self._my_unidecode(item[1]), \
-                                                forward_slash_path(item[0])))
-            #utf-8
-            fileputf = os.path.normpath('{}/Temp/{}/{}.M3U8'.\
-                                        format(self.Pub2SD, self.project, \
-                                               pid_item.text))
-            fileutf = codecs.open(fileputf, mode='w', encoding='utf-8')
-            fileutf.write('\r\n'.join(utf8list))
-            fileutf.close()
-            #legacy
-            filepath = os.path.normpath('{}/Temp/{}/{}.M3U'.\
-                                        format(self.Pub2SD, self.project, \
-                                               pid_item.text))
-            fileout = codecs.open(filepath, mode='w', encoding='cp1252')
-            fileout.write('\r\n'.join(playlist))
-            fileout.close()
+            #write out to self.Pub2SD +/Temp/+ self.project/ collection name
+            if self.M3UorM3U8 == 2:
+                #is utf-8
+                for item in this_list:#   secs,alb,title,location
+                    playlist.append('#EXTINF:{},{}-{}\r\n../{}'.\
+                                    format(item[3], item[2], item[1], \
+                                           forward_slash_path(item[0])))
+                filepath = os.path.normpath('{}/Temp/{}/{}.M3U8'.\
+                                            format(self.Pub2SD, self.project, \
+                                                   pid_item.text))
+                fileout = codecs.open(filepath, mode='w', encoding='utf-8')
+                fileout.write('\r\n'.join(playlist))
+                fileout.close()
+            elif self.M3UorM3U8 == 1:
+                #is legacy
+                for item in this_list:
+                    playlist.append('#EXTINF:{},{}-{}\r\n../{}'.\
+                                    format(item[3], self._my_unidecode(item[2]), \
+                                           self._my_unidecode(item[1]), \
+                                                    forward_slash_path(item[0])))
+                filepath = os.path.normpath('{}/Temp/{}/{}.M3U'.\
+                                            format(self.Pub2SD, self.project, \
+                                                   pid_item.text))
+                fileout = codecs.open(filepath, mode='w', encoding='cp1252')
+                fileout.write('\r\n'.join(playlist))
+                fileout.close()
+            else:
+                #is both
+                utf8list = ['#EXTM3U',]
+                playlist = ['#EXTM3U',]
+                for item in this_list:#   secs,alb,title,location
+                    utf8list.append('#EXTINF:{},{}-{}\r\n../{}'.\
+                                    format(item[3], item[2], item[1], \
+                                           forward_slash_path(item[0])))
+                    playlist.append('#EXTINF:{},{}-{}\r\n../{}'.\
+                                    format(item[3], self._my_unidecode(item[2]), \
+                                           self._my_unidecode(item[1]), \
+                                                    forward_slash_path(item[0])))
+                #utf-8
+                fileputf = os.path.normpath('{}/Temp/{}/{}.M3U8'.\
+                                            format(self.Pub2SD, self.project, \
+                                                   pid_item.text))
+                fileutf = codecs.open(fileputf, mode='w', encoding='utf-8')
+                fileutf.write('\r\n'.join(utf8list))
+                fileutf.close()
+                #legacy
+                filepath = os.path.normpath('{}/Temp/{}/{}.M3U'.\
+                                            format(self.Pub2SD, self.project, \
+                                                   pid_item.text))
+                fileout = codecs.open(filepath, mode='w', encoding='cp1252')
+                fileout.write('\r\n'.join(playlist))
+                fileout.close()
+        else:
+            #no files in this collection with length greater than zero!
+            #so skip it!!!
+            pass
 
     def _copy_old_columns_to_new_where_exist(self, child, idiot_case, \
                                                                 old_columns):
@@ -2027,6 +1767,45 @@ class Backend(threading.Thread):
             for child in children:
                 self._attach_artwork_to(child.tag, _picture_type, _desc, artwork)
 
+    def _on_publish_to_SD(self):
+        """publish files and playlists to SDs"""
+
+        lang = self.ddnGuiLanguage.get()
+        threads = []
+        self.qr.put(('PROGMAX', (len(self.files) * 4 * len(self.output_to))))
+
+        i = 1
+        currentThreadsActive = threading.activeCount()
+        for atarget in self.output_to:
+            if atarget:
+                if os.path.exists(atarget):
+                    target = atarget
+                    threads.append(MyThread(target, \
+                                            self.ddnGuiLanguage.get(), \
+                                            self.Pub2SD, self.project, \
+                                            self.play_list_targets, \
+                                            self.is_copy_playlists_to_top, \
+                                            self.files, aqr[i-1]))
+                    i += 1
+                    threads[-1].start()
+                    self.status['text'] = \
+                               LOCALIZED_TEXT[lang]['{} Threads active'].\
+                           format(threading.activeCount()-currentThreadsActive)
+                else:
+                    messagebox.showerror(\
+                                        LOCALIZED_TEXT[lang]["Invalid path"], \
+                                        LOCALIZED_TEXT[lang]["Can't find {}"].\
+                                                      format(atarget))
+
+        while threading.activeCount() > currentThreadsActive:
+            self.status['text'] = LOCALIZED_TEXT[lang]['{} Threads active'].\
+                       format(threading.activeCount()-currentThreadsActive)
+        self.qr.put(('PROGSTOP', None))
+        [athread.join() for athread in threads]
+
+        self.qr.put(('PROGMAX', 0))
+        self.qr.put(('STATUS', "Output to SD('s) completed."))
+
 
 def get_rid_of_multiple_spaces(tin):
     """replace multiple spaces with single space and strip leading and
@@ -2059,7 +1838,6 @@ def sort_key_for_filenames(filename):
     """build the sort key for imported file names, attempting to guess
        which order is implied by various numbering schemes
        (e.g. chapter numbers without leading zeros, etc...)"""
-    #print(filename)
     if filename[0].isdigit():
         #starts with digit
         digits = FIND_LEADING_DIGITS.findall(filename)[0]
@@ -2103,7 +1881,7 @@ def to_alpha(anumber):
         pass
     else:
         while anumber > 0:
-            anumber = anumber - 1
+            anumber = anumber
             output += chr(anumber % 26 + ord('A'))
             anumber = anumber // 26
     return output[::-1]

@@ -304,6 +304,9 @@ SET_TAGS = {\
 
 LOCALIZED_TEXT = { \
         'en-US':{ \
+            "Publishing completed.":"Publishing completed.", 
+            "Project can't hold '.mp3' files directly.":"Project can't hold '.mp3' files directly.", \
+            "Add a collection first or use 'Add Folder...'.":"Add a collection first or use 'Import a Folder...'.", \
             "Can't promote.":"Can't promote.", \
             "Can't demote.":"Can't demote.", \
             "Can't find child.":"Can't find child.", \
@@ -580,6 +583,11 @@ LOCALIZED_TEXT = { \
             "Preparing =>{}":"Preparing =>{}", \
             }, \
         'fr-FR':{ \
+            "Publishing completed.":"Publication terminée.", 
+            "Project can't hold '.mp3' files directly.":\
+                "Le projet ne peut pas contenir les fichiers '.mp3' directement.", \
+            "Add a collection first or use 'Add Folder...'.":\
+                "Ajoutez d'abord une collection ou utilisez 'Importer un Dossier...'.", \
             "Can't promote.":"Je ne peux pas promouvoir.", \
             "Can't demote.":"Je ne peux pas rétrograder.", \
             "Can't find child.":"Impossible de trouver l'enfant.", \
@@ -820,6 +828,9 @@ LOCALIZED_TEXT = { \
             "Unpacking complete.":"Déballage terminé.", \
             }, \
         'pt-PT':{ \
+            "Publishing completed.":"Publicação concluída.", 
+            "Project can't hold '.mp3' files directly.":"O projeto não pode conter arquivos '.mp3' diretamente.", \
+            "Add a collection first or use 'Add Folder...'.":"Adicione uma coleção primeiro ou use 'Importar uma Pasta...'.", \
             "Can't promote.":"Não pode promover.", \
             "Can't demote.":"Não pode rebaixar.", \
             "Can't find child.":"Não consegue encontrar criança.", \
