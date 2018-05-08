@@ -9,13 +9,14 @@ import queue
 
 from .myconst.localizedText import LOCALIZED_TEXT
 
+    
 class MyThread(threading.Thread):
     """handle copying to multiple SD cards"""
-    def __init__(self, target, lang, pub2sd, project, \
+    def __init__(self, target, pub2sd, project, \
                 play_list_targets, is_copy_playlists_to_top, files, aqr):
         threading.Thread.__init__(self)
         self.target = target
-        self.lang = lang
+#        self.lang = lang
         self.pub2sd = pub2sd
         self.project = project
         self.play_list_targets = play_list_targets
@@ -25,11 +26,16 @@ class MyThread(threading.Thread):
 
     def run(self):
         """run the thread"""
-        on_publish_files(self.target, self.lang, self.Pub2SD, \
+#        on_publish_files(self.target, self.lang, self.Pub2SD, \
+#                       self.project, self.play_list_targets, \
+#                       self.is_copy_playlists_to_top, self.files)
+        on_publish_files(self.target, self.pub2sd, \
                        self.project, self.play_list_targets, \
                        self.is_copy_playlists_to_top, self.files)
 
-def on_publish_files(target, lang, Pub2SD, project, play_list_targets, \
+#def on_publish_files(target, lang, Pub2SD, project, play_list_targets, \
+#                     is_copy_playlists_to_top, files):
+def on_publish_files(target, Pub2SD, project, play_list_targets, \
                      is_copy_playlists_to_top, files):
     '''publish files to target used by MyThead class'''
     #finally copy all file to final destination):
@@ -42,18 +48,19 @@ def on_publish_files(target, lang, Pub2SD, project, play_list_targets, \
 
     os.makedirs(os.path.normpath(target + project), mode=0o777, exist_ok=True)
     target = forward_slash_path(target)
-    #decide if space avaialable on target - abort if not with error message
-    total, used, free = shutil.disk_usage(os.path.normpath(target))
-    _, _, free = shutil.disk_usage(os.path.normpath(target))
-    needed = folder_size(os.path.normpath(Pub2SD + '/Temp/'+ project)) / \
-                                                            (1024.0 * 1024.0)
-    free = free / (1024.0 * 1024.0)
-    if needed > free:
-        messagebox.showerror(\
-                LOCALIZED_TEXT[lang]["Insufficent space on target!"], \
-                LOCALIZED_TEXT[lang]["Needed {}Mb, but only {}Mb available"].\
-                              format(needed, free))
-        return
+    #already checked before launching thread if sufficent room!
+#    #decide if space avaialable on target - abort if not with error message
+#    total, used, free = shutil.disk_usage(os.path.normpath(target))
+#    _, _, free = shutil.disk_usage(os.path.normpath(target))
+#    needed = folder_size(os.path.normpath(Pub2SD + '/Temp/'+ project)) / \
+#                                                            (1024.0 * 1024.0)
+#    free = free / (1024.0 * 1024.0)
+#    if needed > free:
+#        messagebox.showerror(\
+#                LOCALIZED_TEXT[lang]["Insufficent space on target!"], \
+#                LOCALIZED_TEXT[lang]["Needed {}Mb, but only {}Mb available"].\
+#                              format(needed, free))
+#        return
     os.makedirs(os.path.normpath(target + '/' + project), mode=0o777, \
                 exist_ok=True)
 

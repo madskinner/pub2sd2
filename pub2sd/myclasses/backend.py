@@ -50,18 +50,19 @@ from mutagen.id3 import ID3, error, APIC#, \
 #                        WOAS, WORS, WPAY, WPUB
 
 from .myconst.audio import AUDIO
+from .threads import MyThread
 
 class Backend(threading.Thread):
     """handle processing files"""
 
-    def __init__(self, qc, qr, aqr, tl):
+    def __init__(self, qc, qr, aqr): #, tl):
         threading.Thread.__init__(self)
         self.threadID = 1
         self.name = 'backend'
         self.qc = qc
         self.qr = qr
         self.aqr = aqr
-        self.threadlock = tl
+#        self.threadlock = tl
         self.exitFlag = 0
         self.mode = 0
         self.displayColumns = list()
@@ -76,8 +77,7 @@ class Backend(threading.Thread):
                                 'APIC', 'TDRC', 'TRCK', 'TPOS', 'COMM', \
                                 'TCON', 'TCOM']
         self.list_of_tags = set()
-        self.next_iid = 1
-        self.to_be_inserted = dict()
+        self.next_iid = list()
         self.displayColumns = list()
         self.columns = list()
         self.to_be_renamed = dict()
@@ -97,6 +97,8 @@ class Backend(threading.Thread):
         self.ishide = 0
         self.files = dict()
         self.M3UorM3U8 = 2
+        self.output_to = list()
+        
 
 
 #        self.maxcolumnwidths = [0, 0, 0, ]
@@ -106,7 +108,7 @@ class Backend(threading.Thread):
             acommand = self.qc.get()
             if 'EXIT' in acommand:
                 self.exitFlag = 1
-                self.qc.task_done()#                self.destroy()
+                self.qc.task_done()
                 # self.exitFlag can be set by error condition in backend
             elif 'MODE' in acommand:
                 self.mode = acommand[1]
@@ -151,7 +153,7 @@ class Backend(threading.Thread):
                 self.qc.task_done()
             elif 'ADD_FOLDER' in acommand:
                 self.qr.put(('LOCKGUI', None))
-                self.to_be_inserted = dict()
+                self.to_be_inserted = list()
                 the_focus, adir_path = acommand[1]
                 self.qr.put(('PROGMAX', count_mp3_files_below(adir_path) * 2))
                 self._add_tree(the_focus, adir_path, False)
@@ -167,7 +169,7 @@ class Backend(threading.Thread):
                 # collection in way
                 self.qr.put(('LOCKGUI', None))
                 self.qr.put(('PROGMAX', count_mp3_files_below(adir_path) * 2))
-                self.to_be_inserted = dict()
+                self.to_be_inserted = list()
                 self._add_tree(the_focus, adir_path, True)
                 self._on_reload_tree()
                 self.qr.put(('STATUS', "Unpacking complete."))
@@ -187,7 +189,7 @@ class Backend(threading.Thread):
                 focus, filenames = acommand[1]
                 self.qr.put(('LOCKGUI', None))
                 self.qr.put(('PROGMAX', len(filenames) * 2))
-                self.to_be_inserted = dict()
+                self.to_be_inserted = list()
                 self._add_files(focus, filenames)
                 self._on_reload_tree()
                 self.qr.put(('UNLOCKGUI', None))
@@ -229,10 +231,36 @@ class Backend(threading.Thread):
                 self.play_list_targets, self.is_copy_playlists_to_top = acommand[1]
             elif 'M3UorM3U8' in acommand:
                 self.M3UorM3U8 = acommand[1]
+            elif 'OUTPUT_TO' in acommand:
+                self.output_to = acommand[1]
+            elif 'PUBLISH_TO_SD' in acommand:
+                self._on_publish_to_SD()
+            elif 'DELETETEMP' in acommand:
+                self._delete_temp_folder()
+                self.qr.put(('DELETEDTEMP', None))
+                break
+            elif 'DIE_DIE_DIE' in acommand:
+                self.exitFlag = True
+                print("I'm out of here!!!")
+                break
+                
             else:
                 print('backend lost, acommand was {}'.format(acommand))
                 self.qc.task_done()
 
+    def _delete_temp_folder(self):
+        """delete the temporary folder"""
+        self.qr.put(('STATUS', "Deleting old temporary folder."))
+        #FIRST DELETE ALL FILES
+        for afile in self.files:
+            if os.path.isfile(afile[0]):
+                os.remove(afile[0])
+                self.qr.put(('PROGSTEP', -1))
+        #THEN DELETE EMPTY TREE
+        temp = os.path.normpath(self.Pub2SD + '/Temp')
+        if os.path.exists(temp):
+            shutil.rmtree(temp)
+        
     def _load_conf_file(self, aconf_file):
         """loads the old project file into etree tree"""
         the_file = os.path.normpath(self.Pub2SD + '/' + aconf_file + '.prj')
@@ -333,7 +361,6 @@ class Backend(threading.Thread):
             self.list_of_tags = self.list_of_tags.union(set(IDIOT_TAGS.keys()))
             all_tags = self.recommendedTags + list(set(self.recommendedTags)\
                                         .difference(set(IDIOT_TAGS.keys())))
-#            self._pdup_state('disabled')
         else:
             self.smode.attrib['Idiot'] = 'False'
             self.list_of_tags = self.list_of_tags.union(\
@@ -341,7 +368,6 @@ class Backend(threading.Thread):
             all_tags = self.recommendedTags + \
                list(set(self.recommendedTags).\
                                     difference(set(SET_TAGS['en-US'].keys())))
-#            self._pdup_state('normal')
         self.preferred = int(self.smode.attrib['preferred'] == 'True')
         self.qr.put(('TXTPREFCHARDEL', (0.0, 9999.9999)))
         if self.sf2.text != None:
@@ -424,7 +450,6 @@ class Backend(threading.Thread):
                  e.g. on a text frame, 'a string' becomes [3, ['astring', ]]"""
 
         #for each frame in last value in the_values, smarten it up
-#        this_frame = the_values[-1]
         #hang on was idiot so single frames par tout
         #look up tag default value,
         a_frame = child.attrib[item]
@@ -437,7 +462,6 @@ class Backend(threading.Thread):
                                              or a_frame[-1][0:2] == "b'":
                         #is place holder
                         #grab APIC_, first frame!
-#                        a_frame = child.attrib['APIC_'].split('|')[0]
                         this_frame = child.attrib['APIC_']
                         param = ast.literal_eval(this_frame)
                         #is bytes
@@ -513,7 +537,6 @@ class Backend(threading.Thread):
 
         if self.mode == 0:
             self.list_of_tags = self.list_of_tags.union(set(IDIOT_TAGS.keys()))
-#            self._pdup_state('disabled')
         else:
             self.list_of_tags = self.list_of_tags.union(\
                                                 set(SET_TAGS['en-US'].keys()))
@@ -551,7 +574,7 @@ class Backend(threading.Thread):
                             vout.append(data)
                     else:
                         vout.append('-')
-                self.to_be_inserted[child.tag] = (parent, vout, child.text if child.text else '')
+                self.to_be_inserted.append([child.tag, [parent, vout, child.text if child.text else '']])
                 self._load_tree_from(child.tag)
 
 
@@ -596,11 +619,10 @@ class Backend(threading.Thread):
     def _add_a_file(self, afile, e_parent):
         """loads a file into e_parent within self.trout"""
         #always hold data in advanced form, only choose to diplay as idiot
-#        print('add=>{}< to >{}<'.format(afile, e_parent.tag))
         somevalues = self._read_mp3_tags(afile)
         iid = "I{:05X}".format(self.next_iid)
         self.next_iid += 1
-        self.to_be_inserted[iid] = (e_parent.tag, somevalues, 'file')
+        self.to_be_inserted.append([iid, [e_parent.tag, somevalues, 'file']])
         e_child = etree.SubElement(e_parent, iid)
         e_child.text = 'file'
         for c,v in zip(self.columns, somevalues):
@@ -621,7 +643,7 @@ class Backend(threading.Thread):
             vout.extend(['-' for item in self.displayColumns[2:-1]])
             iid = "I{:05X}".format(self.next_iid)
             self.next_iid += 1
-            self.to_be_inserted[iid] = (the_focus, vout, 'collection')
+            self.to_be_inserted.append([iid, [the_focus, vout, 'collection']])
             thisdir = iid
             e_focus = self.trout.find(".//" + the_focus)
             e_parent = etree.SubElement(e_focus, iid)
@@ -634,8 +656,6 @@ class Backend(threading.Thread):
         #step through a list of filepaths for all mp3 files in current dir only
         for f_ in [forward_slash_path(afile) \
                    for afile in glob.glob(adir_path + '/*.mp3')]:
-#            print('sort key =>{}<, for {}'.format(sort_key_for_filenames(os.path.basename(f_)[:-4]), \
-#                                                    os.path.basename(f_)[:-4]))
             _ff[sort_key_for_filenames(os.path.basename(f_)[:-4])] = \
                                                     os.path.basename(f_)[:-4]
             flist[os.path.basename(f_)[:-4]] = f_
@@ -676,12 +696,7 @@ class Backend(threading.Thread):
                 my_name = 1
                 my_isalpha = False
         my_num = 1
-#        if my_isalpha:
-#            nos_chars = len(to_alpha(len(children)))
-#            pass
-#        else:
-#            nos_digits = (len(str(len(children)))-1) \
-#                     if my_name == 1 else 0
+
         nos_chars = len(to_alpha(len(children))) if my_name == 1 else 0
         nos_digits = (len(str(len(children)))-1) if my_name == 1 else 0
 
@@ -776,7 +791,7 @@ class Backend(threading.Thread):
 
     def _read_mp3_process_atag(self, atag, k, apic_params, filepath):
         """process the (advanced) mp3 tag"""
-        #force utf8 encoding, the form all text is held in internally
+        #force utf8 encoding, which is the form all text is held in internally
         atag.encoding = 3
 
         theParameters = None
@@ -800,7 +815,6 @@ class Backend(threading.Thread):
 
     def _read_mp3_tags(self, filepath):
         """read in an mp3 files tags to Treeview wiget"""
-#        print('in read mp3 tags')
         if os.path.getsize(filepath) > 0:
             audio = ID3(filepath)
             result = ['file', '', filepath]
@@ -838,80 +852,10 @@ class Backend(threading.Thread):
                               self.template[self.displayColumns[index]])
         else: #zero length file No Tags!
             result = ['file', '', filepath]
-#            print('full display columns is {}'.format(self.displayColumns))
-#            print('zero length file, with display columns {}'.format(self.displayColumns[2:-1]))
-#            if 'TIT2' in self.displayColumns[2:-1]:
             if 'TIT2' in self.displayColumns[1:-1]:
                 result.extend(['[3, ["{}"]]'.format(\
                                      os.path.basename(filepath)[:-4])])
-#        print(result)
         return result
-
-#    def _read_idiot_mp3_process(self, atag, k, apic_params, filepath):
-#        """process the idiot mp3 tag"""
-#
-#        theParameters = None
-#        if k in THE_IDIOT_P:
-#            theParameters = THE_P[k](atag, False)
-#        elif k == 'APIC':
-#            m = hashlib.sha256(atag.data)
-#            if m.hexdigest() not in self.hashed_graphics:
-#                self.hashed_graphics[m.hexdigest()] = atag.data
-#            apic_params.extend([str([int(atag.encoding), \
-#                                     atag.mime, \
-#                                     int(atag.type), \
-#                                        atag.desc, \
-#                                        m.hexdigest()])])
-#            length = int(len(atag.data)/1024 + 0.5)
-#            theParameters = "b'{}Kb'".format(length)
-#        else:
-#            messagebox.showerror(\
-#        'Error in read_idiot_mp3_tags()', \
-#        "{} is unrecognized MP3 tag in simple mode in {}.".\
-#             format(atag, filepath))
-#            theParameters = ''
-#        return theParameters
-#
-#    def _read_idiot_mp3_tags(self, filepath):
-#        """read the mp3 tags of file in idiot mode"""
-#        if os.path.getsize(filepath) > 0:
-#            audio = ID3(filepath)
-#            result = ['file', '', filepath]
-#            apic_params = list()
-#            for k in self.displayColumns[1:-1]:
-#                list_tags = audio.getall(k)
-#                #print(k, len(list_tags))
-#                aresult = list()
-#                if list_tags:
-#                    atag = list_tags[0]
-#                    theParameters = self._read_idiot_mp3_process(atag, k, \
-#                                                        apic_params, filepath)
-#                    if theParameters != None:
-#                        aresult.extend([str(theParameters)])
-#
-#                    result.extend(['|'.join(aresult)])
-#                else:
-#                    if k == 'TIT2':
-#                        title = os.path.basename(filepath[:-4]) \
-#                                                if '/'in filepath else filepath
-#                        result.extend(['{}'.format(title.strip())])
-#                    else:
-#                        result.extend(['-',])
-#                if k in self.template.keys() \
-#                         and self.template[k] and result[-1] == '-':
-#                    result[-1] = self.template[k]
-#            #insert empty string for adummy column
-#            result.extend(['',])
-#            if apic_params:
-#                result.extend(['|'.join(apic_params)])
-#        else: #zero length file No Tags!
-#            result = ['file', '', filepath]
-#            if 'TIT2' in self.displayColumns[1:-1]:
-#                title = os.path.basename(filepath)[:-4]
-#                result.extend(['{}'.format(title)])
-#            else:
-#                result.extend(['#',])
-#        return result
 
     def _childrens_filenames(self, e_parent, temp_path, project_path_):
         '''form childrens file names'''
@@ -930,8 +874,7 @@ class Backend(threading.Thread):
                 thispath = os.path.normpath(temp_path + '/' + title + '.mp3')
                 thatpath = os.path.normpath(project_path_ + '/' + \
                                             self._my_unidecode(title) + '.mp3')
-                if ('APIC' in self.displayColumns) and ('APIC' in attributes.keys()):# and \
-#                           (int(os.path.getsize(thispath)) > 0):
+                if ('APIC' in self.displayColumns) and ('APIC' in attributes.keys()):
                     #                   [temp path,
                     #                   source path,
                     #                   Apic,
@@ -957,7 +900,6 @@ class Backend(threading.Thread):
         '''prepare files in temp folder'''
 
         self.qr.put(('PROGMAX', len(self.files)))
-#        print('in on prepare files, display columns =>{}<'.format(self.displayColumns))
         for child in [self.trout.find(".//" + c) \
                       for c in sorted(self.files.keys())]:
             self.qr.put(('STATUS{}', ('Preparing =>{}', \
@@ -990,7 +932,8 @@ class Backend(threading.Thread):
                 audio_len = MP3(self.files[child.tag][0])
                 self.files[child.tag][4] = int(audio_len.info.length +0.5)
             else:
-                print('{} is a zero length file! So...'.format(self.files[child.tag][1]))
+                #is a zero length file! So...
+                pass
             self.qr.put(('PROGSTEP', 1))
         self.qr.put(('STATUS', 'Files prepared.'))
         self._on_generate_playlists()
@@ -1003,7 +946,6 @@ class Backend(threading.Thread):
         if atag[0:2] in ["b'", 'b"']:
             #is bytes
             apic_params = child.attrib['APIC_'].split('|')
-#            print('in idiot, apic_params ={}'.format(apic_params))
             para = ast.literal_eval(apic_params[0])
             _encoding = 3
             _mime = para[1]
@@ -1135,8 +1077,6 @@ class Backend(threading.Thread):
         fileId = {}
         listpaths = []
         for child in sorted(self.files.keys()):
-#            final_path = os.path.normpath(target + \
-#                                '/'.join(self.files[child][3].split('/')[:-1]))
             final_path = os.path.dirname(\
                             os.path.normpath(target + self.files[child][3]))
             if final_path not in listpaths:
@@ -1161,7 +1101,9 @@ class Backend(threading.Thread):
             fileId[child].close()
             self.qr.put(('PROGSTEP', 1))
         self._on_copy_playlists(target)
-        self.qr.put(('PROGMAX', 0))
+        self._delete_temp_folder()
+
+        self.qr.put(('PROGVALUE', 0))
         self.qr.put(('STATUS', "Publishing completed."))
 
     def _on_copy_playlists(self, target):
@@ -1253,6 +1195,7 @@ class Backend(threading.Thread):
                 e_parent.remove(e_child)
                 e_parent.insert(child_index, e_child)
         self._on_reload_tree()
+        self.qr.put(('SEEFOCUS', focus))
         self.qr.put(('UNLOCKGUI', None))
     
     def _on_move_down(self, focus):
@@ -1261,12 +1204,15 @@ class Backend(threading.Thread):
         e_child = self.trout.find(".//" + focus)
         if etree.iselement(e_child):
             e_parent = e_child.getparent()
+            self.qr.put(('PRINT', [[kid.tag, e_parent.index(kid)] for kid in e_parent.getchildren()]))
             child_index = e_parent.index(e_child)
             if child_index < len(list(e_parent[:-1])):
                 child_index += 1
                 e_parent.remove(e_child)
                 e_parent.insert(child_index, e_child)
+            self.qr.put(('PRINT', [[kid.tag, e_parent.index(kid)] for kid in e_parent.getchildren()]))
         self._on_reload_tree()
+        self.qr.put(('SEEFOCUS', focus))
         self.qr.put(('UNLOCKGUI', None))
     
     def _on_demote(self, focus):
@@ -1303,6 +1249,7 @@ class Backend(threading.Thread):
             self.qr.put(('MESSAGEBOXSHOWERRORIN', \
                          ("Can't demote", "Can't find child.")))
         self._on_reload_tree()
+        self.qr.put(('SEEFOCUS', focus))
         self.qr.put(('UNLOCKGUI', None))
     
     def _on_promote(self, focus):
@@ -1334,6 +1281,7 @@ class Backend(threading.Thread):
             self.qr.put(('MESSAGEBOXSHOWERRORIN', \
                          ("Can't promote", "Can't find child.")))
                     
+        self.qr.put(('SEEFOCUS', focus))
         self.qr.put(('UNLOCKGUI', None))
 
     def _is_promotable(self,gp,p,c):
@@ -1352,7 +1300,7 @@ class Backend(threading.Thread):
     def _on_load_tree_from_trout(self):
         self.qr.put(('HASHEDGRAPHICS', self.hashed_graphics))
         self._rename_children_of(list(self.trout)[0].tag)
-        self.to_be_inserted = dict()
+        self.to_be_inserted = list()
         self._load_tree_from('')
         self.qr.put(('ADD_ITEMS', self.to_be_inserted))
 
@@ -1574,7 +1522,6 @@ class Backend(threading.Thread):
         """list different frames, for tags which support this
                                                       (e.g. COMM, APIC,...)"""
 
-#        lang = self.ddnGuiLanguage.get()
         is_different_to_all = list()
         textParams = ast.literal_eval(text)
         #test all frames have same length as text, flag error and return false
@@ -1602,11 +1549,7 @@ class Backend(threading.Thread):
     def _on_generate_playlists(self):
         '''generate the playlists'''
 
-        # this is where all labels changed modify for new prog
-        # - just kept as example
-#        self.nodes = 0
         self.nodes = len(self.trout.find(".//I00001").xpath(".//*"))
-#        self._count_nodes('')
         self.qr.put(('PROGMAX', self.nodes))
         self.qr.put(('STATUS', 'Creating playlists...'))
         project_path_ = '../{}/'.format(self.project)
@@ -1770,7 +1713,6 @@ class Backend(threading.Thread):
     def _on_publish_to_SD(self):
         """publish files and playlists to SDs"""
 
-        lang = self.ddnGuiLanguage.get()
         threads = []
         self.qr.put(('PROGMAX', (len(self.files) * 4 * len(self.output_to))))
 
@@ -1781,36 +1723,31 @@ class Backend(threading.Thread):
                 if os.path.exists(atarget):
                     target = atarget
                     threads.append(MyThread(target, \
-                                            self.ddnGuiLanguage.get(), \
                                             self.Pub2SD, self.project, \
                                             self.play_list_targets, \
                                             self.is_copy_playlists_to_top, \
-                                            self.files, aqr[i-1]))
+                                            self.files, self.aqr[i-1]))
                     i += 1
                     threads[-1].start()
-                    self.status['text'] = \
-                               LOCALIZED_TEXT[lang]['{} Threads active'].\
-                           format(threading.activeCount()-currentThreadsActive)
+                    self.qr.put(('STATUS{}', ('{} Threads active', \
+                                 threading.activeCount()-currentThreadsActive)))
                 else:
-                    messagebox.showerror(\
-                                        LOCALIZED_TEXT[lang]["Invalid path"], \
-                                        LOCALIZED_TEXT[lang]["Can't find {}"].\
-                                                      format(atarget))
+                    self.qr.put(('MESSAGEBOXSHOWERRORTHREADS', ("Invalid path", \
+                                        "Can't find {}", atarget)))
 
         while threading.activeCount() > currentThreadsActive:
-            self.status['text'] = LOCALIZED_TEXT[lang]['{} Threads active'].\
-                       format(threading.activeCount()-currentThreadsActive)
-        self.qr.put(('PROGSTOP', None))
+            self.qr.put(('STATUS{}', ('{} Threads active', \
+                                 threading.activeCount()-currentThreadsActive)))
         [athread.join() for athread in threads]
-
-        self.qr.put(('PROGMAX', 0))
+        self._delete_temp_folder()
+        self.qr.put(('PROGVALUE', 0))
         self.qr.put(('STATUS', "Output to SD('s) completed."))
 
 
 def get_rid_of_multiple_spaces(tin):
     """replace multiple spaces with single space and strip leading and
         trailing spaces"""
-    return DOUBLE_SPACE_TO_SINGLE.sub(r' ', tin)
+    return DOUBLE_SPACE_TO_SINGLE.sub(r' ', tin.strip())
 
 def count_mp3_files_below(adir_path):
     """counts all mp3 files below given dir including subdirs"""

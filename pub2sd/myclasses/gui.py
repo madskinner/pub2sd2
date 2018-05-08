@@ -32,22 +32,6 @@ from lxml import etree
 from unidecode import unidecode
 from mutagen.mp3 import MP3
 
-##All are used in preparing_file_scaning_for_tags by exec(a string)...
-#from mutagen.id3 import ID3, error, APIC#, \
-#                        TXXX, WXXX, ETCO, MLLT, SYTC, USLT, SYLT, COMM, \
-#                        RVA2, EQU2, RVAD, RVRB, APIC, PCNT, PCST, POPM, \
-#                        GEOB, RBUF, AENC, LINK, POSS, UFID, USER, OWNE, \
-#                        COMR, ENCR, GRID, PRIV, SIGN, SEEK, ASPI, TIPL, \
-#                        TMCL, IPLS, MCDI, TBPM, TLEN, TORY, TSIZ, TYER, \
-#                        TPOS, TRCK, MVIN, MVNM, TALB, TCOM, TCON, TCOP, \
-#                        TCMP, TDAT, TDEN, TDES, TKWD, TCAT, TDLY, TDOR, \
-#                        TDRC, TDRL, TDTG, TENC, TEXT, TFLT, TGID, TIME, \
-#                        TIT1, TIT2, TIT3, TKEY, TLAN, TMED, TMOO, TOAL, \
-#                        TOFN, TOLY, TOPE, TOWN, TPE1, TPE2, TPE3, TPE4, \
-#                        TPRO, TPUB, TRSN, TRSO, TSO2, TSOA, TSOC, TSOP, \
-#                        TSOT, TSRC, TSSE, TSST, WCOM, WCOP, WOAF, WOAR, \
-#                        WOAS, WORS, WPAY, WPUB
-
 from .myconst.audio import AUDIO
 from .myconst.regexs import FIND_LEADING_DIGITS, FIND_LEADING_ALPHANUM, \
                             FIND_TRAILING_DIGITS, TRIM_LEADING_DIGITS, \
@@ -71,7 +55,6 @@ qcommand = queue.Queue()
 qreport = queue.Queue()
 aqr = [queue.Queue(), queue.Queue(), queue.Queue(), queue.Queue(), \
        queue.Queue(), queue.Queue(), queue.Queue(), queue.Queue()]
-threadlock = threading.Lock()
 
 
 class GuiCore(Tk):
@@ -83,10 +66,8 @@ class GuiCore(Tk):
 
     def _initialize(self):
         """initialize the GuiCore"""
-#        print('Create new threads')
-        self.threadlock = threading.Lock()
-        backendthread = Backend(qcommand, qreport, aqr, self.threadlock)
-        backendthread.start()
+        self.backendthread = Backend(qcommand, qreport, aqr) #, self.threadlock)
+        self.backendthread.start()
         
         self._initialize_variables()
 
@@ -114,6 +95,7 @@ class GuiCore(Tk):
         self._initialize_f4(lang) # on f5 - publish to...
         self._initialize_f5(lang)
 
+        
         if platform.system() == 'Linux': #create on f6
             self._initialize_f6(lang) #will be for locking/unlocking SD cards
         pud2sd_styles = Style()
@@ -131,15 +113,14 @@ class GuiCore(Tk):
         if not qreport.empty():
             while not qreport.empty():
                 areport = qreport.get()
-#                print("in gui, areport={}".format(areport[0]))
                 if 'CLEARTAGTREE' in areport:
                     map(self.tagtree.delete, self.tagtree.get_children())
                 elif 'CLEARTREE' in areport:
-#                    map(self.tree.delete, self.tree.get_children())
                     self.tree.delete(*self.tree.get_children())
                 elif 'SEEFOCUS' in areport:
                     self.tree.see(areport[1])
                     self.tree.focus(areport[1])
+                    self.tree.selection_set(areport[1])
                 elif 'INSERTTAGTREETAGS' in areport:
                     for item in areport[1]:
                         if item not in self.tagtree.get_children():
@@ -164,32 +145,25 @@ class GuiCore(Tk):
                     self.tree.insert(focus, index='end', iid=iid, \
                                      values=vout, open=True, text='file')
                 elif 'ADD_ITEMS' in areport:
-#                    print("areport = {}".format(areport))
-                    #sort list of items to insert into ascending order
-                    for iid in sorted(areport[1].keys()):
-#                        focus = v[0],iid =v[1],vout = v[2],text = v[3]
-                        v = areport[1][iid]
+                    #items handled in the order thet were added to the list
+                    for item in areport[1]:
+                        iid = item[0]
+                        v = item[1]
                         focus = v[0]
                         vout = v[1]
                         text = v[2]
-#                        print("in ADD_ITEMS v[{}]={}".format(iid, v))
                         newItem = self.tree.insert(focus, index='end', \
                                                    iid=iid, values=vout, \
                                                    open=True, text=text)
                         self.progbar.step()
-#                        print(newItem)
-#                    print("ADD_ITEMS complete", self.tree.get_children('I00001'))
                     self._enable_tabs()
                     self.update()
                 elif 'RENAME_CHILDREN' in areport:
                     #so now rename them
-                    print(self.tree.get_children())
                     for iid in areport[1].keys():
-#                        self.tree.set(iid,'Name', areport[1][iid][0])
                         vout = areport[1][iid][0]
                         for c,v in vout:
                             self.tree.set(iid, c, v)
-#                        self.tree.set(iid,'values', areport[1][iid][1])
                         self.tree.item(iid, text=areport[1][iid][1])
                         self.progbar.step()
                     self._enable_tabs()
@@ -210,11 +184,8 @@ class GuiCore(Tk):
                                                         format(areport[1][1]) \
                                                         if areport[1] else ''
                 elif 'MESSAGEBOXASKOKCANCEL' in areport:
-#                    print('got question')
                     result = messagebox.askokcancel(areport[1][0],areport[1][1])
-#                    print('got answer', result)
                     qcommand.put(('OKCANCEL', result))
-#                    print('sent answer')
                 elif 'MESSAGEBOXERROR' in areport:
                     title, m1, m2, m3 = areport[1]
                     title = LOCALIZED_TEXT[lang][title]
@@ -230,7 +201,7 @@ class GuiCore(Tk):
                                           LOCALIZED_TEXT[lang][\
                        "'track in/set_of' doesn't contain a valid integers."]))
                 elif 'MESSAGEBOXSHOWWARNING2' in areport:
-                    messagebox.showwarning(areprot[1][0], \
+                    messagebox.showwarning(areport[1][0], \
                                     LOCALIZED_TEXT[lang][areport[1][1]])
                 elif 'MESSAGEBOXWARNTRACK2' in areport:
                     title, column, url_str = areport[1]
@@ -259,15 +230,18 @@ class GuiCore(Tk):
                     qcommand.put(('OKCANCEL', self.complete))
                 elif 'MESSAGEBOXSHOWERRORLOSTGRAPHIC' in areport:
                     messagebox.showerror('', areport[1])
+                elif 'MESSAGEBOXSHOWERRORTHREADS' in areport:
+                    messagebox.showerror(LOCALIZED_TEXT[lang][areport[1][0]], \
+                                         LOCALIZED_TEXT[lang][areport[1][1]].\
+                                         format(areport[1][2]))
                 elif 'PROGSTEP' in areport:
                     self.progbar.step(areport[1])
-#                    self.update()
                 elif 'PROGSTOP' in areport:
                     self.progbar.stop()
-#                    self.update()
                 elif 'PROGMAX' in areport:
                     self.progbar['maximum'] = areport[1]
                     self.progbar['value'] = 0
+                    self.update()
                 elif 'PROGVALUE' in areport:
                     self.progbar['value'] = areport[1]
                     self.update()
@@ -296,6 +270,9 @@ class GuiCore(Tk):
                     self.hashed_graphics = areport[1]
                 elif 'FILES_PREPARED' in areport:
                     self._on_prepare_files_continued()
+                elif 'DELETEDTEMP' in areport:
+                    self.destroy()
+                    break
                 else:
                     print('Unknown report >{}<'.format(areport))
                 qreport.task_done()
@@ -308,7 +285,6 @@ class GuiCore(Tk):
                             aqr[i].task_done()
                         else:
                             pass
-#                print('in gui, finished task')
                 self.update_idletasks()
         self.lblProject.after(200, self._process_report_queue)
 
@@ -324,7 +300,6 @@ class GuiCore(Tk):
         """initialize variables for GuiCore"""
         self.font = font.Font()
 
-#        self.files = dict()
         self.maxcolumnwidths = [0, 0, 0, ]
 
         self._initialize_project_variables()
@@ -352,6 +327,7 @@ class GuiCore(Tk):
         self.output_to = set()
         self.play_list_targets = set()
         self.needed = 0 #in Mb
+        self.temp_dir_deleted = False
 
         #define all StringVar(), BooleanVar(), etc… needed to hold info
         self.selected_lang = StringVar()
@@ -410,8 +386,8 @@ class GuiCore(Tk):
         self.helpmenu.add_command(label=LOCALIZED_TEXT[lang]['About...'], \
                                   command=on_copyright)
     def _quit(self):
-        qcommand.put(('EXIT', None))
-        self.destroy()
+        qcommand.put(('DELETETEMP', None))
+#        self.destroy()
 
     def _initialize_main_window_notebook(self, lang):
         """initializes notebook widget on main window"""
@@ -629,11 +605,8 @@ class GuiCore(Tk):
         self.tagtree.grid(column=0, row=1, \
                        columnspan=3, rowspan=20, sticky='news', padx=5)
         ysb = Scrollbar(self.f1, orient='vertical', command=self.tagtree.yview)
-        #xsb = Scrollbar(self.f1, orient='horizontal', \
-        #                                          command=self._tagtree.xview)
-        self.tagtree.configure(yscroll=ysb.set) #, xscroll=xsb.set)
+        self.tagtree.configure(yscroll=ysb.set)
         ysb.grid(row=1, column=2, rowspan=20, padx=5, sticky='nse')
-        #xsb.grid(row=11, column=0, columnspan=3, padx=5, sticky='ews')
 
         #fill tagtree
         self.listoftags = [item for item in self.recommendedTags]
@@ -1169,6 +1142,13 @@ class GuiCore(Tk):
         self.btnPub2HD.grid(column=0, row=4, \
                             columnspan=2, padx=5, pady=5, sticky='news')
 
+        self.btnExit = Button(self.f5, \
+                text=LOCALIZED_TEXT[lang]["Delete temporary files and exit."].\
+                                   format(project), \
+                                  command=self._quit)
+        self.btnExit.grid(column=3, row=5, \
+                            columnspan=2, padx=5, pady=5, sticky='news')
+
 
     def _initialize_f6(self, lang):
         """The lock unlock SD card tab, to be implemented?"""
@@ -1257,13 +1237,11 @@ class GuiCore(Tk):
         if len(fileout) != 0: 
             text = self.txtPrefChar.get(0.0, 9999.9999).strip() \
                         if not _text else _text
-#            print(text)
             text = ' '.join(text.split('\n'))
             text = ' '.join(text.split('\r'))
             text = ' '.join(text.split('\f'))
             if ',' in text:
                 pairs = [p.strip() for p in text.split(',')]
-#                print(pairs)
                 astr = ', '.join(pairs)
             elif text:
                 astr = text
@@ -1311,7 +1289,6 @@ class GuiCore(Tk):
                                else {key: '' \
                                      for key in self.tagtree.selection()}
             
-#        self.template = {key: '' for key in self.tagtree.selection()}
         fileout = _fileout if _fileout \
                            else filedialog.asksaveasfilename(\
                                 filetypes=[('Template file', '.json'), ], \
@@ -1319,7 +1296,6 @@ class GuiCore(Tk):
                                            initialfile='', \
                                 title=LOCALIZED_TEXT[lang]['CreateTemplate'], \
                                            defaultextension='.json')
-#        if len(fileout) > 0: #output template
         if fileout: #output template
             output = codecs.open(fileout, mode='w', encoding='utf-8')
 
@@ -1355,17 +1331,17 @@ class GuiCore(Tk):
 
         lang = self.ddnGuiLanguage.get()
 
-        self.output_to = []
+        self.output_to = list()
         self.lblOutputTo['text'] = ''
-#        needed = folder_size(os.path.normpath(self.Pub2SD + '/Temp/' \
-#                                        + self.project)) / (1024.0 * 1024.0)
 
-        for i in range(0, 8):
+        the_range_limit = len(self.tlist) if len(self.tlist) < 8 else 8
+        for i in range(0, the_range_limit):
             self.update_idletasks()
-            if (self.cb[i]['state'] == 'normal') \
-                                                and (self.cbv[i].get() == 't'):
+            i_get = self.cbv[i].get()
+            if i_get is 't':
                 if self.needed < self.tlist[i][1]:
-                    self.output_to.append(self.tlist[i][0].split(',')[0])
+                    the_drive = self.tlist[i][0].split(',')
+                    self.output_to.append(the_drive[0].strip())
                 else:
                     messagebox.showerror(\
                      LOCALIZED_TEXT[lang]['Insufficent space on {}'].\
@@ -1374,6 +1350,9 @@ class GuiCore(Tk):
                         format(self.needed, self.tlist[i][1] / (1024.0 * 1024.0)))
                     self.output_to = []
                     return
+            else:
+                print("arrgh fails, self.cbv[i].get()={}".format(i_get))
+        qcommand.put(('OUTPUT_TO', self.output_to))
         if platform.system() == 'Windows':
             self.lblOutputTo['text'] = \
                              ', '.join(', '.join(self.output_to).split(', , '))
@@ -1382,7 +1361,7 @@ class GuiCore(Tk):
                             for t in self.output_to]).split(', , '))
         else:
             pass
-        self.update_idletasks()
+        self.update()
 
     def _on_refresh_drives(self):
         '''Linux not seeing usb/SD drives'''
@@ -1392,9 +1371,9 @@ class GuiCore(Tk):
         mega_bytes = LOCALIZED_TEXT[lang]['Mb']
         self.tlist = [['', 0], ['', 0], ['', 0], ['', 0], \
                       ['', 0], ['', 0], ['', 0], ['', 0]]
+        self.tlist = list()
         i = 0
         if platform.system() == 'Linux':
-            print("I'm running on Linux, yipee!")
             for part in psutil.disk_partitions():
                 if ('vfat' in part.fstype or 'fuseblk' in part.fstype) \
                           and 'rw' in part.opts \
@@ -1410,10 +1389,9 @@ class GuiCore(Tk):
                     free = '{0:.2f}{1}'.format(free/1024, giga_bytes) \
                             if free > 1024 else '{:.2f}{}'.format(free, mega_bytes)
                     percent = '{0:0.1%}'.format(usage.percent/100)
-                    self.tlist[i] = ['{}, {}, {}, {}, {}'.\
+                    self.tlist.append(['{}, {}, {}, {}, {}'.\
                         format(part.mountpoint, total, used, free, percent), \
-                              usage.free]
-                    print(self.tlist[i])
+                              usage.free])
                     i += 1
         elif platform.system() == 'Windows':
             for part in psutil.disk_partitions():
@@ -1429,16 +1407,16 @@ class GuiCore(Tk):
                     free = '{0:.2f}{1}'.format(free/1024, giga_bytes) \
                             if free > 1024 else '{:.2f}{}'.format(free, mega_bytes)
                     percent = '{0:0.1%}'.format(usage.percent/100)
-                    self.tlist[i] = ['{}, {}, {}, {}, {}'.\
+                    self.tlist.append(['{}, {}, {}, {}, {}'.\
                         format(part.mountpoint, total, used, free, percent), \
-                                usage.free]
+                                usage.free])
                     i += 1
         else:
             messagebox.showerror('Unrecognised OS', \
                   "Help I've been kidnapped by {}.".format(platform.system()))
 
         for i in range(0, 8):
-            if self.tlist[i][0]:
+            if i < len(self.tlist) and self.tlist[i][0]:
                 if platform.system() == 'Windows':
                     self.cb[i]['text'] = self.tlist[i][0]
                 elif platform.system() == 'Linux':
@@ -1464,8 +1442,6 @@ class GuiCore(Tk):
         lang = self.ddnGuiLanguage.get()
 
         qcommand.put(('INITIALDIGIT', self.InitialDigit.get() ))
-#        initial_digit = self.InitialDigit.get().upper()
-#        prefix = self.InitialDigit.get()
 
         
         qcommand.put(('MODE', self.mode.get()))
@@ -1480,13 +1456,13 @@ class GuiCore(Tk):
         #load old project to backend
         qcommand.put(('CONF_FILE', conf_file))
 
+
     def _on_click_f0_next_continued(self, lang):
         """conf file loaded or project created so continue"""
         #now load template if any
         if self.ddnCurTemplate.get():
             thisone = os.path.normpath(self.Pub2SD + '/'+ \
                                    self.ddnCurTemplate.get() + '.json')
-            print('going to load template >{}<'.format(thisone))
             if os.path.isfile(thisone):
                 filein = codecs.open(thisone, mode='r', encoding='utf-8')
                 lines = filein.readlines()
@@ -1554,9 +1530,7 @@ class GuiCore(Tk):
 
         lang = self.ddnGuiLanguage.get()
         self.ddnPrefChar.current(0)
-#        self.sf1.clear()
         self.selected_tags = [i for i in self.tagtree.selection()]
-#        print(self.selected_tags)
         if 'TIT2' not in self.selected_tags:
             self.selected_tags.insert(0, 'TIT2')
         qcommand.put(('SELECTED_TAGS', self.selected_tags ))
@@ -1718,7 +1692,6 @@ class GuiCore(Tk):
         #open all new files
         self.project = self.ddnCurProject.get()
 
-#        self.files = {}
         #walk down tree creating filenames
         # and opening them in pairs iid:filename
         temp_path = os.path.normpath(self.Pub2SD + '/Temp/' + self.project)
@@ -1814,12 +1787,6 @@ class GuiCore(Tk):
         dir_path = filedialog.askdirectory(initialdir=os.path.expanduser('~'),\
                                         title="Select folder…", mustexist=True)
         #if mp3 files in top level of dir path arrrgh
-#        print('project_id =>{}'.format(self.project_id))
-#        print('focus =>{}'.format(focus))
-#        print('dir_path =>{}'.format(dir_path))
-#        l = os.listdir(dir_path)
-#        print("list dir_path=>{}".format(l))
-#        print("mp3 files =>{}".format([f for f in l if f[-4:] in ['.mp3', '.MP3']]))
         
         if dir_path:
             if focus in ['', 'I00001'] and \
@@ -1850,7 +1817,6 @@ class GuiCore(Tk):
 
     def _on_demote(self):
         """demote item one level in the heirachy"""
-#        list_of_items = self.tree.selection()
         qcommand.put(('DEMOTE', self.tree.focus()))
 
 
@@ -1878,8 +1844,6 @@ class GuiCore(Tk):
     def _on_get(self, _column=''):
         """get the current tag value of selected row and column
                                          and display in enter tag value box"""
-        #                               focus,      column, 
-        #qcommand.put(('ON_GET', (self.tree.focus(),self.ddnSelectTag.get().split(':')[0].upper())))
 
         lang = self.ddnGuiLanguage.get()
         if self.tree.focus() == '':
@@ -1900,7 +1864,6 @@ class GuiCore(Tk):
                                         else DEFAULT_VALUES['ide3v24'][column])
             if self.mode.get() != 0: #not idiot
                 self.lblParameters['text'] = READ_TAG_INFO[column]
-#        self._rename_children_of(self.project_id)
         self.update()
 
     def _on_get_default(self, _column=''):
@@ -1951,11 +1914,8 @@ class GuiCore(Tk):
                 for focus in list_of_items:
                     if self.mode.get() == 0:
                         qcommand.put(('ATTACH_ARTWORK_TO', (focus, PICTURE_TYPE['COVER_FRONT'], '', fart)))
-#                        self._attach_artwork_to(focus, PICTURE_TYPE['COVER_FRONT'], '', fart)
                     else:
                         qcommand.put(('ATTACH_ARTWORK_TO', (focus, _picture_type, _desc, fart)))
-#                        self._attach_artwork_to(focus, _picture_type, _desc, fart)
-#                    self.tree.see(focus)
             else:
                 #no file selected so blank apic if idiot
                 if self.mode.get() == 0:
@@ -1964,7 +1924,6 @@ class GuiCore(Tk):
         else:
             messagebox.showwarning(LOCALIZED_TEXT[lang]['Select Artwork'], \
                           LOCALIZED_TEXT[lang]["no items selected"])
-#        self._rename_children_of(self.project_id)
         self.update()
 
     def _on_prepare_files(self):
@@ -1988,49 +1947,7 @@ class GuiCore(Tk):
 
     def _on_publish_to_SD(self):
         """publish files and playlists to SDs"""
-
-        lang = self.ddnGuiLanguage.get()
-        threads = []
-        self.progbar['maximum'] = len(self.files)*4*len(self.output_to)
-        self.progbar['value'] = 0
-
-        qcommand.put(('PUBLISH_TO_SD', (self.output_to,)))
-#        i = 1
-#        currentThreadsActive = threading.activeCount()
-#        self.progbar['value'] = 0
-#        self.progbar.start()
-#        for atarget in self.output_to:
-#            if atarget:
-#                if os.path.exists(atarget):
-#                    target = atarget
-#                    threads.append(MyThread(target, \
-#                                            self.ddnGuiLanguage.get(), \
-#                                            self.Pub2SD, self.project, \
-#                                            self.play_list_targets, \
-#                                            self.is_copy_playlists_to_top.get(), \
-#                                                                self.files))
-#                    i += 1
-#                    threads[-1].start()
-#                    self.status['text'] = \
-#                               LOCALIZED_TEXT[lang]['{} Threads active'].\
-#                           format(threading.activeCount()-currentThreadsActive)
-#                    self.update_idletasks()
-#                else:
-#                    messagebox.showerror(\
-#                                        LOCALIZED_TEXT[lang]["Invalid path"], \
-#                                        LOCALIZED_TEXT[lang]["Can't find {}"].\
-#                                                      format(atarget))
-#
-#        while threading.activeCount() > currentThreadsActive:
-#            self.status['text'] = LOCALIZED_TEXT[lang]['{} Threads active'].\
-#                       format(threading.activeCount()-currentThreadsActive)
-#            self.update_idletasks()
-#        self.progbar.stop()
-#        [athread.join() for athread in threads]
-#
-#        self.progbar['value'] = 0
-#        self.status['text'] = \
-#                   LOCALIZED_TEXT[lang]["Output to SD('s) completed."]
+        qcommand.put(('PUBLISH_TO_SD', self.output_to))
         self.update()
 
     def _on_publish_to_SD_continued(self):
@@ -2048,10 +1965,6 @@ class GuiCore(Tk):
         target = os.path.normpath(self.Pub2SD + '/' + \
                                   self.ddnCurProject.get() + '_SD')
         
-#        self.progbar['maximum'] = len(self.files)*4
-#        self.progbar['value'] = 0
-#        self.status['text'] = \
-#                   LOCALIZED_TEXT[lang]["Output to HD in progress..."]
         self.update_idletasks()
         qcommand.put(('PUBLISHFILES', target))
         self.status['text'] = LOCALIZED_TEXT[lang]["Output to HD completed."]
@@ -2282,12 +2195,3 @@ def delete_folder(path):
         # remove if exists
         shutil.rmtree(path)
 
-#def folder_size(top):
-#    '''return size used by folder in bytes'''
-#    this_folder_size = 0
-#    for (path, dirs, files) in os.walk(top):
-#        for file in files:
-#            filename = os.path.join(path, file)
-#            this_folder_size += os.path.getsize(filename)
-#    return this_folder_size
-        
