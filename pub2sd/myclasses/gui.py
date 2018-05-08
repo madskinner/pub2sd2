@@ -9,7 +9,7 @@ import fnmatch
 import os
 import platform
 import webbrowser
-import queue
+from queue import Queue
 import threading
 
 import codecs
@@ -51,10 +51,15 @@ def get_script_directory():
     return os.path.dirname(__file__)
 
 SCRIPT_DIR = get_script_directory()
-qcommand = queue.Queue()
-qreport = queue.Queue()
-aqr = [queue.Queue(), queue.Queue(), queue.Queue(), queue.Queue(), \
-       queue.Queue(), queue.Queue(), queue.Queue(), queue.Queue()]
+#qcommand = queue.Queue()
+#qreport = queue.Queue()
+#aqr = [queue.Queue(), queue.Queue(), queue.Queue(), queue.Queue(), \
+#       queue.Queue(), queue.Queue(), queue.Queue(), queue.Queue()]
+#
+qcommand = Queue()
+qreport = Queue()
+aqr = [Queue(), Queue(), Queue(), Queue(), \
+       Queue(), Queue(), Queue(), Queue()]
 
 
 class GuiCore(Tk):
