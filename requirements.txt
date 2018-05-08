@@ -3,4 +3,3 @@ unidecode>=0.4.1
 mutagen>=1.37
 psutil>=3.4.2
 Sphinx>=1.6.5
-queue>=0
