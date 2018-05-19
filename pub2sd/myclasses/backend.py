@@ -11,6 +11,7 @@ import os
 import platform
 import glob
 import hashlib
+import webbrowser
 import codecs
 from unidecode import unidecode
 from mutagen.mp3 import MP3
@@ -18,6 +19,8 @@ import re
 import ast
 import shutil
 import pickle
+import json
+import time
 
 from lxml import etree
 
@@ -26,7 +29,8 @@ from tkinter import messagebox
 
 from .myconst.regexs import FIND_LEADING_DIGITS, FIND_LEADING_ALPHANUM, \
                             FIND_TRAILING_DIGITS, TRIM_LEADING_DIGITS, \
-                            TRIM_TRAILING_DIGITS, STRIPPERS
+                            TRIM_TRAILING_DIGITS, STRIPPERS, TAB, RETURN, \
+                            NEWLINE, RETAB, RERETURN, RENEWLINE
 from .myconst.readTag import IDIOT_TAGS, READ_TAG_INFO, HASH_TAG_ON
 
 from .myconst.therest import THIS_VERSION, THE_IDIOT_P, THE_P, LATIN1, \
@@ -83,6 +87,7 @@ class Backend(threading.Thread):
         self.to_be_renamed = dict()
         self.initial_digit = ''
         self.prefix = ''
+        self.html_out = ''
         
         #bodge to get past WinPython....
         self.Pub2SD = os.path.normpath(os.path.expanduser('~') + '/Pub2SD')
@@ -122,7 +127,8 @@ class Backend(threading.Thread):
                 self.project = acommand[1]
                 self._load_conf_file(acommand[1])
             elif 'LOAD_TEMPLATE' in acommand:
-                self.template = acommand[1]
+#                self.template = acommand[1]
+                self._load_template(acommand[1])
                 self.qc.task_done()
             elif 'LOADTREEFROMTROUT' in acommand:
                 self._on_reload_tree()
@@ -224,9 +230,22 @@ class Backend(threading.Thread):
             elif 'ON_SET' in acommand:
                 self._on_set(acommand[1])
             elif 'ATTACH_ARTWORK_TO' in acommand:
-                focus, _picture_type, _desc, fart = acommand[1]
-                self._attach_artwork_to(focus, _picture_type, _desc, fart)
-                self._on_reload_tree()
+                focus, _picture_type, _desc, artwork = acommand[1]
+                #hash it here, pass hash_tag and length
+                if artwork \
+                    and os.path.exists(artwork) \
+                    and artwork[-4:] in ['.png', 'jpg',]:
+#                    print("is a real graphics file to put in hashedgraphics and load tag")
+                    fart = codecs.open(artwork, mode='rb').read()
+                    hash_tag, length = self._hash_it(fart)
+#                    print("hash=>{}<, length=>{}<".format(hash_tag, length))
+                    mime = 'image/' + artwork[-3:]                
+                    self._attach_artwork_to(focus, _picture_type, _desc, \
+                                            hash_tag, length, mime)
+                    self._on_reload_tree()
+                else:
+                    #clear tag
+                    self._attach_artwork_to(focus, '', '', '', '', '')
             elif 'SETCOPYPLAYLISTS' in acommand:
                 self.play_list_targets, self.is_copy_playlists_to_top = acommand[1]
             elif 'M3UorM3U8' in acommand:
@@ -235,7 +254,10 @@ class Backend(threading.Thread):
                 self.output_to = acommand[1]
             elif 'PUBLISH_TO_SD' in acommand:
                 self._on_publish_to_SD()
+            elif 'EXPORTHTML' in acommand:
+                self._export_to_html()
             elif 'DELETETEMP' in acommand:
+                self.qr.put(('STATUS', "Deleting temporary files, this may take a few minutes."))
                 self._delete_temp_folder()
                 self.qr.put(('DELETEDTEMP', None))
                 break
@@ -250,25 +272,36 @@ class Backend(threading.Thread):
 
     def _delete_temp_folder(self):
         """delete the temporary folder"""
-        self.qr.put(('STATUS', "Deleting old temporary folder."))
-        #FIRST DELETE ALL FILES
-        for afile in self.files:
-            if os.path.isfile(afile[0]):
-                os.remove(afile[0])
-                self.qr.put(('PROGSTEP', -1))
-        #THEN DELETE EMPTY TREE
         temp = os.path.normpath(self.Pub2SD + '/Temp')
         if os.path.exists(temp):
             shutil.rmtree(temp)
+        self.qr.put(('STATUS', "Deleting old temporary folder."))
         
     def _load_conf_file(self, aconf_file):
         """loads the old project file into etree tree"""
         the_file = os.path.normpath(self.Pub2SD + '/' + aconf_file + '.prj')
         if aconf_file and os.path.isfile(the_file):
+#            print("load existing Project")
             result = self._load_project(the_file)
         else:
             result = self._create_project()
         self.qr.put(('CONTINUE_F0_NEXT', result))
+
+    def _load_template(self, template_path):
+        """adds tags in template to tag tree displayed in f1"""
+        if os.path.isfile(template_path):
+            filein = codecs.open(template_path, mode='r', encoding='utf-8')
+            lines = filein.readlines()
+            filein.close()
+            #load template to backend
+            self.template = json.loads(''.join(lines))
+            for atag in self.template.keys():
+                self.qr.put(('SELECTIONTAGTREE', atag))
+                self.sf1.attrib[atag] = 'show'
+        else:
+            #diagnostic only
+            print("Can't find {}".format(template_path))
+
 
     def _wait_for_responce(self):
         while True:
@@ -302,28 +335,67 @@ class Backend(threading.Thread):
     def _load_project(self, thefile):
         """loads an existing project (.prj) file, adapting it's contents
                                       to the current Simple/Advanced choice"""
-        if thefile:
-            linesin = list()
-            filein = codecs.open(thefile, mode='r', encoding='utf-8')
-            for aline in filein.readlines():
-                if aline.strip():
-                    linesin.extend([aline.strip()])
-            filein.close()
-            lines = ''.join(linesin)
-            self.root = etree.fromstring(lines)
-            self.settings = self.root.find("settings")
-            self.smode = self.settings.find("mode")
-            self.stemp = self.settings.find("template")
-            self.sf1 = self.settings.find("f1")
-            self.sf2 = self.settings.find("f2")
-            self.sf4 = self.settings.find("f4")
-            self.trout = self.root.find("tree")
-            self._fix_old_proj_iid(self.trout)
+        if not thefile: #no file specified so fail!
+            return False
+        
+        linesin = list()
+        filein = codecs.open(thefile, mode='r', encoding='utf-8')
+        for aline in filein.readlines():
+            if aline.strip():
+                linesin.extend([aline.strip()])
+        filein.close()
+        lines = ''.join(linesin)
+        self.root = etree.fromstring(lines)
+        self.settings = self.root.find("settings")
+        etree.strip_attributes(self.settings, ['template',])
+        self.smode = self.settings.find("mode")
+        #can't save project until after template already applied
+        #so template setting is not needed
+#        self.stemp = self.settings.find("template")
+        self.sf1 = self.settings.find("f1")
+        self.sf2 = self.settings.find("f2")
+        self.sf4 = self.settings.find("f4")
+        self.trout = self.root.find("tree")
+        self._fix_old_proj_iid(self.trout)
+#        print("loaded old project and fixed iid tag names")
+            
+        self.old_mode = dict(self.smode.attrib)
+        if 'version' not in self.smode.attrib:
+            self.qr.put(('MESSAGEBOXASKOKCANCEL', (\
+                                        'Project created in old format?', \
+                        "This will attempt to update the project file " + \
+                        "format to the current standard, every field " + \
+                        "must be verified. It may be faster to " + \
+                        "recreate the project from scratch. " +
+                        "Do you wish to continue")))
+            if not self._wait_for_responce():
+                return False
+            self.smode.attrib['version'] = THIS_VERSION
                 
-            self.old_mode = dict(self.smode.attrib)
+            if 'idiot' in self.old_mode and self.old_mode['idiot'] == 'True':
+                self._upgrade_child_of(self.trout)
+        else:
+#            print("data doesn't need upgrading")
+            pass
+        if 'preferred' in self.smode.attrib:
+            if self.smode.attrib['preferred'] == 'True':
+                self.smode.attrib['preferred'] = '1'
+#                self.preferred = 1
+            elif self.smode.attrib['preferred'] == 'False':
+                self.smode.attrib['preferred'] = '0'
+#                self.preferred = 0
+            self.preferred = int(self.smode.attrib['preferred'])
+        else:
+            self.preferred = 0
+        #now pass self.preferred back to gui!
+        self.qr.put(('PREFERRED', self.preferred))
+        
+#        print("got past version checkpoint")
+        #now check the mode radio buttons
         idiot_case = self._get_idiot_case_mode_for_load_project()
-        if idiot_case == 1:
-            # downgrade
+#        print("idiot case is {}".format(idiot_case))
+#        self.list_of_tags = set()
+        if idiot_case == 1: # downgrade
             self.mode = 0
             self.qr.put(('MESSAGEBOXASKOKCANCEL', ('Confirm Downgrade?', \
                         "This will downgrade this project from 'Advanced' " \
@@ -333,16 +405,15 @@ class Backend(threading.Thread):
                 return False
             #do downgrade!
             #remove all non idiot tags
-            self.list_of_tags = set()
             difference = set(SET_TAGS['en-US'].keys()).\
                                             difference(set(IDIOT_TAGS.keys))
             etree.strip_attributes(self.trout, difference)
             etree.strip_attributes(self.sf1, difference)
-            etree.strip_attributes(self.stemp, difference)
-            self._downgrade_child_of(self.trout)
+#            etree.strip_attributes(self.stemp, difference) 
+            #think i don't need this, what does template hold? name of file or contents of file
+#            self._downgrade_child_of(self.trout, difference)
             pass
-        elif idiot_case == 2:
-            # upgrade:
+        elif idiot_case == 2: # upgrade:
             self.qr.put(('MESSAGEBOXASKOKCANCEL', ('Confirm Upgrade?', \
                         "This will upgrade this project from 'Simple' to " \
                         + "'Advanced'." )))
@@ -350,24 +421,31 @@ class Backend(threading.Thread):
             if not self._wait_for_responce():
                 return False
             self.mode = 1
-            self._upgrade_child_of(self.trout)
+            #data already in advanced form so what is there to update?
+            #self._upgrade_child_of(self.trout)
         else:
             pass
-        self.template = dict(self.stemp.attrib)
-        
+        self.template = dict(self.sf1.attrib)
+#        print("got past upgrade/downgrade questions")
 
         if self.mode == 0:
             self.smode.attrib['Idiot'] = 'True'
-            self.list_of_tags = self.list_of_tags.union(set(IDIOT_TAGS.keys()))
+            self.list_of_tags =list(set(IDIOT_TAGS.keys()))
+            #so list_of_tags is a set of all idiot tags
             all_tags = self.recommendedTags + list(set(self.recommendedTags)\
                                         .difference(set(IDIOT_TAGS.keys())))
+            #so all_tags now holds a LIST of recommended tags
+            # followed by any idiot tags left out
         else:
             self.smode.attrib['Idiot'] = 'False'
-            self.list_of_tags = self.list_of_tags.union(\
-                                                set(SET_TAGS['en-US'].keys()))
+            #so list_of_tags holds all advanced tags
+            self.list_of_tags = list(set(SET_TAGS['en-US'].keys()))
             all_tags = self.recommendedTags + \
                list(set(self.recommendedTags).\
                                     difference(set(SET_TAGS['en-US'].keys())))
+            #all_tags now holds a LIST of recommended tags
+            # followed by any advanced tags left out
+#        print("got past tag set")
         self.preferred = int(self.smode.attrib['preferred'] == 'True')
         self.qr.put(('TXTPREFCHARDEL', (0.0, 9999.9999)))
         if self.sf2.text != None:
@@ -380,10 +458,11 @@ class Backend(threading.Thread):
         #now select tags
         for item in self.sf1.attrib.keys():
             self.qr.put(('SELECTIONTAGTREE', item))
-        #now add any additional tags in template
-        for item in set(self.stemp.attrib.keys()).\
-                                    difference(set(self.sf1.attrib.keys())):
-            self.qr.put(('SELECTIONTAGTREE', item))
+        #will be done in _load_template()
+#        #now add any additional tags in template
+#        for item in set(self.stemp.attrib.keys()).\
+#                                    difference(set(self.sf1.attrib.keys())):
+#            self.qr.put(('SELECTIONTAGTREE', item))
         #f4 feature phone folders
         self.qr.put(('ENTERLIST',self.sf4.get('folderList')))
         if 'is_copy_playlists_to_top' in self.sf4.attrib:
@@ -401,12 +480,14 @@ class Backend(threading.Thread):
                                               else dict()
         return True
 
-    def _downgrade_child_of(self, parent):
+    def _downgrade_child_of(self, parent, difference):
         for child in parent.getchildren():
-            if child.attrib['Type'] not in ['project', 'collection']:
-                for tag in child.attrib.keys():
-                    self.list_of_tags.add(tag)
-                    child.attrib[tag] = self._downgrade_data(tag, child)
+            for tag in difference:
+                child.attrib.pop(tag, None)
+#            if child.attrib['Type'] not in ['project', 'collection']:
+#                for tag in child.attrib.keys() and tag in difference:
+#                    self.list_of_tags.add(tag)
+#                    child.attrib[tag] = self._downgrade_data(tag, child)
             self._downgrade_child_of(child)
                 
 
@@ -426,15 +507,33 @@ class Backend(threading.Thread):
             this_frame = child.attrib[item].split('|')[-1]
             if this_frame not in ['-', '']:
                 #not an 'empty' frame
+#                print('{} this_frame=>{}<'.format(item, this_frame))
+                this_frame = TAB.sub(r'&#9;', this_frame)
+                this_frame = RETURN.sub(r'&#13;', this_frame)
+                this_frame = NEWLINE.sub(r'&#10;', this_frame)
                 if item in IDIOT_TAGS: 
                     param = ast.literal_eval(str(this_frame))
                     if item == 'APIC':
-                        return param[-1]
+#                        return param[-1]
+                        result = param[-1]
                     elif item in TF_TAGS or item == 'COMM':
-                        return param[-1][0]
+#                        return param[-1][0]
+                        result = RETAB.sub(r'\t', param[-1][0])
+                        result = RERETURN.sub(r'\r', param[-1][0])
+                        result = RENEWLINE.sub(r'\n', param[-1][0])
                     elif item in ['WCOM', 'WCOP', 'WOAF', 'WOAR', 'WOAS', \
                                   'WORS', 'WPAY', 'WPUB', 'WXXX']:
-                        return param[-1]
+#                        return param[-1]
+                        result = RETAB.sub(r'\t', param[-1])
+                        result = RERETURN.sub(r'\r', param[-1])
+                        result = RENEWLINE.sub(r'\n', param[-1])
+                    else:
+#                        return this_frame
+                        result = this_frame
+#                    print(result)
+                    return result
+                elif item in ['APIC_',]:
+                    #never dowgrade this data
                     return this_frame
                 else:
                     #not idiot tag so discard 'advanced' data
@@ -443,6 +542,18 @@ class Backend(threading.Thread):
                 return this_frame
         return the_value
 
+    def _upgrade_child_of(self, parent):
+#        if 'version' in self.smode.attrib:
+#            #no upgrade necessary
+#            return
+        for child in parent.getchildren():
+            if child.attrib['Type'] not in ['project', 'collection']:
+                for tag in child.attrib.keys():
+                    self.list_of_tags.add(tag)
+#                    if tag not in ['APIC_',]:
+                    child.attrib[tag] = self._upgrade_data(tag, child)
+            self._upgrade_child_of(child)
+                
                 
     def _upgrade_data(self, item, child):
         """smarten data up from simple(idiot) mode to advanced with encoding
@@ -474,7 +585,7 @@ class Backend(threading.Thread):
                                        if param[4] in self.hashed_graphics \
                                                 else 0)
                         #      _encoding,_mime,_type,_desc,_data
-                        this_frame = "[3,{},{},{},{}]".\
+                        this_frame = '[3,"{}",{},"{}",{}]'.\
                                               format(param[1], int(param[2]), \
                                               '', _data)
                     else: #is string
@@ -485,7 +596,7 @@ class Backend(threading.Thread):
                         #_type = 3
                         #_desc = ''
                         #add check file exists else break!!!!!
-                        this_frame = "[3,{},3,'',{}]".\
+                        this_frame = '[3,"{}",3,"","{}"]'.\
                                               format(_mime, a_frame)
                 elif item == 'TBPM':
                     packit = '["' + a_frame + '"]'
@@ -498,7 +609,17 @@ class Backend(threading.Thread):
 #                this_frame = a_frame
             elif item == 'APIC_':
                 #and return to last value in the_values
-                this_frame = a_frame
+                if a_frame:
+#                    print(child.tag, a_frame)
+                    outframe = list()
+                    for aframe in a_frame.split('|'):
+#                        print(aframe)
+                        param = ast.literal_eval(aframe)
+                        outframe.append('[3,"{}",3,"","{}"]'.\
+                                                  format(param[1], param[4]))
+                    this_frame = '|'.join(outframe)
+                else:
+                    this_frame = ""
             else:
                 this_frame = a_frame
         else:
@@ -513,7 +634,9 @@ class Backend(threading.Thread):
         #add child 'settings', all user configurable bits under here
         self.settings = etree.SubElement(self.root, "settings")
         self.smode = etree.SubElement(self.settings, "mode")
-        self.stemp = etree.SubElement(self.settings, "template")
+        #can't save project until after template already applied
+        #so template setting is not needed
+#        self.stemp = etree.SubElement(self.settings, "template")
         self.sf0 = etree.SubElement(self.settings, "f0")
         self.sf1 = etree.SubElement(self.settings, "f1")
         self.sf2 = etree.SubElement(self.settings, "f2")
@@ -533,6 +656,7 @@ class Backend(threading.Thread):
                          if self.mode == 0 else 'False'
         self.smode.attrib['preferred'] = 'False' \
                          if self.preferred == 0 else 'True'
+        self.smode.attrib['version'] = THIS_VERSION 
         self.old_mode = dict(self.smode.attrib)
 
         if self.mode == 0:
@@ -548,13 +672,13 @@ class Backend(threading.Thread):
             
         self.sf2.text = ''
 
-        self.stemp.text = ''
+#        self.stemp.text = ''
 
         self.sf4.attrib['folderList'] = ''
         self.sf4.attrib['is_copy_playlists_to_top'] = 'False'
         self.sf4.attrib['M3UorM3U8'] = '2'
         return True
-
+    
     def _load_tree_from(self, _trout):
         if not _trout:
             tree = self.trout
@@ -566,7 +690,7 @@ class Backend(threading.Thread):
             for child in tree.getchildren():
                 vout= list()
                 for k in self.columns:
-                    if k not in ['adummy', '_APIC'] and k in child.attrib:
+                    if k not in ['adummy', 'APIC_'] and k in child.attrib:
                         if self.mode: #is advanced
                             vout.append(child.attrib[k])
                         else: #is idiot
@@ -586,6 +710,9 @@ class Backend(threading.Thread):
 
         if aproject:
             output = codecs.open(aproject, mode='w', encoding='utf-8')
+#            print(etree.tostring(self.root, encoding='unicode', \
+#                                         pretty_print=False))
+#            return
             output.write(etree.tostring(self.root, encoding='unicode', \
                                          pretty_print=True))
             output.close()
@@ -641,6 +768,7 @@ class Backend(threading.Thread):
             if 'TIT2' in self.displayColumns:
                 vout.extend([self._my_unidecode(os.path.split(adir_path)[-1]),])
             vout.extend(['-' for item in self.displayColumns[2:-1]])
+#            print("next iid ={}, becomes I{:05X}".format(self.next_iid, self.next_iid))
             iid = "I{:05X}".format(self.next_iid)
             self.next_iid += 1
             self.to_be_inserted.append([iid, [the_focus, vout, 'collection']])
@@ -755,14 +883,22 @@ class Backend(threading.Thread):
         """normalize strings to avoid unicode character which won't display
            correctly or whose use in filenames may crash filesystem"""
         l = list()
-        if self.preferred != 1:
+        self._fix_eng_bug_in_unidecode()
+        if self.preferred == 0:
             self.pref = list()
-        #fix eng/Eng 'bug' in unidecode
-        if 'ŋ' not in [v[0] for v in self.pref]:
-            self.pref.append(['ŋ', 'ng', re.compile('ŋ')])
-        if 'Ŋ' not in [v[0] for v in self.pref]:
-            self.pref.append(['Ŋ', 'Ng', re.compile('Ŋ')])
-        #scan list of preffered character/string pairs
+            #aggresively normalize
+        elif self.preferred == 1:
+            #use preferred list to normalize
+            pass
+        elif self.preferred == 2:
+            #normalization disabled
+            return text
+        else:
+            print("Error, unrecognised value for self.preferred=>{}< should be [0, 1, 2]".format(self.preferred) )
+            return text
+        self._fix_eng_bug_in_unidecode()
+        #got this far so either aggressive with 'empty' list or used preferred
+        #scan list of preferred character/string pairs
         for kv in self.pref:# in range(0,len(text)):
             #build list of all hits in text
             l.extend([[m.start(), len(kv[0]), kv[1]] \
@@ -789,6 +925,22 @@ class Backend(threading.Thread):
             return ''.join([c if c.isalnum() or c in self.pref_char else '_' \
                             for c in unidecode(text)])
 
+    def _fix_eng_bug_in_unidecode(self):
+        if 'ŋ' not in [v[0] for v in self.pref]:
+            self.pref.append(['ŋ', 'ng', re.compile('ŋ')])
+        if 'Ŋ' not in [v[0] for v in self.pref]:
+            self.pref.append(['Ŋ', 'Ng', re.compile('Ŋ')])
+
+    def _hash_it(self, artworkdata):
+        """put artworkdata (is bytes) into hashedgraphics and return hashtag and length str"""
+        #so open artwork read in as bytes
+        m = hashlib.sha256(artworkdata)
+        length = "b'{}Kb'".format(int(len(artworkdata)/1024 + 0.5))
+        #so if the hash not a key in hashed_graphics, add it
+        if m.hexdigest() not in self.hashed_graphics:
+            self.hashed_graphics[m.hexdigest()] = artworkdata
+        return m.hexdigest(), length
+
     def _read_mp3_process_atag(self, atag, k, apic_params, filepath):
         """process the (advanced) mp3 tag"""
         #force utf8 encoding, which is the form all text is held in internally
@@ -796,15 +948,25 @@ class Backend(threading.Thread):
 
         theParameters = None
         if k == 'APIC':
-            m = hashlib.sha256(atag.data)
-            if m.hexdigest() not in self.hashed_graphics:
-                self.hashed_graphics[m.hexdigest()] = atag.data
+#            m = hashlib.sha256(atag.data)
+#            #so if the hash not a key in hashed_graphics, add it
+#            if m.hexdigest() not in self.hashed_graphics:
+#                self.hashed_graphics[m.hexdigest()] = atag.data
+            hash_tag, length = self.hash_it(atag.data)
+#            theParameters = [int(atag.encoding), atag.mime, \
+#                             int(atag.type), atag.desc, \
+#                                m.hexdigest()]
             theParameters = [int(atag.encoding), atag.mime, \
                              int(atag.type), atag.desc, \
-                                m.hexdigest()]
+                               hash_tag]
+            #There may be multiple APIC tags in a file
+            # displayed in APIC as multiple frames in sequence order
+            #the hash tag for each frame will be held as part of a frame 
+            #in APIC_ in the corresponding order
             apic_params.extend([str(theParameters)])
-            length = int(len(atag.data)/1024 + 0.5)
-            theParameters[4] = "b'{}Kb'".format(length)
+#            length = int(len(atag.data)/1024 + 0.5)
+#            theParameters[4] = "b'{}Kb'".format(length)
+            theParameters[4] = length
         elif k in THE_P:
             theParameters = THE_P[k](atag, True)
         else:
@@ -823,8 +985,9 @@ class Backend(threading.Thread):
                 #list all instances of that tag
                 list_tags = audio.getall(k)
                 aresult = list()
-                if list_tags:
+                if list_tags: #not an empty list!
                     for atag in list_tags:
+                        #now for each tag instance...
                         theParameters = \
                                 self._read_mp3_process_atag(atag, k, \
                                                         apic_params, filepath)
@@ -979,6 +1142,7 @@ class Backend(threading.Thread):
         """preparing file scaning for tags advanced mode"""
         #not idiot
         param = ast.literal_eval(atag)
+#        print(param)
         _encoding = int(param[0])
         _mime = param[1]
         _type = int(param[2])
@@ -993,14 +1157,39 @@ class Backend(threading.Thread):
         tindex = thetags.index(atag)
         if param[4][0:2] in ['b"', "b'"]:
             apic_params = child.attrib['APIC_'].split('|')
+            
             para = ast.literal_eval(\
                             apic_params[tindex])
+#            print(apic_params)
+#            print(para)
+#            print(self.hashed_graphics)
+#            while True:
+#                time.sleep(60)
+#                pass
+#            print(para[4])
             if para[4] in self.hashed_graphics:
                 _data = \
                 self.hashed_graphics[para[4]]
+            else:
+                #error message? Can't find graphic
+                #in hashed_graphics so return?
+                self.qr.put(('MESSAGEBOXSHOWERRORLOSTGRAPHIC', (\
+                            "Can't find graphic in hashed_graphics", \
+                            "lost saved graphic for {}.".\
+                            format(child.text))))
+                _data = None
+        elif param[4] in ['-',]:
+            _data = None
         else:
-            _data = open(\
-        os.path.normpath(param[4]), 'rb').read()
+            if os.path.exists(os.path.normpath(param[4])):
+                _data = open(os.path.normpath(param[4]), 'rb').read()
+            else:
+                _data = None
+                self.qr.put(('MESSAGEBOXERROR', (\
+                            "Can't find artwork.", \
+                            "Can't find image for", child.text, \
+                            "file may have been moved or no longer exists." )))
+                
         return [_encoding, _mime, _type, _desc, _data]
 
 
@@ -1014,7 +1203,8 @@ class Backend(threading.Thread):
                 _encoding, _mime, _type, _desc, _data = \
                        self._preparing_file_scaning_for_tags_advanced_mode(\
                             atag, child, picture_type_1_2, thetags)
-                audio.add(APIC(_encoding, _mime, _type, \
+                if _data:
+                    audio.add(APIC(_encoding, _mime, _type, \
                                _desc, _data))
 
     def _preparing_file_scaning_for_tags(self, child, k, audio, thetags):
@@ -1101,7 +1291,7 @@ class Backend(threading.Thread):
             fileId[child].close()
             self.qr.put(('PROGSTEP', 1))
         self._on_copy_playlists(target)
-        self._delete_temp_folder()
+#        self._delete_temp_folder()
 
         self.qr.put(('PROGVALUE', 0))
         self.qr.put(('STATUS', "Publishing completed."))
@@ -1645,79 +1835,107 @@ class Backend(threading.Thread):
             #so skip it!!!
             pass
 
-    def _copy_old_columns_to_new_where_exist(self, child, idiot_case, \
-                                                                old_columns):
-        """copy data from columns in old project to the new project
-           where the old column is still selected in the new project,
-                                               for the specified file (item)"""
-        the_values = list()
-        for item in self.columns:
-            if old_columns:
-                if item in old_columns and item in child.attrib.keys():
-                    if not (item == 'adummy' or item == 'APIC_') \
-                           or (the_values[0] not in ['collection', 'project']):
-                        the_values.extend([child.attrib[item]])
-                    else:
-                        the_values.extend([child.attrib[item]])
-                else:
-                    #not in old, so new defaults to '-'
-                    the_values.extend(['-'])
-            else:
-                    #no dif so in attribs
-                if item in child.attrib:
-                    if not (item == 'adummy' or item == 'APIC_') \
-                           or (the_values[0] not in ['collection', 'project']):
-                        the_values.extend([child.attrib[item]])
-            if idiot_case in ['upgrade data',]:
-                the_values = self._upgrade_data(the_values, item, child)
-            elif idiot_case in ['downgrade data',]:
-                the_values = downgrade_data(the_values, item)
-        return the_values
+#    def _copy_old_columns_to_new_where_exist(self, child, idiot_case, \
+#                                                                old_columns):
+#        """copy data from columns in old project to the new project
+#           where the old column is still selected in the new project,
+#                                               for the specified file (item)"""
+#        the_values = list()
+#        for item in self.columns:
+#            if old_columns:
+#                if item in old_columns and item in child.attrib.keys():
+#                    if not (item == 'adummy' or item == 'APIC_') \
+#                           or (the_values[0] not in ['collection', 'project']):
+#                        the_values.extend([child.attrib[item]])
+#                    else:
+#                        the_values.extend([child.attrib[item]])
+#                else:
+#                    #not in old, so new defaults to '-'
+#                    the_values.extend(['-'])
+#            else:
+#                    #no dif so in attribs
+#                if item in child.attrib:
+#                    if not (item == 'adummy' or item == 'APIC_') \
+#                           or (the_values[0] not in ['collection', 'project']):
+#                        the_values.extend([child.attrib[item]])
+#            if idiot_case in ['upgrade data',]:
+#                the_values = self._upgrade_data(the_values, item, child)
+#            elif idiot_case in ['downgrade data',]:
+#                the_values = downgrade_data(the_values, item)
+#            else:
+#                print("unrecognised idiot_case in _copy_old_columns_to_new_where_exist()")
+#        return the_values
 
-    def _attach_artwork_to(self, target, _picture_type, _desc, artwork):
+    def _attach_artwork_to(self, target, _picture_type, _desc, hash_tag, length, mime):
         """attaches the artwork to item in focus or to its dependants
                                                              if collection"""
+#        print("entering _attach_artwork_to({})".format(target))
         e_target = self.trout.find(".//" + target)
-        if self.mode == 0:
-            #is idiot so...
-            text = artwork if artwork else '-'
-        else:
-            #is NOT idiot so...
-            if artwork:
-                text = '[3,"{}",{},"{}","{}"]'.format(\
-                    'image/png' \
-                    if artwork[-4:] == '.png' else 'image/jpg', \
-                    str(_picture_type), _desc, artwork)
+        #all data stored in advanced form, so ignore mode
+#        if self.mode == 0:
+#            #is idiot so...
+#            text = artwork if artwork else '-'
+#        else:
+#            #is NOT idiot so...
+#        #first find create hash of artwork
+#        if artwork and os.path.exists(artwork) and artwork[-4:] in ['.png', 'jpg',]:
+#            #is a real graphics file to put in hashedgraphics and load tag
+#            fart = codecs.open(artwork, mode='rb').read()
+#            hash_tag, length, mime = self.hash_it(fart)
+        theParameters = '[{},"{}",{},"{}","{}"]'.\
+                        format(3, mime, str(_picture_type), _desc, hash_tag)
+        dumbPara = '[{},"{}",{},"{}","{}"]'.\
+                        format(3, mime, str(_picture_type), _desc, length)
+#        print(e_target.attrib)
+        if e_target.attrib['Type'] in ['file',]:
+#            print("{} is a file".format(target))
+            if not hash_tag:
+#                print("no hash tag")
+                e_target.attrib['APIC'] = '-'
+                e_target.attrib['APIC_'] = '-'
             else:
-                text = '-'
-        if e_target.attrib['Type'] is 'file':
-            currentTag = e_target.attrib['APIC']
-            if currentTag is '-' or self.mode == 0:
-                e_target.attrib['APIC'] = text
-            else:
-                currentFrames = currentTag.split('|')
-                if self._is_different_hash(currentFrames, text, 'APIC'):
-                    #so append
-                    currentFrames.extend([text])
+                currentTag = e_target.attrib['APIC']
+#                print("APIC is {}".format(currentTag))
+                if currentTag is '-' or self.mode == 0:
+#                    print("APIC=>{}, APIC_=>{}".format(dumbPara, theParameters))
+                    e_target.attrib['APIC']  = dumbPara
+                    e_target.attrib['APIC_'] = theParameters
                 else:
-                    #replace a frame
-                    currentFrames[self._list_different_frames(currentFrames, \
-                                            text, 'APIC').index(False)] = text
-                e_target.attrib['APIC'] = '|'.join(currentFrames)
+                    currentFrames = currentTag.split('|')
+                    apic_frames = e_target.attrib['APIC'].split('|')
+                    #I've split the frames apart
+                    #so now test it the new frame is diffrent enough to
+                    # justfiy own frame
+                    if self._is_different_hash(currentFrames, theParameters, 'APIC'):
+                        #so append
+                        currentFrames.append(dumbPara)
+                        apic_frames.append(theParameters)
+                    else:
+                        #replace first matching frame
+                        theList = self._list_different_frames(currentFrames, dumbPara, 'APIC')
+                        if False in theList:
+                            index = theList.index(False)
+                            currentFrames[index] = dumbPara
+                            apic_frames[index] = theParameters
+                    e_target.attrib['APIC'] = '|'.join(currentFrames)
+                    e_target.attrib['APIC_'] = '|'.join(apic_frames)
         else:
             #is collection, list children of focus and attach artwork to each
             children = e_target.getchildren()
             for child in children:
-                self._attach_artwork_to(child.tag, _picture_type, _desc, artwork)
+                self._attach_artwork_to(child.tag, _picture_type, _desc, hash_tag, length, mime)
 
     def _on_publish_to_SD(self):
         """publish files and playlists to SDs"""
 
         threads = []
-        self.qr.put(('PROGMAX', (len(self.files) * 4 * len(self.output_to))))
+        self.usb_status = ['','','','','','','','']
+#        self.qr.put(('PROGMAX', (len(self.files) * 4 * len(self.output_to))))
+        self.qr.put(('PROGMAX', (2 * int(len(self.files)/20) * len(self.output_to))))
 
         i = 1
         currentThreadsActive = threading.activeCount()
+#        print("currentThreadsActive {}".format(currentThreadsActive))
         for atarget in self.output_to:
             if atarget:
                 if os.path.exists(atarget):
@@ -1734,15 +1952,128 @@ class Backend(threading.Thread):
                 else:
                     self.qr.put(('MESSAGEBOXSHOWERRORTHREADS', ("Invalid path", \
                                         "Can't find {}", atarget)))
-
-        while threading.activeCount() > currentThreadsActive:
-            self.qr.put(('STATUS{}', ('{} Threads active', \
-                                 threading.activeCount()-currentThreadsActive)))
-        [athread.join() for athread in threads]
-        self._delete_temp_folder()
+#thinks... this is same as [athread.join() for athread in threads]
+        while len(threads):
+            for athread in threads:
+                if not athread.is_alive():
+                    athread.join()
+                    threads.remove(athread)
+#        while threading.activeCount() > currentThreadsActive:
+##            self.qr.put(('STATUS{}', ('{} Threads active', \
+##                                 threading.activeCount()-currentThreadsActive)))
+#            print('{} Threads active', \
+#                                 threading.activeCount()-currentThreadsActive)
+#        [athread.join() for athread in threads]
+#        self._delete_temp_folder()
         self.qr.put(('PROGVALUE', 0))
         self.qr.put(('STATUS', "Output to SD('s) completed."))
 
+    def _html_tree_from(self, _trout):
+        if not _trout:
+            tree = self.trout
+            parent = ''
+        else:
+            tree = self.trout.find(".//" + _trout)
+            parent = tree.tag
+        if len(tree):
+            for child in tree.getchildren():
+#                attributes = child.attrib
+#                print(attributes)
+                vout= list()
+                for k in self.columns:
+                    if k not in ['adummy', ] and k in child.attrib:
+                        if self.mode: #is advanced
+                            vout.append(child.attrib[k])
+                        else: #is idiot
+                            data = self._downgrade_data(k, child)
+                            vout.append(data)
+                    else:
+                        vout.append('-')
+                if child.attrib['Type'] in ['file',]:
+                    self.html_out.append('<tr>' + \
+                                            '<td>' + child.tag + '</td>' + \
+                                            '<td>' + (child.text if child.text else '-') + \
+                                            '.mp3'  + '</td>' + \
+                                            ''.join(['<td>' + v + '</td>' for v in vout]) + '</tr>')
+                else: #is 'collection' or 'project'
+                    self.html_out.append('<tr>' + \
+                                            '<td>' + child.tag + '</td>' + \
+                                    '<td>' + (child.text if child.text else '-') + '</td>' + '</tr>')
+                self.qr.put(('PROGSTEP', 1))
+                self._html_tree_from(child.tag)
+
+
+    def _export_to_html(self):
+        """produce html tree, showing final file/dir name, location of source, title and the rest of the display"""
+        self.qr.put(('STATUS', "Exporting to HTML..."))
+        the_headings = ['<th>Id Tag</th>', '<th>File/Dir</th>',]
+        for c in self.columns:
+#            if c not in ['adummy', ]:
+            if c not in ['', ]:
+                if c in ['Name',]:
+                    the_headings.append('<th>' + 'Base' + '</th>')
+                else:
+                    the_headings.append('<th>' + c + '</th>')
+        fileout = os.path.normpath(self.Pub2SD + '/' + self.project + '.html')
+        self.html_out = ['\ufeff<!DOCTYPE html>', \
+                    '<html>', \
+                    '<head>', \
+                    '<title>' + self.project + '</title>', \
+                    '<style>',\
+                    'table, th, td {', \
+                    '    border: 1px solid black;', \
+                    '    border-collapse: collapse;', \
+                    '}', \
+                    'th {', \
+#                    '    padding: 0.1em 0.1ex 0.1em 0ex;', \
+                    '    padding: 5px 5px 5px 5px;', \
+                    '    text-align: center;', \
+                    '    vertical-align: top;', \
+                    '    color: black;', \
+                    '    font-family: Andika SEB;', \
+                    '    font-size: 100%;', \
+                    '}', \
+                    'td, tr {', \
+#                    '    padding: 0.1em 0.1ex 0.1em 0ex;', \
+                    '    padding: 5px 5px 5px 5px;', \
+                    '    text-align: left;', \
+                    '    vertical-align: top;', \
+                    '    color: black;', \
+                    '    font-family: Andika SEB;', \
+                    '    font-size: 100%;', \
+                    '}', \
+                    'td.spkr_no {', \
+#                    '    padding: 0.1em 0.1ex 0.1em 0ex;', \
+                    '    padding: 5px 5px 5px 5px;', \
+                    '    text-align: center;', \
+                    '    vertical-align: top;', \
+                    '    color: black;', \
+                    '    font-family: Andika SEB;', \
+                    '    font-size: 100%;', \
+                    '}', \
+                    'h1 {', \
+                    '    color: black;', \
+                    '    font-family: Andika SEB;', \
+                    '    font-size: 160%;', \
+                    '}', \
+                    '</style>', \
+                    '</head>', \
+                    '<body>', \
+                        '<h1>' + self.project + '</h1>', \
+                    '<table style="width:100%">', \
+                    '<tr>' + ''.join(the_headings) + '</tr>']
+        
+        self._html_tree_from('')
+        self.html_out.append('')
+        output = codecs.open(fileout, mode='w',encoding='utf-8')
+        output.write( '\n'.join(self.html_out) )
+        output.flush()
+        output.close()
+        #now open in browser
+        url = os.path.normpath("file://" + fileout)
+        webbrowser.open(url)
+        self.qr.put(('PROGVALUE', 0))
+        self.qr.put(('STATUS', ''))
 
 def get_rid_of_multiple_spaces(tin):
     """replace multiple spaces with single space and strip leading and

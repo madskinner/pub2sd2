@@ -13,6 +13,12 @@ TRIM_LEADING_DIGITS = re.compile(r'^\d+(.+?)')
 TRIM_LEADING_ALPHANUM = re.compile(r'^\w+(.+?)')
 TRIM_TRAILING_DIGITS = re.compile(r'(.+?)\d+$')
 DOUBLE_SPACE_TO_SINGLE = re.compile(r'\s\s+')
+TAB = re.compile(r'\t')
+RETURN = re.compile(r'\r')
+NEWLINE = re.compile(r'\n')
+RETAB = re.compile(r'&#9;')
+RERETURN = re.compile(r'&#13')
+RENEWLINE = re.compile(r'&#10;')
 HEX_CHAR = re.compile(r'0[xX][0-9a-fA-F]{4,4}')
 
 def _nothing(title):

@@ -9,7 +9,7 @@ import fnmatch
 import os
 import platform
 import webbrowser
-from queue import Queue
+import queue
 import threading
 
 import codecs
@@ -56,10 +56,31 @@ SCRIPT_DIR = get_script_directory()
 #aqr = [queue.Queue(), queue.Queue(), queue.Queue(), queue.Queue(), \
 #       queue.Queue(), queue.Queue(), queue.Queue(), queue.Queue()]
 #
-qcommand = Queue()
-qreport = Queue()
-aqr = [Queue(), Queue(), Queue(), Queue(), \
-       Queue(), Queue(), Queue(), Queue()]
+class PQueue(queue.PriorityQueue):
+  '''
+  A custom queue subclass that provides a :meth:`clear` method.
+  '''
+
+  def clear(self):
+    '''
+    Clears all items from the queue.
+    '''
+
+    with self.mutex:
+      unfinished = self.unfinished_tasks - len(self.queue)
+      if unfinished <= 0:
+        if unfinished < 0:
+          raise ValueError('task_done() called too many times')
+        self.all_tasks_done.notify_all()
+      self.unfinished_tasks = unfinished
+      self.queue.clear()
+      self.not_full.notify_all()
+
+
+qcommand = queue.Queue()
+qreport = queue.Queue()
+aqr = [PQueue(), PQueue(), PQueue(), PQueue(), \
+       PQueue(), PQueue(), PQueue(), PQueue()]
 
 
 class GuiCore(Tk):
@@ -93,6 +114,15 @@ class GuiCore(Tk):
         if not os.path.isdir(self.Pub2SD):
             os.makedirs(self.Pub2SD, 0o777) #make the dir
 
+        pud2sd_styles = Style()
+        pud2sd_styles.configure('lowlight.TButton', \
+                                font=('Sans', 8, 'bold'),)
+        pud2sd_styles.configure('highlight.TButton', \
+                                font=('Sans', 11, 'bold'), \
+                                background='blue', foreground='green')
+        pud2sd_styles.configure('wleft.TRadiobutton', \
+                                anchor='w', justify='left')
+        
         self._initialize_f0(lang) # so on f1, recommended mp3tags
         self._initialize_f1(lang) # so on f2, special characters
         self._initialize_f2(lang) # so on f3 tab Edit Hierarchy
@@ -103,14 +133,6 @@ class GuiCore(Tk):
         
         if platform.system() == 'Linux': #create on f6
             self._initialize_f6(lang) #will be for locking/unlocking SD cards
-        pud2sd_styles = Style()
-        pud2sd_styles.configure('lowlight.TButton', \
-                                font=('Sans', 8, 'bold'),)
-        pud2sd_styles.configure('highlght.TButton', \
-                                font=('Sans', 11, 'bold'), \
-                                background='white', foreground='#007F00')
-        pud2sd_styles.configure('wleft.TRadiobutton', \
-                                anchor='w', justify='left')
         self._process_report_queue()
         
     def _process_report_queue(self):
@@ -270,6 +292,7 @@ class GuiCore(Tk):
                         self._on_click_f0_next_continued(lang)
                     else:
                         print("can't continue")
+                        pass
                     self.update()
                 elif 'HASHEDGRAPHICS' in areport:
                     self.hashed_graphics = areport[1]
@@ -277,20 +300,28 @@ class GuiCore(Tk):
                     self._on_prepare_files_continued()
                 elif 'DELETEDTEMP' in areport:
                     self.destroy()
-                    break
+                    return
+                elif 'PREFERRED' in areport:
+                    self.preferred.set(areport[1])
                 else:
                     print('Unknown report >{}<'.format(areport))
                 qreport.task_done()
-                #now scan queues from pub to SD threads
-                for i in range(0, 8):
-                    if not aqr[i].empty():
-                        aqreport = aqr[i].get()
-                        if 'PROGSTEP' in aqreport:
-                            self.progbar.step(1)
-                            aqr[i].task_done()
-                        else:
-                            pass
-                self.update_idletasks()
+        #now scan queues from pub to SD threads
+        for i in range(0, 8):
+            if not aqr[i].empty():
+                aqreport = aqr[i].get()
+#                print("seen item in queue{}, =>{}<".format(i,aqreport))
+                if 'PROGSTEP' in aqreport:
+                    self.progbar.step(1)
+                    aqr[i].task_done()
+                elif 'PRINT' in aqreport:
+                    print(aqreport[2])
+                elif 'STATUS' in aqreport:
+                    self.usb_status[i] = aqreport[2]
+                    self.status['text'] = ';'.join([t for t in self.usb_status if t])
+                else:
+                    pass
+        self.update()
         self.lblProject.after(200, self._process_report_queue)
 
     def _initialize_project_variables(self):
@@ -333,6 +364,7 @@ class GuiCore(Tk):
         self.play_list_targets = set()
         self.needed = 0 #in Mb
         self.temp_dir_deleted = False
+        self.usb_status = ['', '', '', '', '', '', '', '']
 
         #define all StringVar(), BooleanVar(), etc… needed to hold info
         self.selected_lang = StringVar()
@@ -347,7 +379,7 @@ class GuiCore(Tk):
         self.set_trim = StringVar()
         self.next_track = 0
         self.is_copy_playlists_to_top = IntVar()
-        self.isCoolMusic = IntVar()
+#        self.isCoolMusic = IntVar()
         self.EnterList = StringVar()
         self.additionalTags = StringVar()
         self.folderList = StringVar()
@@ -464,6 +496,14 @@ class GuiCore(Tk):
         self.lblProject.grid(column=1, row=0, columnspan=2, padx=5, pady=5, \
                              sticky='ew')
         self.lblProject['justify'] = 'left'
+
+        self.btnHTMLProject = Button(self.f_1, \
+                                     text=LOCALIZED_TEXT[lang]["HTML"], \
+                                                command=self._on_html_project)
+        self.btnHTMLProject.grid(column=2, row=0, columnspan=2, padx=5, pady=5, sticky='news')
+        self.btnHTMLProject['state'] = 'disabled'
+        self.btnHTMLProject_ttp = CreateToolTip(self.btnSaveProject, \
+                                        LOCALIZED_TEXT[lang]['HTML_ttp'])
 
         self.lblGuiLanguage = Label(self.f_1, \
                             text=LOCALIZED_TEXT[lang]['Interface language>'])
@@ -674,10 +714,15 @@ class GuiCore(Tk):
                                     variable=self.preferred, value=1, \
                                     style='wleft.TRadiobutton')
         self.rdbPreferred.grid(column=1, row=3, padx=5, pady=5, sticky='news')
+        self.rdbDisable = Radiobutton(self.f2, \
+                                    text=LOCALIZED_TEXT[lang]["Disable Normalization"], \
+                                    variable=self.preferred, value=2, \
+                                    style='wleft.TRadiobutton')
+        self.rdbDisable.grid(column=1, row=4, padx=5, pady=5, sticky='news')
         self.lblLatin1 = Label(self.f2, \
                                text=LOCALIZED_TEXT[lang]["AddLatin1Example"], \
                                 anchor='w', justify='left', wraplength=200)
-        self.lblLatin1.grid(column=3, row=3, padx=5, pady=5, sticky='news')
+        self.lblLatin1.grid(column=3, row=4, padx=5, pady=5, sticky='news')
 
         self.preferred.set(0)
 
@@ -703,14 +748,14 @@ class GuiCore(Tk):
         self.btnSavePref.grid(column=4, row=4, padx=5, pady=5, sticky='news')
 
         self.txtPrefChar = Text(self.f2, height=10, width=60)
-        self.txtPrefChar.grid(column=0, row=4, \
+        self.txtPrefChar.grid(column=0, row=5, \
                               columnspan=3, rowspan=6, padx=5, pady=5, \
                               sticky='news')
         ysb = Scrollbar(self.f2, orient='vertical', \
                               command=self.txtPrefChar.yview)
         self.txtPrefChar.configure(yscroll=ysb.set, font=("sans", 12), \
                                                        undo=True, wrap='word')
-        ysb.grid(row=4, column=3, rowspan=6, sticky='nws')
+        ysb.grid(row=5, column=3, rowspan=6, sticky='nws')
 
         self.btnF2Next = Button(self.f2, text=LOCALIZED_TEXT[lang]["Next"], \
                                               command=self._on_click_f2_next, \
@@ -760,7 +805,7 @@ class GuiCore(Tk):
         self.btnImportContents = Button(self.boxOuter, \
                     text=LOCALIZED_TEXT[lang]["Add the Contents of Folder"], \
                     state='normal', command=self._on_add_contents, \
-                    style='lowlight.TButton')
+                    style='highlight.TButton')
 
         self.btnImportContents.grid(column=0, row=0, \
                                     rowspan=1, padx=5, pady=5, sticky='news')
@@ -1150,7 +1195,8 @@ class GuiCore(Tk):
         self.btnExit = Button(self.f5, \
                 text=LOCALIZED_TEXT[lang]["Delete temporary files and exit."].\
                                    format(project), \
-                                  command=self._quit)
+                                  command=self._quit, \
+                                  style='highlight.TButton')
         self.btnExit.grid(column=3, row=5, \
                             columnspan=2, padx=5, pady=5, sticky='news')
 
@@ -1159,6 +1205,12 @@ class GuiCore(Tk):
         """The lock unlock SD card tab, to be implemented?"""
         pass
 
+    def _on_html_project(self):
+        """Export the whole project tree to an HTML file and open it with 
+                                                      your default browser."""
+        qcommand.put(('EXPORTHTML', None))
+#        print("in _on_html_project")
+        pass
     def _on_loadPrefChar(self, dummy, _prefchar=None, _lst='', _filein=''):
         """load a set of preferred character pairs from LATIN1 constant
                                                  or a utf8 coded  .csv file"""
@@ -1287,11 +1339,11 @@ class GuiCore(Tk):
     def _on_create_template(self, _lang='', _template=None, _fileout=''):
         """saves the currently selected combination of tags
                                                to a utf-8 encoded .json file"""
-        
+        print("running _on_create_template")
         lang = _lang if _lang else self.ddnGuiLanguage.get()
             
         a_template = _template if _template is not None \
-                               else {key: '' \
+                               else {key:'show' \
                                      for key in self.tagtree.selection()}
             
         fileout = _fileout if _fileout \
@@ -1304,7 +1356,7 @@ class GuiCore(Tk):
         if fileout: #output template
             output = codecs.open(fileout, mode='w', encoding='utf-8')
 
-            j = json.dumps(self.template, indent=4, sort_keys=True)
+            j = json.dumps(a_template, indent=4, sort_keys=True)
             output.write(j)
             output.close()
         return a_template
@@ -1469,16 +1521,16 @@ class GuiCore(Tk):
             thisone = os.path.normpath(self.Pub2SD + '/'+ \
                                    self.ddnCurTemplate.get() + '.json')
             if os.path.isfile(thisone):
-                filein = codecs.open(thisone, mode='r', encoding='utf-8')
-                lines = filein.readlines()
-                #load template to backend
-                self.template = json.loads(''.join(lines))
-                self.stemp.text = self.ddnCurTemplate.get()
-                attributes = self.stemp.attrib
-                for k in self.template.keys():
-                    attributes[k] = self.template[k]
-                filein.close()
-                qcommand.put(('LOAD_TEMPLATE', self.template))
+#                filein = codecs.open(thisone, mode='r', encoding='utf-8')
+#                lines = filein.readlines()
+#                #load template to backend
+#                self.template = json.loads(''.join(lines))
+##                self.stemp.text = self.ddnCurTemplate.get()
+#                attributes = self.stemp.attrib
+#                for k in self.template.keys():
+#                    attributes[k] = self.template[k]
+#                filein.close()
+                qcommand.put(('LOAD_TEMPLATE', thisone))
         elif not self.ddnCurTemplate.get():
             qcommand.put(('LOAD_TEMPLATE', ''))
         else:
@@ -1654,6 +1706,9 @@ class GuiCore(Tk):
 
         self.n.add(self.f3)
         self.n.select(3)
+        self.btnHTMLProject['state'] = 'normal'
+        self.update()
+
 
     def _on_click_f3m0_next(self):
         """proceed to 'Edit heirarchy' sub-tab"""
@@ -1710,15 +1765,16 @@ class GuiCore(Tk):
                     LOCALIZED_TEXT[lang]['Error in on_click_f4_next()'], \
                     LOCALIZED_TEXT[lang]["Folder <{}> may be in use by another \
                     program. Close all other programs \
-                    and try again.".format(temp_path)])
+                    and try again."].format(temp_path))
                 return
         project_path_ = os.path.normpath(self.project)
         # trailling '\\' will be removed
         qcommand.put(('CHILDRENS_FILENAMES', (self.project_id, \
                                                temp_path, project_path_)))
         self.play_list_targets = set()
-        if self.isCoolMusic.get() == 1:
-            self.play_list_targets.add('COOL_MUSIC')
+        #chkbutton nologer there
+#        if self.isCoolMusic.get() == 1:
+#            self.play_list_targets.add('COOL_MUSIC')
         #if list
         if self.EnterList.get():
             self.play_list_targets.update(set(self.EnterList.get().split(',')))
@@ -1952,6 +2008,7 @@ class GuiCore(Tk):
 
     def _on_publish_to_SD(self):
         """publish files and playlists to SDs"""
+        self.usb_status = ['', '', '', '', '', '', '', '']
         qcommand.put(('PUBLISH_TO_SD', self.output_to))
         self.update()
 
@@ -1959,6 +2016,7 @@ class GuiCore(Tk):
         """feedback completed"""
         lang = self.ddnGuiLanguage.get()
         self.progbar['value'] = 0
+        self.update()
         self.status['text'] = \
                    LOCALIZED_TEXT[lang]["Output to SD('s) completed."]
         self.update()
@@ -2067,6 +2125,7 @@ class GuiCore(Tk):
         self.lblPreferred['text'] = LOCALIZED_TEXT[lang]['lblPreferred']
         self.rdbDefault['text'] = LOCALIZED_TEXT[lang]['Default']
         self.rdbPreferred['text'] = LOCALIZED_TEXT[lang]['Preferred']
+        self.rdbDisable['text'] = LOCALIZED_TEXT[lang]['Disable Normalization']
 
         self.btnF3M0Next['text'] = LOCALIZED_TEXT[lang]['Next']
         self.btnF3M1Next['text'] = LOCALIZED_TEXT[lang]['Next']

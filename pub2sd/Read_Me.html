@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html><head>
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
@@ -9,6 +9,7 @@
   <style type="text/css">
 	<!--
 		p { font-family : "Andika SEB", geneva, arial, helvetica, sans-serif; font-size : 13pt; font-style : normal; color: #000000; margin-top: 0.07in; margin-bottom: 0.07in }
+		li { font-family : "Andika SEB", geneva, arial, helvetica, sans-serif; font-size : 13pt; font-style : normal; color: #000000; margin-top: 0.07in; margin-bottom: 0.07in }
 		h1 { font-family : "Andika SEB", geneva, arial, helvetica, sans-serif; font-size : 20pt; font-style : normal; color: #000000; margin-top: 0.07in; margin-bottom: 0.07in  }
 		h2 { font-family : "Andika SEB", geneva, arial, helvetica, sans-serif; font-size : 16pt; font-style : normal; color: #000000; margin-top: 0.07in; margin-bottom: 0.07in  }
 		a:link { font-family : "Andika SEB", geneva, arial, helvetica, sans-serif; color: #0000ff }
@@ -24,45 +25,47 @@
 
 <h1>Why use Pub2SDwizard?</h1>
 
-<p>Just copying your  MP3 files on to an SD card is easy enough, but:</p>
+<p>Just copying your MP3 files on to an SD card is easy enough, but:</p>
 
-<p style="margin-left: 40px;">What order do you wish them to play in?</p>
+<ul>
 
-<p style="margin-left: 40px;">Since different devices and applications
+  <li>What order do you wish them to play in?</li>
+  <li>Since different devices and applications
 will sort them in different ways, how do you force them to play in the
-order you desire?</p>
-
-<p style="margin-left: 80px;">While a simple radio can play files from
+order you desire?</li>
+  <p style="margin-left: 80px;">While a simple radio can play files
+from
 SD cards or USB stick they will probably sort solely on the filenames,
 but mobile phones may sort them on their creation or last modified date
 or other embedded metadata tags. Which tags are used will depend on the
 paticular make and model of phone and or the application it's running.</p>
-
-<p style="margin-left: 40px;">How do you organise the files so that a user can navigate to the desired file even on the simplest phone?</p>
-
-<p style="margin-left: 40px;">How do you create playlists that more advanced phones can discover automatically and in what format?</p>
-
-<p style="margin-left: 40px;">Will the device/application be able to display the characters in your filenames?</p>
-
-<p style="margin-left: 40px;">Do you need to rename your files for compatibility with the operating system of your users devices?</p>
-
-<p style="margin-left: 40px;">Later when you come to add new files to a
+  <li>How do you organise the files so that a
+user can navigate to the desired file even on the simplest phone?</li>
+  <li>How do you create playlists that more
+advanced phones can discover automatically and in what format?</li>
+  <li>Will the device/application be able to
+display the characters in your filenames?</li>
+  <li>Do you need to rename your files for
+compatibility with the operating system of your users devices?</li>
+  <li>Later when you come to add new files to a
 project or reorganise it, how will you avoid having to retype
-everything you entered for your previous project?</p>
-
-<p style="margin-left: 40px;">Do you need to add to or edit multiple
+everything you entered for your previous project?</li>
+  <li>Do you need to add to or edit multiple
 files existing metadata (e.g. to add cover art, correct the copyright
-info, list contributors, ...)?</p>
+info, list contributors, ...)?</li>
+</ul>
 
 <p>Pub2SDwizard can walk you through this process, saving your
-decisions, enforcing your sort orders as well as assisting you to make
+decisions and enforcing your sort orders as well as assisting you to
+make
 multiple copies of the resulting SD card at once.</p>
 
 <h1>Overview</h1>
 
 <p>The Pub2SDwizard tool is based on the specification and description
 of expected use at &lt;<a href="http://id3.org/Developer%20Information" target="_blank">http://id3.org/Developer%20Information</a>&gt;, as
-implemented in the 'mutagen' (version 1.37) libraries for Python 3 &lt;<a href="http://mutagen.readthedocs.io/en/latest/api/id3.html">http://mutagen.readthedocs.io/en/latest/api/id3.html</a>&gt;.</p>
+implemented in the 'mutagen' (version &gt;=1.37) libraries for Python 3
+&lt;<a href="http://mutagen.readthedocs.io/en/latest/api/id3.html">http://mutagen.readthedocs.io/en/latest/api/id3.html</a>&gt;.</p>
 
 <p>While
 the 4 letter codes for the MP3 tags follow the above standard, where
@@ -91,13 +94,14 @@ list at the top right of the screen and can be changed at any time.</p>
 <h2>The name of your project?<br>
 </h2>
 
-<p><img style="width: 766px; height: 228px;" alt="asks project name" src="images/project_name.jpg"></p>
+<p><img style="width: 712px; height: 223px;" alt="asks project name" src="images/project_name.jpg"></p>
 
 <p>This
 can either be entered directly or chosen from the drop-down list.
 The project settings can be saved at any time and will be held in a
 '&lt;project name&gt;.prj' file stored in a 'Pub2SD' folder under your
-home folder (i.e. 'C:\Users\&lt;username&gt;\Pub2SD'). This name will
+home folder (i.e. 'C:\Users\&lt;username&gt;\Pub2SD' for Windows). This
+name will
 also be used as the name of the top
 level folder on the SD card which will hold your published files.</p>
 
@@ -115,14 +119,14 @@ presented as simple strings and restricts you to a single piece of
 artwork and a single comment whose language is not defined.</p>
 
 <p>A number of the 'advanced' tags allow you to have multiple entries
-for each tag distiguished by theit 'language' and 'desciption' fields.
+for each tag distiguished by their 'language' and 'desciption' fields.
 In addition there are many different types of artwork that can be
 included. Though not all applications may recognise these features.<br>
 </p>
 
-<p>Once you've chosen your project name and select your project type,
+<p>Once you've chosen your project name and selected your project type,
 you can click on the 'Next' button. This will update the 'Current
-project:' and 'Mode:' fields near the top of the window. However you
+project:' and 'Mode:' fields near the top of the window and enable the 'Save project settings' button. However you
 may wish to select some
 additional items from the 'Optional' section first.<br>
 </p>
@@ -150,7 +154,7 @@ remove any tags already present in the project.</p>
 
 <p>Once you have created some templates you can manually edit the
 '.json' template files, in your&nbsp;
-'\Documents\Pub2SD' folder, to add 'default values' to some or all of
+'~\Pub2SD' folder, to add 'default values' to some or all of
 the tags listed by their four character tag codes. Then whenever an MP3
 file is loaded into a project which has that template attached these
 default values will be pre-loaded into Pub2SDwizard for any tags which
@@ -177,7 +181,7 @@ abscence the most commonly used tags are selected by default. In
 existing projects the tags already chosen along with any new tags
 specified in your template are selected by default. You can add to
 or remove tags from the selection with a&nbsp; 'Ctrl+click' on the tag
-of interest. You can restore a default selection ofmost commonly used
+of interest. You can restore a default selection of most commonly used
 tags by clicking
 on the 'Default tags' button.</p>
 
@@ -197,7 +201,8 @@ when it is requested.</p>
 
 <h2>Special characters</h2>
 
-<p><img style="width: 868px; height: 535px;" alt="Special characters" src="images/SpecialCharacters.jpg"></p>
+<p><a href="images/SpecialCharacters.jpg"><img style="border: 0px solid ; width: 868px; height: 535px;" alt="Special characters" src="../../../Documents/_Pub2SD/images/SpecialCharacters.jpg"></a><br>
+</p>
 
 <p>By default, tags which require 'Latin1' and the filenames generated
 are aggressively normalised to remove any special characters to
@@ -228,10 +233,15 @@ saltillo. (Though I don't know how many phones would actually display
 it!).</p>
 
 <p>The preferred list is strictly a set of pairs of strings rather than
-characters so '&#330;/Ng', 'ng/&#331;'
+characters so 'Ŋ/Ng', 'ng/ŋ'
 or even 'Tom/Fred' would work. The characters in the strings on either
 side of the '/' can either be entered directly or as their Unicode
-values using the 0xNNNN notation. </p>
+values using the 0xNNNN notation.</p>
+<p><span style="font-weight: bold;">N.B. </span>The third option
+'Disable Normalization' is supplied for testing purpose only, since the
+behaviour of the phones or applications you are targeting is
+unpredictable at best when incompatible characters are used!<br>
+ </p>
 
 <h2>Edit...</h2>
 
@@ -242,7 +252,8 @@ moved or deleted.</p>
 
 <h3>Import hierarchy</h3>
 
-<p><img style="width: 551px; height: 213px;" alt="import folder" src="images/ImportHierarchy.jpg"></p>
+<p><img style="width: 615px; height: 201px;" alt="Import hierarchy" src="images/ImportHierarchy.jpg"><br>
+</p>
 
 <p>In 'Simple' mode only the 'Import a Folder and it's Contents'
 button is
@@ -268,7 +279,7 @@ name it derived from rather than the title tag in an MP3 file. So
 any compromises made in representing the orthography for the original
 operating system will be preserved. Consequently you must always verify
 that the titles of the collections are as you wish them to appear(e.g
-Saa+ï needs replacing with either Saang or Saa&#331;).</p>
+Saa+ï needs replacing with either Saang or Saaŋ).</p>
 
 <p><img style="width: 728px; height: 293px;" alt="files pre-trim" src="images/showFilesPretrim.jpg"></p>
 
@@ -288,11 +299,11 @@ had leading or trailing characters added to
 their
 filenames (and/or their MP3 titles) to help determine the sequence in
 which they should be played. These may no longer be required and so can
-be removed using the 'Trim from Title' button. This will also show, in
-the left most column, the final folder and file names which will be
-published to the SD card.</p>
+be removed using the 'Trim from Title' button. <br>
+</p>
 
-<p><img style="width: 274px; height: 190px;" alt="trim from titles" src="images/TrimFromTitle.jpg"></p>
+<p><img style="width: 269px; height: 175px;" alt="Trim from Title" src="images/TrimFromTitle.jpg"><br>
+</p>
 
 <p>This will trim characters from every item below the currently
 selected
@@ -309,7 +320,8 @@ they are displayed and trimed any unwanted charaters, click on the
 <h3>Edit
 Hierarchy</h3>
 
-<p><img style="width: 331px; height: 92px;" alt="edit hierarchy" src="images/EditHierarchy.jpg"></p>
+<p><img style="width: 560px; height: 82px;" alt="Edit Hierarchy" src="images/EditHierarchy.jpg"><br>
+</p>
 
 <p>'Simple' mode will only allow you to delete unwanted files or
 collections. 'Advanced' mode allows you to restructure your hierarchy
@@ -339,7 +351,7 @@ forms, diacritics removed, ligatures split and an approximate
 transliteration of any cyrillic, greek or non-roman characters will be
 attempted. In addition any punctuation or spaces will become underscore
 charaters, or your preferred characters. <br>
-( e.g. 'à Â Þ Æ ç &#330; &#331; ñ &#436;' would become 'a_A_Th_AE_c_NG_ng_n_y')</p>
+( e.g. 'à Â Þ Æ ç Ŋ ŋ ñ ƴ' would become 'a_A_Th_AE_c_NG_ng_n_y')</p>
 
 <p>In 'Simple' mode all tags will be represented as single strings of
 characters and their encoding and any other parameters will be hidden.
@@ -388,10 +400,11 @@ overwrite all the existing frames in the tag.</p>
 <p>When the users MP3 reader application displays the contents of the
 (TCOP) Copyright tag it will always be preceeded by the '©'
 copyright symbol. This is fixed in the ID3 standards and can not be
-changed. Should you prefer to use the Sound recording copyright symbol '&#8471;'
+changed. Should you prefer to use the Sound recording copyright symbol
+'℗'
 you will have to add that to the start of the copyright string. Though
 this will result in displaying both symbols preceeding the rest of the
-string ('©&#8471;').
+string ('©℗').
 Alternatively the (COMM) Comment tag could be used, but be aware the
 users MP3 reader application may not display the Comment tag.</p>
 
@@ -542,4 +555,5 @@ Again, be aware that individual applications and hardware may have
 implemented the ID3 standard
 differently and differ in their customary usage. Always test on the
 relevant application and hardware, no guarentees are given or implied!</p>
+
 </body></html>

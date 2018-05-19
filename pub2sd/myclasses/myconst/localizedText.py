@@ -304,6 +304,28 @@ SET_TAGS = {\
 
 LOCALIZED_TEXT = { \
         'en-US':{ \
+            "Can't find artwork.":"Can't find artwork.", \
+            "Can't find image for":"Can't find image for", \
+            "file may have been moved or no longer exists.":\
+                "file may have been moved or no longer exists.", \
+            "Deleting temporary files, this may take a few minutes.":\
+                "Deleting temporary files, this may take a few minutes.", \
+            "Project created in old format!":\
+                                            "Project created in old format!", \
+            "This will attempt to update the project file " + \
+                "format to the current standard, every field " + \
+                "must be verified. It may be faster to " + \
+                "recreate the project from scratch. " +
+                "Do you wish to continue?":"This will attempt to update " + \
+                "the project file " + \
+                "format to the current standard, every field " + \
+                "must be verified. It may be faster to " + \
+                "recreate the project from scratch. " +
+                "Do you wish to continue?", \
+            "Exporting to HTML...":"Exporting to HTML...", \
+            "HTML_ttp":"Export the whole project tree to an html file and open it in your default browser.", \
+            "HTML":"Export to html.", \
+            "Disable Normalization":"Disable Normalization.", \
             "Delete temporary files and exit.":"Delete temporary files and exit.", \
             "Publishing completed.":"Publishing completed.", 
             "Project can't hold '.mp3' files directly.":"Project can't hold '.mp3' files directly.", \
@@ -498,7 +520,8 @@ LOCALIZED_TEXT = { \
             'SelectArtwork_ttp':'Select the cover artwork (.png/.jpg) to be embedded in the currently selected "MP3" file (in the APIC tag).\n' + \
                         "If a collection is selected, the artwork will be embedded in all it's MP3 files and all those of it's subcollections… ", \
             'Art_ttp':'Select the cover artwork (.png/.jpg) to be embedded in the currently selected "MP3" file.\n' + \
-                        "If a collection is selected, the artwork will be embedded in all it's MP3 files and all those of it's subcollections…", \
+                        "If a collection is selected, the artwork will be embedded in all it's MP3 files and all those of it's subcollections…\n" + \
+                        "N.B. Recommended size: 300x300 pixels, 800x600 pixels and 25 kilobytes are the practical limits." , \
             'no items selected':'No items selected.', \
             'No ID3 tag':'No ID3 tag', \
             'No ID3 tags found in':'No ID3 tags found in', \
@@ -584,6 +607,27 @@ LOCALIZED_TEXT = { \
             "Preparing =>{}":"Preparing =>{}", \
             }, \
         'fr-FR':{ \
+            "Can't find artwork.":"Impossible de trouver une image.", \
+            "Can't find image for":"Impossible de trouver l'image pour", \
+            "file may have been moved or no longer exists.":\
+                "le fichier peut avoir été déplacé ou n'existe plus.", \
+            "Deleting temporary files, this may take a few minutes.":\
+                "Suppression de fichiers temporaires, cela peut prendre quelques minutes.", \
+            "Project created in old format!":\
+                                        "Projet créé dans le vieux format!", \
+            "This will attempt to update the project file " + \
+                "format to the current standard, every field " + \
+                "must be verified. It may be faster to " + \
+                "recreate the project from scratch. " +
+                "Do you wish to continue?":"Cela va tenter de mettre à " + \
+                    "jour le format de fichier du projet à la norme " + \
+                    "actuelle, chaque champ doit être vérifié. Il peut " + \
+                    "être plus rapide de recréer le projet à partir de " + \
+                    "zéro. Souhaitez-vous continuer?", \
+            "Exporting to HTML...":"Exporter au format HTML ...", \
+            "HTML_ttp":"Exportez l'arborescence complète du projet vers un fichier html et ouvrez-le dans votre navigateur par défaut.", \
+            "HTML":"Exporter vers html", \
+            "Disable Normalization":"Désactiver la normalisation.", \
             "Delete temporary files and exit.":"Supprimez les fichiers temporaires et quittez.", \
             "Publishing completed.":"Publication terminée.", 
             "Project can't hold '.mp3' files directly.":\
@@ -789,7 +833,8 @@ LOCALIZED_TEXT = { \
                         "Seuls les fichiers MP3 peuvent contenir des tags, donc si vous avez sélectionné une collection, tous les fichiers qu'elle contient, y compris ceux qui se trouvent dans les sous-collections, seront modifiés. " + \
                         "(Encodage{0:Latin1. 1:UTF-16. 2:UTF-16BE, 3:UTF-8})", \
             'Art_ttp':"Sélectionnez l'illustration de couverture (.png / .jpg) pour l'intégrer dans le fichier MP3 sélectionné.\n" + \
-                        "Si une collection est sélectionnée, l'œuvre sera incorporée dans tous ses fichiers MP3 et tous ceux de ses sous-collections …", \
+                        "Si une collection est sélectionnée, l'œuvre sera incorporée dans tous ses fichiers MP3 et tous ceux de ses sous-collections …\n" + \
+                        "N.B. Taille recommandée: 300x300 pixels, 800x600 pixels et 25 kilo-octets sont les limites pratiques.", \
             'and/or':'et / ou', \
             'Adjust order of files':"Régler l'ordre", \
             'As needed':'Comme requis', \
@@ -830,6 +875,27 @@ LOCALIZED_TEXT = { \
             "Unpacking complete.":"Déballage terminé.", \
             }, \
         'pt-PT':{ \
+            "Can't find artwork.":"Não é possível encontrar obras de arte.", \
+            "Can't find image for":"Não é possível encontrar a imagem para", \
+            "file may have been moved or no longer exists.":\
+                "arquivo pode ter sido movido ou não existe mais.", \
+            "Deleting temporary files, this may take a few minutes.":\
+                "Excluindo arquivos temporários, isso pode levar alguns minutos.", \
+            "Project created in old format!":\
+                                        "Projeto criado em formato antigo!", \
+            "This will attempt to update the project file " + \
+                "format to the current standard, every field " + \
+                "must be verified. It may be faster to " + \
+                "recreate the project from scratch. " +
+                "Do you wish to continue?":"Isso tentará atualizar o " + \
+                    "formato do arquivo de projeto para o padrão atual, " + \
+                    "cada campo deve ser verificado. Pode ser mais " + \
+                    "rápido recriar o projeto do zero. " + \
+                    "Você deseja continuar?", \
+            "Exporting to HTML...":"Exportando para HTML ...", \
+            "HTML_ttp":"Exporte toda a árvore do projeto para um arquivo html e abra-o no navegador padrão.", \
+            "HTML":"Exportar para html.", \
+            "Disable Normalization":"Desativar a normalização.", \
             "Delete temporary files and exit.":"Exclua arquivos temporários e saia.", \
             "Publishing completed.":"Publicação concluída.", 
             "Project can't hold '.mp3' files directly.":"O projeto não pode conter arquivos '.mp3' diretamente.", \
@@ -1039,7 +1105,8 @@ LOCALIZED_TEXT = { \
                         'Somente arquivos MP3 podem conter tags, portanto, se você selecionou uma coleção, todos os arquivos dentro dela, incluindo aqueles em sub-coleções, serão alterados. ' + \
                         "(Codificação{0:Latin1. 1:UTF-16. 2:UTF-16BE, 3:UTF-8})", \
             'Art_ttp':'Selecione a arte da capa (.png / .jpg) para ser incorporada no arquivo "MP3" atualmente selecionado.\n' + \
-                        'Se uma coleção for selecionada, a arte será incorporada em todos os seus arquivos MP3 e todos os seus sub-coletivos …', \
+                        'Se uma coleção for selecionada, a arte será incorporada em todos os seus arquivos MP3 e todos os seus sub-coletivos …\n' + \
+                        "N.B. Tamanho recomendado: 300 x 300 pixels, 800 x 600 pixels e 25 kilobytes são os limites práticos.", \
             'and/or':'E / ou', \
             'Adjust order of files':'Ajuste a ordem', \
             'As needed':'Como necessário', \
