@@ -21,7 +21,7 @@ from mutagen.id3 import TXXX, WXXX, ETCO, MLLT, SYTC, USLT, SYLT, COMM, \
                         WOAS, WORS, WPAY, WPUB
 
 from .localizedText import LOCALIZED_TEXT
-
+from .regexs import escape_tab_return_feed, unescape_tab_return_feed
 #RVA2, PRIV not implemented?
 def _audio_mvnm(atuple):
     audio, atag, advanced, _, _ = atuple
@@ -648,7 +648,12 @@ def _audio_equ2(atuple):
 def _audio_comm(atuple):
     audio, atag, advanced, _, _ = atuple
     if advanced:
-        param = ast.literal_eval(atag)
+        print('in _audio_comm')
+        print(atag)
+        param = ast.literal_eval(escape_tab_return_feed(atag))
+        print(param)
+        print(">{}<".format(param[3]))
+        param[3] = [unescape_tab_return_feed(p) for p in param[3]]
         audio.add(COMM(param[0], param[1], param[2], param[3]))
     else:
         audio.add(COMM(3, 'XXX', '', atag))

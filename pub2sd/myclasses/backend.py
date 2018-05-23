@@ -21,6 +21,7 @@ import shutil
 import pickle
 import json
 import time
+import wand
 
 from lxml import etree
 
@@ -30,11 +31,12 @@ from tkinter import messagebox
 from .myconst.regexs import FIND_LEADING_DIGITS, FIND_LEADING_ALPHANUM, \
                             FIND_TRAILING_DIGITS, TRIM_LEADING_DIGITS, \
                             TRIM_TRAILING_DIGITS, STRIPPERS, TAB, RETURN, \
-                            NEWLINE, RETAB, RERETURN, RENEWLINE
+                            NEWLINE, RETAB, RERETURN, RENEWLINE, \
+                            escape_tab_return_feed, unescape_tab_return_feed
 from .myconst.readTag import IDIOT_TAGS, READ_TAG_INFO, HASH_TAG_ON
 
 from .myconst.therest import THIS_VERSION, THE_IDIOT_P, THE_P, LATIN1, \
-                            PICTURE_TYPE, TF_TAGS#, PF,
+                            PICTURE_TYPE, TF_TAGS, URL_TAGS, SORT_TAGS#, PF,
 from .myconst.localizedText import SET_TAGS, TRIM_TAG, DEFAULT_VALUES
 
 ##All are used in preparing_file_scaning_for_tags by exec(a string)...
@@ -115,6 +117,8 @@ class Backend(threading.Thread):
                 self.exitFlag = 1
                 self.qc.task_done()
                 # self.exitFlag can be set by error condition in backend
+#            elif 'POPUPIMAGES' in acommand:
+#                self.popup(acommand[1])
             elif 'MODE' in acommand:
                 self.mode = acommand[1]
                 self.qc.task_done()
@@ -300,7 +304,8 @@ class Backend(threading.Thread):
                 self.sf1.attrib[atag] = 'show'
         else:
             #diagnostic only
-            print("Can't find {}".format(template_path))
+#            print("Can't find {}".format(template_path))
+            pass
 
 
     def _wait_for_responce(self):
@@ -362,12 +367,12 @@ class Backend(threading.Thread):
         self.old_mode = dict(self.smode.attrib)
         if 'version' not in self.smode.attrib:
             self.qr.put(('MESSAGEBOXASKOKCANCEL', (\
-                                        'Project created in old format?', \
+                                        'Project created in old format!', \
                         "This will attempt to update the project file " + \
                         "format to the current standard, every field " + \
                         "must be verified. It may be faster to " + \
                         "recreate the project from scratch. " +
-                        "Do you wish to continue")))
+                        "Do you wish to continue?")))
             if not self._wait_for_responce():
                 return False
             self.smode.attrib['version'] = THIS_VERSION
@@ -489,7 +494,7 @@ class Backend(threading.Thread):
 #                    self.list_of_tags.add(tag)
 #                    child.attrib[tag] = self._downgrade_data(tag, child)
             self._downgrade_child_of(child)
-                
+
 
     def _downgrade_data(self, item, child):
         """reduce all idiot tags to core data, 
@@ -507,10 +512,8 @@ class Backend(threading.Thread):
             this_frame = child.attrib[item].split('|')[-1]
             if this_frame not in ['-', '']:
                 #not an 'empty' frame
-#                print('{} this_frame=>{}<'.format(item, this_frame))
-                this_frame = TAB.sub(r'&#9;', this_frame)
-                this_frame = RETURN.sub(r'&#13;', this_frame)
-                this_frame = NEWLINE.sub(r'&#10;', this_frame)
+                print('in _downgrade_data, {} this_frame=>{}<'.format(item, this_frame))
+                this_frame = escape_tab_return_feed(this_frame)
                 if item in IDIOT_TAGS: 
                     param = ast.literal_eval(str(this_frame))
                     if item == 'APIC':
@@ -518,15 +521,11 @@ class Backend(threading.Thread):
                         result = param[-1]
                     elif item in TF_TAGS or item == 'COMM':
 #                        return param[-1][0]
-                        result = RETAB.sub(r'\t', param[-1][0])
-                        result = RERETURN.sub(r'\r', param[-1][0])
-                        result = RENEWLINE.sub(r'\n', param[-1][0])
+                        result = unescape_tab_return_feed(param[-1][0])
                     elif item in ['WCOM', 'WCOP', 'WOAF', 'WOAR', 'WOAS', \
                                   'WORS', 'WPAY', 'WPUB', 'WXXX']:
 #                        return param[-1]
-                        result = RETAB.sub(r'\t', param[-1])
-                        result = RERETURN.sub(r'\r', param[-1])
-                        result = RENEWLINE.sub(r'\n', param[-1])
+                        result = unescape_tab_return_feed(param[-1])
                     else:
 #                        return this_frame
                         result = this_frame
@@ -678,6 +677,17 @@ class Backend(threading.Thread):
         self.sf4.attrib['is_copy_playlists_to_top'] = 'False'
         self.sf4.attrib['M3UorM3U8'] = '2'
         return True
+
+#    def popup(self, iid):
+#        child = self.trout.find(".//" + iid)
+#        apic_ = child.attrib["APIC_"]
+#        frames = apic_.split('|')
+#        self.wim = list()
+#        for aframe in frames:
+#            thisframe =  ast.literal_eval(aframe)
+#            self.wim.append(wand.image.Image(
+#                    blob=self.hashed_graphics[thisframe[4]], format='jpg'))
+#            wand.display(self.wim[-1])
     
     def _load_tree_from(self, _trout):
         if not _trout:
@@ -985,15 +995,51 @@ class Backend(threading.Thread):
                 #list all instances of that tag
                 list_tags = audio.getall(k)
                 aresult = list()
+                if k in ['COMM',]:
+                    langs = ['XXX', 'eng', 'fra', 'por']
+                    comms = dict()
+                    xresult = list()
                 if list_tags: #not an empty list!
                     for atag in list_tags:
                         #now for each tag instance...
                         theParameters = \
                                 self._read_mp3_process_atag(atag, k, \
                                                         apic_params, filepath)
-                        if theParameters != None:
+#                        if theParameters != None:
+                        if k in['COMM',] and theParameters:
+                            if theParameters[1] in comms.keys():
+                                comms[theParameters[1]][theParameters[1] + theParameters[2]] = theParameters
+                            else:
+                                comms[theParameters[1]] = dict()
+                                comms[theParameters[1]][theParameters[1] + theParameters[2]] = theParameters
+                        elif theParameters:
                             aresult.extend([str(theParameters)])
+                    if k in ['COMM',]:
+                        for l in langs:
+                            if not xresult and l in comms.keys():
+                                keylist = sorted(comms[l].keys())
+                                xresult = comms[l][keylist[0]]
+                                aresult.extend([comms[l][y] for y in keylist[1:]])
+                            elif l in comms.keys():
+                                aresult.extend([comms[l][y] for y in keylist])
+                        for l in sorted(set(comms.keys()).difference(set(langs))):
+                            if not xresult:
+                                keylist = sorted(comms[l].keys())
+                                xresult = comms[l][keylist[0]]
+                                aresult.extend([comms[l][y] for y in keylist[1:]])
+                            else:
+                                aresult.extend([comms[l][y] for y in keylist])
+                        if self.smode:
+                            aresult.insert(0, xresult)
+                        else:
+                            aresult =[xresult,]
                     result.extend(['|'.join(aresult)])
+                    #now if idiot mode choose one frame and force lang='XXX'
+                    #   choice if more than one pick first XXX, 
+                    #                       if no XXX pick first eng, 
+                    #                       if no eng pick first fra, 
+                    #                       if no fra pick first
+                    # else if advanced mode list langs
                 else:
                     title = os.path.basename(filepath)[:-4]
                     result.extend(['[3, ["{}"]]'.format(title.strip())]\
@@ -1500,13 +1546,16 @@ class Backend(threading.Thread):
 
     def _on_set(self, atuple):
         """set value of tag"""
+        print(atuple)
         focus, column, text = atuple
         focus_item = self.trout.find(".//" + focus)
         name = focus_item.attrib['Name']
         location = focus_item.attrib['Location']
         if self.mode != 0:
             for test in text.split('|'):
-                if len(HASH_TAG_ON[column]) != len(ast.literal_eval(test)):
+                print(">{}<".format(test))
+                print("len HASHTAG ON={}, len test={}".format(len(HASH_TAG_ON[column]), len(ast.literal_eval(escape_tab_return_feed(test)))))
+                if len(HASH_TAG_ON[column]) != len(ast.literal_eval(escape_tab_return_feed(test))):
                     self.qr.put(('MESSAGEBOXSHOWHASHERROR', (name,\
                                     column, test, len(HASH_TAG_ON[column]))))
                     return
@@ -1713,11 +1762,11 @@ class Backend(threading.Thread):
                                                       (e.g. COMM, APIC,...)"""
 
         is_different_to_all = list()
-        textParams = ast.literal_eval(text)
+        textParams = ast.literal_eval(escape_tab_return_feed(text))
         #test all frames have same length as text, flag error and return false
         for aFrame in currentFrames:
             if aFrame:
-                frameParams = ast.literal_eval(aFrame)
+                frameParams = ast.literal_eval(escape_tab_return_feed(aFrame))
                 if len(frameParams) != len(textParams):
                     self.qr.put(('MESSAGEBOXSHOWWARNING2', \
                                                     ('', 'MissMatchedFrames')))
@@ -2153,4 +2202,20 @@ def to_alpha(anumber):
             output += chr(anumber % 26 + ord('A'))
             anumber = anumber // 26
     return output[::-1]
+
+def escape_tab_return_feed(text):
+    result = TAB.sub(r'&#9;', text)
+    result = RETURN.sub(r'&#13;', result)
+    result = NEWLINE.sub(r'&#10;', result)
+    return result
+
+def unescape_tab_return_feed(text):
+    result = RETAB.sub(r'\t', text)
+    result = RERETURN.sub(r'\r', result)
+    result = RENEWLINE.sub(r'\n', result)
+    return result
+
+def is_hashable(tag):
+    '''return true if tag hashable'''
+    return True if True in HASH_TAG_ON[tag] else False
 

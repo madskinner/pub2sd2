@@ -56,3 +56,14 @@ STRIPPERS = {
             "Dígitos finais":_leading_aphanum, \
             }
 
+def escape_tab_return_feed(text):
+    result = TAB.sub(r'&#9;', text)
+    result = RETURN.sub(r'&#13;', result)
+    result = NEWLINE.sub(r'&#10;', result)
+    return result
+
+def unescape_tab_return_feed(text):
+    result = RETAB.sub(r'\t', text)
+    result = RERETURN.sub(r'\r', result)
+    result = RENEWLINE.sub(r'\n', result)
+    return result

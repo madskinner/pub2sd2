@@ -211,7 +211,9 @@ class GuiCore(Tk):
                                                         format(areport[1][1]) \
                                                         if areport[1] else ''
                 elif 'MESSAGEBOXASKOKCANCEL' in areport:
-                    result = messagebox.askokcancel(areport[1][0],areport[1][1])
+                    result = messagebox.askokcancel(\
+                                        LOCALIZED_TEXT[lang][areport[1][0]], \
+                                        LOCALIZED_TEXT[lang][areport[1][1]])
                     qcommand.put(('OKCANCEL', result))
                 elif 'MESSAGEBOXERROR' in areport:
                     title, m1, m2, m3 = areport[1]
@@ -365,6 +367,7 @@ class GuiCore(Tk):
         self.needed = 0 #in Mb
         self.temp_dir_deleted = False
         self.usb_status = ['', '', '', '', '', '', '', '']
+        self.Treed = False
 
         #define all StringVar(), BooleanVar(), etc… needed to hold info
         self.selected_lang = StringVar()
@@ -502,7 +505,7 @@ class GuiCore(Tk):
                                                 command=self._on_html_project)
         self.btnHTMLProject.grid(column=2, row=0, columnspan=2, padx=5, pady=5, sticky='news')
         self.btnHTMLProject['state'] = 'disabled'
-        self.btnHTMLProject_ttp = CreateToolTip(self.btnSaveProject, \
+        self.btnHTMLProject_ttp = CreateToolTip(self.btnHTMLProject, \
                                         LOCALIZED_TEXT[lang]['HTML_ttp'])
 
         self.lblGuiLanguage = Label(self.f_1, \
@@ -763,6 +766,22 @@ class GuiCore(Tk):
         self.btnF2Next.grid(column=3, row=20, columnspan=2, padx=5, pady=5, \
                                                                  sticky='news')
 
+
+#    def popup(self, event):
+#        """action in event of button 3 on tree view"""
+#        # select row under mouse
+#        iid = self.tree.identify_row(event.y)
+#        if iid:
+#            # mouse pointer over item
+#            #grab hash tag(s) from APIC_
+#            #and open window for each graphic
+#            qcommand.put(('POPUPIMAGES', iid))
+#        else:
+#            # mouse pointer not over item
+#            # occurs when items do not fill frame
+#            # no action required
+#            pass
+
     def _initialize_f3(self, lang='en-US'):
         """initialize the Edit... tab"""
 
@@ -775,6 +794,8 @@ class GuiCore(Tk):
         ysb.grid(row=0, column=11, rowspan=20, padx=5, sticky='nse')
         xsb.grid(row=20, column=0, columnspan=12, padx=5, sticky='ews')
 
+#        self.tree.bind("<Button-3>", self.popup)
+        
         self.m = Notebook(self.f3, width=1000)
         self.m.grid(column=0, row=21, \
                     columnspan=12, padx=5, pady=5, sticky='news')
@@ -1193,8 +1214,7 @@ class GuiCore(Tk):
                             columnspan=2, padx=5, pady=5, sticky='news')
 
         self.btnExit = Button(self.f5, \
-                text=LOCALIZED_TEXT[lang]["Delete temporary files and exit."].\
-                                   format(project), \
+                text=LOCALIZED_TEXT[lang]["Delete temporary files and exit."], \
                                   command=self._quit, \
                                   style='highlight.TButton')
         self.btnExit.grid(column=3, row=5, \
@@ -1703,7 +1723,7 @@ class GuiCore(Tk):
         self.pref_char = [c for c in self.pref_char \
                              if c not in self.illegalChars]
         qcommand.put(('SELFPREF', (self.pref, self.pref_char, self.preferred.get(), self.template)))
-
+        self.Treed = True
         self.n.add(self.f3)
         self.n.select(3)
         self.btnHTMLProject['state'] = 'normal'
@@ -2168,10 +2188,14 @@ class GuiCore(Tk):
 
         self.btnTrimTitle['text'] = LOCALIZED_TEXT[lang]['Trim Title']
         self.btnPub2SD['text'] = LOCALIZED_TEXT[lang]["Publish to SD/USB"]
+        self.btnExit['text'] =LOCALIZED_TEXT[lang][\
+                                        "Delete temporary files and exit."]
         project = self.ddnCurProject.get()
         self.btnPub2HD['text'] = \
             LOCALIZED_TEXT[lang]["Publish to '~\\Pub2SD\\{}_SD'"].\
                           format(project if project else "<project>")
+        self.btnHTMLProject['text'] = LOCALIZED_TEXT[lang]["HTML"]
+        self.btnHTMLProject_ttp.text = LOCALIZED_TEXT[lang]['HTML_ttp']
         self.n.tab(self.f0, text=LOCALIZED_TEXT[lang]['Project name'])
         self.n.tab(self.f1, \
                    text=LOCALIZED_TEXT[lang]['Commonly used MP3 tags'])
