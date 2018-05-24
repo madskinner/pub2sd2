@@ -304,6 +304,8 @@ SET_TAGS = {\
 
 LOCALIZED_TEXT = { \
         'en-US':{ \
+            "Append":"Append", \
+            "Append_ttp":"Appends the contents of the entry box to the currently selected tag. This command is only available in 'Advanced' mode and only when the currently selected tag can hold multiple frames.", \
             "Can't find artwork.":"Can't find artwork.", \
             "Can't find image for":"Can't find image for", \
             "file may have been moved or no longer exists.":\
@@ -607,6 +609,8 @@ LOCALIZED_TEXT = { \
             "Preparing =>{}":"Preparing =>{}", \
             }, \
         'fr-FR':{ \
+            "Append":"Ajouter", \
+            "Append_ttp":"Ajoute le contenu de la zone de saisie à le tag MP3 actuellement sélectionnée. Cette commande est uniquement disponible en mode 'Avancé' et uniquement lorsque le tag MP3 actuellement sélectionnée peut contenir plusieurs blocs.", \
             "Can't find artwork.":"Impossible de trouver une image.", \
             "Can't find image for":"Impossible de trouver l'image pour", \
             "file may have been moved or no longer exists.":\
@@ -875,6 +879,12 @@ LOCALIZED_TEXT = { \
             "Unpacking complete.":"Déballage terminé.", \
             }, \
         'pt-PT':{ \
+            "Append":"Acrescentar", \
+            "Append_ttp":"Anexa o conteúdo da caixa de entrada à tag " + \
+                "MP3 atualmente selecionada. Este comando só está " + \
+                "disponível no modo 'Avançado' e somente quando a " + \
+                "tag MP3 atualmente selecionada pode conter múltiplos " + \
+                "quadros.", \
             "Can't find artwork.":"Não é possível encontrar obras de arte.", \
             "Can't find image for":"Não é possível encontrar a imagem para", \
             "file may have been moved or no longer exists.":\

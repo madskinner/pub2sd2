@@ -117,9 +117,14 @@ class GuiCore(Tk):
         pud2sd_styles = Style()
         pud2sd_styles.configure('lowlight.TButton', \
                                 font=('Sans', 8, 'bold'),)
-        pud2sd_styles.configure('highlight.TButton', \
+        if platform.system() == 'Windows':
+            pud2sd_styles.configure('highlight.TButton', \
                                 font=('Sans', 11, 'bold'), \
                                 background='blue', foreground='green')
+        elif platform.system() == 'Linux':
+            pud2sd_styles.configure('highlight.TButton', \
+                                font=('Sans', 11, 'bold'), \
+                                background='white', foreground='green')
         pud2sd_styles.configure('wleft.TRadiobutton', \
                                 anchor='w', justify='left')
         
@@ -992,13 +997,6 @@ class GuiCore(Tk):
         self.boxEnter.grid(column=0, row=0, columnspan=3, padx=5, pady=5, \
                            sticky='news')
 
-        self.etrTagValue = Entry(self.boxEnter, \
-                                 textvariable=self.currentEntry, width=70)
-        self.etrTagValue.grid(column=0, row=1, \
-                              columnspan=3, padx=5, pady=5, sticky='news')
-        self.etrTagValue['justify'] = 'left'
-        self.etrTagValue_ttp = CreateToolTip(self.etrTagValue, \
-                                        LOCALIZED_TEXT[lang]['entry1_ttp'])
 
         set_tagb = []
         for tag in SET_TAGS[lang]:
@@ -1014,6 +1012,13 @@ class GuiCore(Tk):
         self.ddnSelectTag['justify'] = 'left'
         self.ddnSelectTag_ttp = CreateToolTip(self.ddnSelectTag, \
                                     LOCALIZED_TEXT[lang]['ddnSelectTag_ttp'])
+        self.etrTagValue = Entry(self.boxEnter, \
+                                 textvariable=self.currentEntry, width=70)
+        self.etrTagValue.grid(column=0, row=1, \
+                              columnspan=3, padx=5, pady=5, sticky='news')
+        self.etrTagValue['justify'] = 'left'
+        self.etrTagValue_ttp = CreateToolTip(self.etrTagValue, \
+                                        LOCALIZED_TEXT[lang]['entry1_ttp'])
 
         self.lblParameters = Label(self.boxEnter, \
                                    text='', \
@@ -1033,6 +1038,13 @@ class GuiCore(Tk):
                                         LOCALIZED_TEXT[lang]['Set_ttp'])
         self.btnSet.grid(column=1, row=1, padx=5, pady=5, sticky='news')
 
+        self.btnAppend = Button(self.boxOuter, text=LOCALIZED_TEXT[lang]["Append"], \
+                             command=self._on_append)
+        self.btnAppend_ttp = CreateToolTip(self.btnSet, \
+                                        LOCALIZED_TEXT[lang]['Append_ttp'])
+        self.btnAppend.grid(column=1, row=2, padx=5, pady=5, sticky='news')
+        self.btnAppend['state'] = 'disabled'
+
         self.btnGetDefault = Button(self.boxOuter, \
                                 text=LOCALIZED_TEXT[lang]["Get default"], \
                                                   command=self._on_get_default)
@@ -1043,7 +1055,7 @@ class GuiCore(Tk):
                             if self.mode.get() == 0 else \
                             LOCALIZED_TEXT[lang]['M2_ttp'], \
                            anchor='w', justify='left', wraplength=590)
-        self.lblM2.grid(column=0, row=2, columnspan=3, padx=5, pady=5, \
+        self.lblM2.grid(column=0, row=3, columnspan=3, padx=5, pady=5, \
                         sticky='news')
         self.boxArt = LabelFrame(self.m2, text='', labelanchor='n', \
                                  borderwidth=1)
@@ -1945,6 +1957,11 @@ class GuiCore(Tk):
                                         else DEFAULT_VALUES['ide3v24'][column])
             if self.mode.get() != 0: #not idiot
                 self.lblParameters['text'] = READ_TAG_INFO[column]
+            if self.mode.get() and is_hashable(column):
+                self.btnAppend['state'] = 'normal'
+            else:
+                self.btnAppend['state'] = 'disabled'
+
         self.update()
 
     def _on_get_default(self, _column=''):
@@ -1963,6 +1980,19 @@ class GuiCore(Tk):
             self.etrTagValue.insert(0, DEFAULT_VALUES['ide3v24'][column])
             self.lblParameters['text'] = READ_TAG_INFO[column]
 
+    def _on_append(self):
+        #                          focus,      column, text, location
+        focus = self.tree.focus()
+        if self.mode and is_hashable(self.ddnSelectTag.get().split(':')[0].upper()):
+        #splitting 'get' on ':' and discarding all but the first str
+            the_frames = self.etrTagValue.get().split('|')
+            qcommand.put(('ON_APPEND', (focus, \
+                                self.ddnSelectTag.get().split(':')[0].upper(), \
+                                the_frames[0])))
+            self.status['text'] = ''
+            self.progbar['value'] = 0
+            self.update()
+        
     def _on_set(self):
         '''set value of tag'''
         #                          focus,      column, text, location
@@ -2181,6 +2211,8 @@ class GuiCore(Tk):
         self.btnGet['text'] = LOCALIZED_TEXT[lang]["Get"]
         self.btnSet['text'] = LOCALIZED_TEXT[lang]['Set']
         self.btnSet_ttp.text = LOCALIZED_TEXT[lang]['Set_ttp']
+        self.btnAppend['text'] = LOCALIZED_TEXT[lang]['Append']
+        self.btnAppend_ttp.text = LOCALIZED_TEXT[lang]['Append_ttp']
         self.btnGetDefault['text'] = LOCALIZED_TEXT[lang]['Get default']
 
     def _change_lang_3(self, lang):
@@ -2282,4 +2314,8 @@ def delete_folder(path):
     if os.path.exists(path):
         # remove if exists
         shutil.rmtree(path)
+
+def is_hashable(tag):
+    '''return true if tag hashable'''
+    return True if True in HASH_TAG_ON[tag] else False
 

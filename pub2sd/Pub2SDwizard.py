@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -
 #-------------------------------------------------------------------------------
 # Name:        Pub2SD
-""" Purpose:     Assemble, massage and copy mp3 and artwork files to SD/USB.
-            Generating various playlist files."""
+#""" Purpose:     Assemble, massage and copy mp3 and artwork files to SD/USB.
+#            Generating various playlist files."""
 #
 # Author:      marks
 #
@@ -10,7 +10,6 @@
 # Copyright:   (c)2016 SIL international
 # Licence:     Creative Commons?
 #-------------------------------------------------------------------------------
-
 
 import sys
 import os

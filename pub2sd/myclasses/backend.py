@@ -21,7 +21,7 @@ import shutil
 import pickle
 import json
 import time
-import wand
+#import wand
 
 from lxml import etree
 
@@ -512,7 +512,7 @@ class Backend(threading.Thread):
             this_frame = child.attrib[item].split('|')[-1]
             if this_frame not in ['-', '']:
                 #not an 'empty' frame
-                print('in _downgrade_data, {} this_frame=>{}<'.format(item, this_frame))
+#                print('in _downgrade_data, {} this_frame=>{}<'.format(item, this_frame))
                 this_frame = escape_tab_return_feed(this_frame)
                 if item in IDIOT_TAGS: 
                     param = ast.literal_eval(str(this_frame))
@@ -624,6 +624,27 @@ class Backend(threading.Thread):
         else:
             this_frame = a_frame
         return this_frame
+
+    def _upgrade_text(self, item, text):
+        """smarten data up from simple(idiot) mode to advanced with encoding
+           and full structure for each tag of the specified item.
+                 e.g. on a text frame, 'a string' becomes [3, ['astring', ]]
+            item is tag, text holds current 'frame'."""
+
+        #for each frame in last value in the_values, smarten it up
+        #hang on was idiot so single frames par tout
+        #look up tag default value,
+#        a_frame = text
+#        if child.attrib['Type'] not in ['collection', 'project']:
+#            #is file so process
+        if item in DEFAULT_VALUES['ide3v24']:
+            #insert text as appropriate
+            a_frame = DEFAULT_VALUES['ide3v24'][item]
+#                    print(child.tag, a_frame)
+            a_frame = a_frame.replace('[""]', '["{}"]'.format(text))
+            return a_frame
+        else:
+            return text
 
     def _create_project(self):
         """create new project"""
@@ -962,7 +983,7 @@ class Backend(threading.Thread):
 #            #so if the hash not a key in hashed_graphics, add it
 #            if m.hexdigest() not in self.hashed_graphics:
 #                self.hashed_graphics[m.hexdigest()] = atag.data
-            hash_tag, length = self.hash_it(atag.data)
+            hash_tag, length = self._hash_it(atag.data)
 #            theParameters = [int(atag.encoding), atag.mime, \
 #                             int(atag.type), atag.desc, \
 #                                m.hexdigest()]
@@ -994,18 +1015,25 @@ class Backend(threading.Thread):
             for k in self.displayColumns[1:-1]:
                 #list all instances of that tag
                 list_tags = audio.getall(k)
+                if k in ['COMM',]:
+                    self.qr.put(('PRINT', "list_tags={}".format(list_tags)))
                 aresult = list()
                 if k in ['COMM',]:
                     langs = ['XXX', 'eng', 'fra', 'por']
                     comms = dict()
                     xresult = list()
+                    self.qr.put(('PRINT',"found {} COMM tags in {}".format(len(list_tags), os.path.basename(filepath))))
                 if list_tags: #not an empty list!
                     for atag in list_tags:
+                        if k in ['COMM',]:
+                            self.qr.put(('PRINT', "atag is {}".format(str(atag))))
                         #now for each tag instance...
                         theParameters = \
                                 self._read_mp3_process_atag(atag, k, \
                                                         apic_params, filepath)
-#                        if theParameters != None:
+                        if k in ['COMM',]:
+                            self.qr.put(('PRINT',"theParameters={}".format(theParameters)))
+                        #accumulate COMM tags in comms all others in aresult
                         if k in['COMM',] and theParameters:
                             if theParameters[1] in comms.keys():
                                 comms[theParameters[1]][theParameters[1] + theParameters[2]] = theParameters
@@ -1014,36 +1042,66 @@ class Backend(threading.Thread):
                                 comms[theParameters[1]][theParameters[1] + theParameters[2]] = theParameters
                         elif theParameters:
                             aresult.extend([str(theParameters)])
-                    if k in ['COMM',]:
-                        for l in langs:
-                            if not xresult and l in comms.keys():
-                                keylist = sorted(comms[l].keys())
-                                xresult = comms[l][keylist[0]]
-                                aresult.extend([comms[l][y] for y in keylist[1:]])
-                            elif l in comms.keys():
-                                aresult.extend([comms[l][y] for y in keylist])
-                        for l in sorted(set(comms.keys()).difference(set(langs))):
-                            if not xresult:
-                                keylist = sorted(comms[l].keys())
-                                xresult = comms[l][keylist[0]]
-                                aresult.extend([comms[l][y] for y in keylist[1:]])
-                            else:
-                                aresult.extend([comms[l][y] for y in keylist])
-                        if self.smode:
-                            aresult.insert(0, xresult)
-                        else:
-                            aresult =[xresult,]
-                    result.extend(['|'.join(aresult)])
                     #now if idiot mode choose one frame and force lang='XXX'
                     #   choice if more than one pick first XXX, 
                     #                       if no XXX pick first eng, 
                     #                       if no eng pick first fra, 
                     #                       if no fra pick first
                     # else if advanced mode list langs
+                    if k in ['COMM',]:
+                        self.qr.put(('PRINT', "processed all COMM tags for this file"))
+                        self.qr.put(('PRINT', "comms is {}".format(comms)))
+                        self.qr.put(('PRINT', "{} langs in COMM".format(comms.keys())))
+                        for l in langs:
+                            if not xresult and l in comms.keys():
+                                keylist = sorted(comms[l].keys())
+                                xresult = comms[l][keylist[0]]
+                                xresult[0] = 3
+                                xresult[1] = 'XXX'
+                                for y in keylist:
+                                    this = [3, \
+                                            'XXX', \
+                                            comms[l][y][2], \
+                                            comms[l][y][3]]
+                                    aresult.append(this)
+                            elif l in comms.keys():
+                                keylist = sorted(comms[l].keys())
+                                for y in keylist:
+                                    this = [3, \
+                                            comms[l][y][1], \
+                                            comms[l][y][2], \
+                                            comms[l][y][3]]
+                                    aresult.append(this)
+                        for l in sorted(set(comms.keys()).difference(set(langs))):
+                            keylist = sorted(comms[l].keys())
+                            if not xresult:
+                                xresult = comms[l][keylist[0]]
+                                xresult[0] = 3
+                                xresult[1] = 'XXX'
+                                for y in keylist:
+                                    this = [3, \
+                                            'XXX', \
+                                            comms[l][y][2], \
+                                            comms[l][y][3]]
+                                    aresult.append(this)
+                            else:
+                                for y in keylist:
+                                    this = [3, \
+                                            comms[l][y][1], \
+                                            comms[l][y][2], \
+                                            comms[l][y][3]]
+                                    aresult.append(this)
+                        if not self.mode:
+                            aresult =[xresult,]
+#                        sss = str(aresult[0])
+#                        for s in aresult[1:]:
+#                            sss += '|' + str(s)
+                        self.qr.put(('PRINT', "COMM in read mp3 tags =>{}<".format(aresult)))
+                    result.append('|'.join([str(s) for s in aresult]))
                 else:
                     title = os.path.basename(filepath)[:-4]
-                    result.extend(['[3, ["{}"]]'.format(title.strip())]\
-                                         if k == 'TIT2' else ['-',])
+                    result.append('[3, ["{}"]]'.format(title.strip())\
+                                         if k == 'TIT2' else '-')
                 if k in self.template.keys() and self.template[k] \
                                                          and result[-1] == '-':
                     result[-1] = DEFAULT_VALUES['ide3v24'][k].\
@@ -1551,7 +1609,7 @@ class Backend(threading.Thread):
         focus_item = self.trout.find(".//" + focus)
         name = focus_item.attrib['Name']
         location = focus_item.attrib['Location']
-        if self.mode != 0:
+        if self.mode:
             for test in text.split('|'):
                 print(">{}<".format(test))
                 print("len HASHTAG ON={}, len test={}".format(len(HASH_TAG_ON[column]), len(ast.literal_eval(escape_tab_return_feed(test)))))
@@ -1559,6 +1617,7 @@ class Backend(threading.Thread):
                     self.qr.put(('MESSAGEBOXSHOWHASHERROR', (name,\
                                     column, test, len(HASH_TAG_ON[column]))))
                     return
+                print('right nos parameters')
         if column == 'TRCK':
             #if advanced mode strip '[3,"' and '"]" and split any list on ','
             self._on_set_trck(\
@@ -1729,60 +1788,99 @@ class Backend(threading.Thread):
     def _set_tag_(self, parent, column, text):
         """set tag specified in column with value in text, for current
            item or it's dependants"""
+        print("in _set_tag_")
         if parent.attrib['Type'] in ['collection', 'project']:
             children = parent.getchildren()
             for child in children:
                 self._set_tag_(child)
         else: #is file so…
             if not self.mode: # == 0 is idiot
-                parent.attrib[column] = text
-            else: #not idiot
-                if is_hashable(column):
-                    currentTag = parent.attrib[column]
-                    currentFrames = str(currentTag).split('|')
-                    textFrames = text.split('|')
-                    if len(textFrames) > 1: #multiple frames
-                        if textFrames is not currentFrames: #so replace them
-                            parent.attrib[column] = text
-                    else:
-                        #text is single frame
-                        if self._is_different_hash(currentFrames, text, column):
-                            #so append
-                            currentFrames.extend([text])
-                        else: #replace a frame
-                            currentFrames[\
-                                    self._list_different_frames(currentFrames, \
-                                            text, column).index(False)] = text
-                        parent.attrib[column] = '|'.join(currentFrames)
+                #so have to upgrade data!
+                if column not in ['APIC',]:
+                    parent.attrib[column] = self._upgrade_text(column, text)
                 else:
+                    #error use cover art button
+                    pass
+            else: #is advanced
+                #so for each frame verify
+                if is_hashable(column):
+                    #so verify all frames are unique
+                    textFrames = text.split('|')
+                    for aFrame in textFrames:
+                        thisframe = ast.literal_eval(escape_tab_return_feed(aFrame))
+                        if len(thisframe) != len(HASH_TAG_ON[column]):
+                            #error message and give up
+                            pass
+                            return
+                    if False in self._list_different_frames(text, column):
+                        #reject with not unique frames error message
+                        pass
+                    else:
+                       parent.attrib[column] = text
+                else:
+                    #check if multiple frame in text even though not supported?
+                    #so new text replaces old, format not checked here
+                    thisframe = ast.literal_eval(escape_tab_return_feed(text))
+                    if len(thisframe) != len(HASH_TAG_ON[column]):
+                        #insufficient parameters error message show defalt form and give up
+                        pass
+                        return
                     parent.attrib[column] = text
 
-    def _list_different_frames(self, currentFrames, text, tag):
+    def _list_different_frames(self, text, tag):
         """list different frames, for tags which support this
                                                       (e.g. COMM, APIC,...)"""
 
         is_different_to_all = list()
-        textParams = ast.literal_eval(escape_tab_return_feed(text))
-        #test all frames have same length as text, flag error and return false
-        for aFrame in currentFrames:
-            if aFrame:
-                frameParams = ast.literal_eval(escape_tab_return_feed(aFrame))
-                if len(frameParams) != len(textParams):
-                    self.qr.put(('MESSAGEBOXSHOWWARNING2', \
-                                                    ('', 'MissMatchedFrames')))
-                    return [False]
-                is_diff = [True if HASH_TAG_ON[tag][x] \
-                           and frameParams[x] is not textParams[x] \
-                                else False for x in range(0, len(textParams))]
-                is_different_to_all.extend([(True in is_diff)])
+        #so split text into separate frames
+        textFrames = text.split('|')
+        mash = dict()
+        for aFrame in textFrames:
+            textParams = ast.literal_eval(escape_tab_return_feed(aFrame))
+            hash_tag = ''
+            for apara in range(0, len(textParams)):
+                if HASH_TAG_ON[tag][apara]:
+                    hash_tag += textParams[apara]
+            if not hash_tag:
+                #not hashable error message
+                print("{} is not hashable!".format(tag))
+                is_different_to_all.append(False)
+            elif hash_tag not in mash:
+                mash[hash_tag] = True
+                is_different_to_all.append(True)
+
+            else:
+                #is duplicate tag
+                is_different_to_all.append(False)
         return is_different_to_all
+                    
+#        #test all frames have same length as text, flag error and return false
+#        for aFrame in currentFrames:
+#            if aFrame:
+#                frameParams = ast.literal_eval(escape_tab_return_feed(aFrame))
+#                if len(frameParams) != len(textParams):
+#                    self.qr.put(('MESSAGEBOXSHOWWARNING2', \
+#                                                    ('', 'MissMatchedFrames')))
+#                    return [False]
+#                is_diff = [True if HASH_TAG_ON[tag][x] \
+#                           and frameParams[x] is not textParams[x] \
+#                                else False for x in range(0, len(textParams))]
+#                is_different_to_all.extend([(True in is_diff)])
+#        return is_different_to_all
 
     def _is_different_hash(self, currentFrames, text, tag):
         """true if 'text' not in 'currentFrames' and tag is hashable"""
-
-        return False \
-            if False in self._list_different_frames(currentFrames, text, tag) \
-            else True
+        #is text a valid frame
+        thisframe = ast.literal_eval(escape_tab_return_feed(text))
+        if len(thisframe) != len(HASH_TAG_ON[column]):
+            #insufficient parameters error message and give up
+            return False
+        else:
+            testFrames = currentFrames + '|' + text
+        if False in self._list_different_frames(currentFrames, text, tag):
+            return False
+        else:
+            return True
 
 
     def _on_generate_playlists(self):
@@ -2123,6 +2221,14 @@ class Backend(threading.Thread):
         webbrowser.open(url)
         self.qr.put(('PROGVALUE', 0))
         self.qr.put(('STATUS', ''))
+
+    def _hash_it(self, _data):
+        """ saves to dictionary and returns hash tag and length string"""
+        m = hashlib.sha256(_data)
+        if m.hexdigest() not in self.hashed_graphics:
+            self.hashed_graphics[m.hexdigest()] = _data
+        length = int(len(_data)/1024 + 0.5)
+        return  m.hexdigest(), "b'{}Kb'".format(length)
 
 def get_rid_of_multiple_spaces(tin):
     """replace multiple spaces with single space and strip leading and
