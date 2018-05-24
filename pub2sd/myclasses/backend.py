@@ -233,6 +233,9 @@ class Backend(threading.Thread):
                 self._on_reload_tree()
             elif 'ON_SET' in acommand:
                 self._on_set(acommand[1])
+            elif 'ON_APPEND' in acommand:
+                self._on_append(acommand[1])
+                self._on_reload_tree()
             elif 'ATTACH_ARTWORK_TO' in acommand:
                 focus, _picture_type, _desc, artwork = acommand[1]
                 #hash it here, pass hash_tag and length
@@ -1601,6 +1604,25 @@ class Backend(threading.Thread):
     def _on_reload_tree(self):
         self.qr.put(('CLEARTREE', None))
         self._on_load_tree_from_trout()
+
+    def _on_append(self, atuple ):
+        focus, column, text = atuple
+        focus_item = self.trout.find(".//" + focus)
+        #action only possible in advanced mode with tags that are hashable
+        #if is collection/project apply to all below
+        if focus_item.attrib['Type'] in ['collection', 'project']:
+            #is collection... so
+            children = focus_item.getchildren()
+            for child in children:
+                self._on_append((child.tag, column, text))
+        else:
+            #is file so…
+            if focus_item.attrib[column]:
+                focus_item.attrib[column] = \
+                                '|'.join([focus_item.attrib[column], text])
+            else:
+                focus_item.attrib[column] = text
+
 
     def _on_set(self, atuple):
         """set value of tag"""
