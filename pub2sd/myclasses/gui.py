@@ -49,27 +49,27 @@ from .tooltip import CreateToolTip
 from .threads import MyThread
 from .backend import Backend
 
-#def get_script_directory():
-#    """return path to current script"""
-#    return os.path.dirname(__file__)
-#
-#SCRIPT_DIR = get_script_directory()
+def get_script_directory():
+    """return path to current script"""
+    return os.path.dirname(__file__)
+
+SCRIPT_DIR = get_script_directory()
 
 class PQueue(queue.PriorityQueue):
-  '''A custom queue subclass that provides a :meth:`clear` method.'''
+    '''A custom queue subclass that provides a :meth:`clear` method.'''
 
-  def clear(self):
-    ''' Clears all items from the queue.'''
+    def clear(self):
+        ''' Clears all items from the queue.'''
 
-    with self.mutex:
-        unfinished = self.unfinished_tasks - len(self.queue)
-        if unfinished <= 0:
-            if unfinished < 0:
-                raise ValueError('task_done() called too many times')
-            self.all_tasks_done.notify_all()
-        self.unfinished_tasks = unfinished
-        self.queue.clear()
-        self.not_full.notify_all()
+        with self.mutex:
+            unfinished = self.unfinished_tasks - len(self.queue)
+            if unfinished <= 0:
+                if unfinished < 0:
+                    raise ValueError('task_done() called too many times')
+                self.all_tasks_done.notify_all()
+            self.unfinished_tasks = unfinished
+            self.queue.clear()
+            self.not_full.notify_all()
 
 qcommand = queue.Queue()
 qreport = queue.Queue()
@@ -131,9 +131,9 @@ class GuiCore(Tk):
         self._initialize_f4(lang) # on f5 - publish to...
         self._initialize_f5(lang)
 
-        if platform.system() == 'Linux': 
+        if platform.system() == 'Linux':
             #create on f6,will be for locking/unlocking SD cards
-            self._initialize_f6(lang) 
+            self._initialize_f6(lang)
         self._process_report_queue()
 
     def _process_report_queue(self):
@@ -167,22 +167,22 @@ class GuiCore(Tk):
                 elif 'M3UorM3U8' in areport:
                     self.M3UorM3U8.set(areport[1])
                 elif 'ADD_FILE' in areport:
-                    focus = areport[1]
-                    iid = areport[2]
-                    vout = areport[3]
-                    self.tree.insert(focus, index='end', iid=iid, \
-                                     values=vout, open=True, text='file')
+#                    focus = areport[1]
+#                    iid = areport[2]
+#                    vout = areport[3]
+                    self.tree.insert(areport[1], index='end', iid=areport[2], \
+                                     values=areport[3], open=True, text='file')
                 elif 'ADD_ITEMS' in areport:
                     #items handled in the order thet were added to the list
                     for item in areport[1]:
-                        iid = item[0]
-                        v = item[1]
-                        focus = v[0]
-                        vout = v[1]
-                        text = v[2]
-                        newItem = self.tree.insert(focus, index='end', \
-                                                   iid=iid, values=vout, \
-                                                   open=True, text=text)
+#                        iid = item[0]
+#                        v = item[1]
+#                        focus = v[0]
+#                        vout = v[1]
+#                        text = v[2]
+                        newItem = self.tree.insert(item[1][0], index='end', \
+                                            iid=item[0], values=item[1][1], \
+                                            open=True, text=item[1][2])
                         self.progbar.step()
                     self._enable_tabs()
                     self.update()
@@ -217,27 +217,30 @@ class GuiCore(Tk):
                                         LOCALIZED_TEXT[lang][areport[1][1]])
                     qcommand.put(('OKCANCEL', result))
                 elif 'MESSAGEBOXERROR' in areport:
-                    title, m1, m2, m3 = areport[1]
-                    title = LOCALIZED_TEXT[lang][title]
-                    m1 = LOCALIZED_TEXT[lang][m1]
-                    m3 = LOCALIZED_TEXT[lang][m3]
-                    messagebox.showerror(title, \
-                                            "{} <{}>, {}".format(m1, m2, m3))
+#                    title, m1, m2, m3 = areport[1]
+#                    title = LOCALIZED_TEXT[lang][title]
+#                    m1 = LOCALIZED_TEXT[lang][m1]
+#                    m3 = LOCALIZED_TEXT[lang][m3]
+                    messagebox.showerror(areport[1][0], \
+                                        "{} <{}>, {}".format(\
+                                        LOCALIZED_TEXT[lang][areport[1][1]], \
+                                        areport[1][2], \
+                                        LOCALIZED_TEXT[lang][areport[1][3]]))
                 elif 'MESSAGEBOXWARNTRACK' in areport:
                     title, m1, m2, m3 = areport[1]
                     messagebox.showwarning(title, \
                         LOCALIZED_TEXT[lang]['Set'] + ' TRCK, >{}< {}'.format(\
-                                          text, \
+                                          m2, \
                                           LOCALIZED_TEXT[lang][\
                        "'track in/set_of' doesn't contain a valid integers."]))
                 elif 'MESSAGEBOXSHOWWARNING2' in areport:
                     messagebox.showwarning(areport[1][0], \
                                     LOCALIZED_TEXT[lang][areport[1][1]])
                 elif 'MESSAGEBOXWARNTRACK2' in areport:
-                    title, column, url_str = areport[1]
-                    messagebox.showwarning(LOCALIZED_TEXT[lang][title] + \
-                                           ' {}'.format(column), \
-                                    LOCALIZED_TEXT[lang][url_str])
+#                    title, column, url_str = areport[1]
+                    messagebox.showwarning(LOCALIZED_TEXT[lang][areport[1][0]] + \
+                                           ' {}'.format(areport[1][1]), \
+                                    LOCALIZED_TEXT[lang][areport[1][2]])
                 elif 'MESSAGEBOXSHOWWARNINGMULTPLEFILEICONS' in areport:
                     messagebox.showwarning('', \
                         LOCALIZED_TEXT[lang][areport[1][0]].\
@@ -249,7 +252,7 @@ class GuiCore(Tk):
                 elif 'MESSAGEBOXSHOWERRORINSUFFICENT' in areport:
                     messagebox.showerror(\
                                         LOCALIZED_TEXT[lang][areport[1][0]], \
-                                        LOCALIZED_TEXT[lang][areport[1[1]]].\
+                                        LOCALIZED_TEXT[lang][areport[1][1]].\
                                         format(areport[1][2], areport[1][3]))
                 elif 'MESSAGEBOXSHOWHASHERROR' in areport:
                     name, column, test, mhash = areport[1]
@@ -295,7 +298,7 @@ class GuiCore(Tk):
                         self._on_click_f0_next_continued(lang)
                     else:
                         print("can't continue")
-                        pass
+#                        pass
                     self.update()
                 elif 'HASHEDGRAPHICS' in areport:
                     self.hashed_graphics = areport[1]
@@ -426,6 +429,8 @@ class GuiCore(Tk):
                                   command=self._on_read_me)
         self.helpmenu.add_command(label=LOCALIZED_TEXT[lang]['About...'], \
                                   command=on_copyright)
+
+    @staticmethod
     def _quit(self):
         qcommand.put(('DELETETEMP', None))
 #        qcommand.put(('DIE_DIE_DIE', None))
@@ -537,7 +542,7 @@ class GuiCore(Tk):
         self._initialize_main_window_notebook(lang)
 
         self.progbar = Progressbar(self, maximum=100, variable=self.int_var, \
-                                   mode="determinate" )
+                                   mode="determinate")
         self.progbar.grid(column=0, row=6, columnspan=8, padx=5, pady=5, \
                           sticky='news')
         self.status = Label(self, text=LOCALIZED_TEXT[lang]['empty string'], \
@@ -1231,8 +1236,9 @@ class GuiCore(Tk):
         """The lock unlock SD card tab, to be implemented?"""
         pass
 
+    @staticmethod
     def _on_html_project(self):
-        """Export the whole project tree to an HTML file and open it with 
+        """Export the whole project tree to an HTML file and open it with
                                                       your default browser."""
         qcommand.put(('EXPORTHTML', None))
 
@@ -1240,7 +1246,7 @@ class GuiCore(Tk):
         """load a set of preferred character pairs from LATIN1 constant
                                                  or a utf8 coded  .csv file"""
 
-        lst = _lst if len(_lst) > 0 else self.ddnPrefChar.get()
+        lst = _lst if _lst else self.ddnPrefChar.get()
         prefchar = _prefchar if _prefchar is not None else self.txtPrefChar
         if lst == 'Latin1':
             if prefchar.get(0.0, 9999.9999).rstrip():
@@ -1250,7 +1256,7 @@ class GuiCore(Tk):
         elif lst == '': #del
             prefchar.delete(0.0, 9999.9999)
         else: #load txt file
-            if len(_filein) == 0:
+            if not _filein:
                 filein = os.path.normpath(self.Pub2SD + '/'+ lst + '.csv')
             else:
                 filein = _filein
@@ -1275,7 +1281,7 @@ class GuiCore(Tk):
         #m2
         self.btnGet["state"] = astate
         self.btnSet["state"] = astate
-        self.btnGetDefault["state"] =astate
+        self.btnGetDefault["state"] = astate
         self.btnSelectArtwork["state"] = astate
         self.btnF3M2Next["state"] = astate
 
@@ -1301,12 +1307,12 @@ class GuiCore(Tk):
         self._set_tabs("disable")
 
     def _on_SavePref(self, _lang='en-US', _fileout='', _text=""):
-        """save your list of preferred character pairs to a utf-8 coded 
+        """save your list of preferred character pairs to a utf-8 coded
         .csv file. If _fileout is supplied the filedialog
-        will not be called. If _text is supplied self.txtPrefChar will not 
+        will not be called. If _text is supplied self.txtPrefChar will not
         be accessed"""
 
-        lang = self.ddnGuiLanguage.get() if len(_lang) == 0 else _lang
+        lang = self.ddnGuiLanguage.get() if not _lang else _lang
 
         fileout = filedialog.asksaveasfilename(\
                         filetypes=[('Preferred characters file', '.csv'), ], \
@@ -1314,8 +1320,9 @@ class GuiCore(Tk):
                                     initialfile='', \
                                     title=LOCALIZED_TEXT[lang]['SavePref'], \
                                     defaultextension='.csv') \
-                  if len(_fileout) == 0 else _fileout
-        if len(fileout) != 0: 
+                  if not _fileout else _fileout
+#        if len(fileout) != 0:
+        if fileout:
             text = self.txtPrefChar.get(0.0, 9999.9999).strip() \
                         if not _text else _text
             text = ' '.join(text.split('\n'))
@@ -1366,11 +1373,11 @@ class GuiCore(Tk):
         """saves the currently selected combination of tags
                                                to a utf-8 encoded .json file"""
         lang = _lang if _lang else self.ddnGuiLanguage.get()
-            
+
         a_template = _template if _template is not None \
                                else {key:'show' \
                                      for key in self.tagtree.selection()}
-            
+
         fileout = _fileout if _fileout \
                            else filedialog.asksaveasfilename(\
                                 filetypes=[('Template file', '.json'), ], \
@@ -1518,14 +1525,13 @@ class GuiCore(Tk):
         self.btnMoveDown['state'] = astate
 
     def _on_click_f0_next(self):
-        """loads the setting on the 'Project Name' tab and proceeds to the 
+        """loads the setting on the 'Project Name' tab and proceeds to the
         'Choose MP3 tags' tab"""
         qcommand.put(('SCRIPT_DIR', self.script_dir))
         lang = self.ddnGuiLanguage.get()
 
         qcommand.put(('INITIALDIGIT', self.InitialDigit.get()))
 
-        
         qcommand.put(('MODE', self.mode.get()))
         conf_file = self.ddnCurProject.get()
         if not conf_file:
@@ -1543,9 +1549,6 @@ class GuiCore(Tk):
         """conf file loaded or project created so continue"""
         #now load template if any
         if self.ddnCurTemplate.get():
-#            thisone = os.path.normpath(self.Pub2SD + '/'+ \
-#                                   self.ddnCurTemplate.get() + '.json')
-#            print("self.Pub2SD =>{}<, self.ddnCurTemplate.get()=>{}< .json".format(self.Pub2SD, self.ddnCurTemplate.get()))
             thisone = Path(self.Pub2SD, (self.ddnCurTemplate.get() + '.json'))
             if thisone.exists() and thisone.is_file():
 #                print(str(thisone))
@@ -1617,7 +1620,7 @@ class GuiCore(Tk):
         self.displayColumns = [item for item in self.columns]
         self.displayColumns.remove('Location')
 #        self.displayColumns.remove('Name')
-        
+
         qcommand.put(('DISPLAYCOLUMNS', (self.displayColumns, self.columns)))
         self.Treed = True
 
@@ -1755,15 +1758,8 @@ class GuiCore(Tk):
 
     def _on_click_f3m2_next(self):
         """proceed to 'Feature-phone options' tab"""
-        #create self.files here? 
+        #create self.files here?
         qcommand.put(('HASHEDGRAPHICS', self.hashed_graphics))
-#        self.list_images = [self.hashed_graphics[ahash] for ahash in list(self.hashed_graphics.keys())]
-#        if self.list_images:
-#            self.next_image = PhotoImage(data=self.list_images[0])
-#            self.imgCover.image = self.next_image
-#        else:
-#            self.next_image = PhotoImage(file='mainc.png')
-#            self.imgCover.image = self.next_image
 
         self.status['text'] = ''
         self.progbar['value'] = 0
@@ -1836,7 +1832,8 @@ class GuiCore(Tk):
 
         lang = self.ddnGuiLanguage.get()
         focus = self.tree.focus()
-        if len(focus) < 1 or not self.tree.set(focus, 'Type') == 'collection':
+#        if len(focus) < 1 or not self.tree.set(focus, 'Type') == 'collection':
+        if focus or self.tree.set(focus, 'Type') != 'collection':
             messagebox.showwarning('', LOCALIZED_TEXT[lang][\
                                                 "Please select a collection."])
         else:
@@ -1878,7 +1875,7 @@ class GuiCore(Tk):
         dir_path = filedialog.askdirectory(initialdir=os.path.expanduser('~'),\
                                         title="Select folder…", mustexist=True)
         #if mp3 files in top level of dir path arrrgh
-        
+
         if dir_path:
             if focus in ['', 'I00001'] and \
                             [f for f in os.listdir(dir_path) \
@@ -1992,7 +1989,7 @@ class GuiCore(Tk):
             self.status['text'] = ''
             self.progbar['value'] = 0
             self.update()
-        
+
     def _on_set(self):
         '''set value of tag'''
         #                          focus,      column, text, location
@@ -2223,7 +2220,7 @@ class GuiCore(Tk):
 
         self.btnTrimTitle['text'] = LOCALIZED_TEXT[lang]['Trim Title']
         self.btnPub2SD['text'] = LOCALIZED_TEXT[lang]["Publish to SD/USB"]
-        self.btnExit['text'] =LOCALIZED_TEXT[lang][\
+        self.btnExit['text'] = LOCALIZED_TEXT[lang][\
                                         "Delete temporary files and exit."]
         project = self.ddnCurProject.get()
         self.btnPub2HD['text'] = \

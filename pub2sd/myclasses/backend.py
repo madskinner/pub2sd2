@@ -13,8 +13,6 @@ import glob
 import hashlib
 import webbrowser
 import codecs
-from unidecode import unidecode
-from mutagen.mp3 import MP3
 import re
 import ast
 import shutil
@@ -22,13 +20,32 @@ import pickle
 import json
 import time
 import zipfile
+
+from tkinter import messagebox
 from pathlib import Path
+
+from unidecode import unidecode
+from mutagen.mp3 import MP3
 from pydub import AudioSegment
 #import wand
 
 from lxml import etree
 
-from tkinter import messagebox
+##All are used in preparing_file_scaning_for_tags by exec(a string)...
+from mutagen.id3 import ID3, error, APIC#, \
+#                        TXXX, WXXX, ETCO, MLLT, SYTC, USLT, SYLT, COMM, \
+#                        RVA2, EQU2, RVAD, RVRB, APIC, PCNT, PCST, POPM, \
+#                        GEOB, RBUF, AENC, LINK, POSS, UFID, USER, OWNE, \
+#                        COMR, ENCR, GRID, PRIV, SIGN, SEEK, ASPI, TIPL, \
+#                        TMCL, IPLS, MCDI, TBPM, TLEN, TORY, TSIZ, TYER, \
+#                        TPOS, TRCK, MVIN, MVNM, TALB, TCOM, TCON, TCOP, \
+#                        TCMP, TDAT, TDEN, TDES, TKWD, TCAT, TDLY, TDOR, \
+#                        TDRC, TDRL, TDTG, TENC, TEXT, TFLT, TGID, TIME, \
+#                        TIT1, TIT2, TIT3, TKEY, TLAN, TMED, TMOO, TOAL, \
+#                        TOFN, TOLY, TOPE, TOWN, TPE1, TPE2, TPE3, TPE4, \
+#                        TPRO, TPUB, TRSN, TRSO, TSO2, TSOA, TSOC, TSOP, \
+#                        TSOT, TSRC, TSSE, TSST, WCOM, WCOP, WOAF, WOAR, \
+#                        WOAS, WORS, WPAY, WPUB
 
 
 from  .myconst.regexs import FIND_LEADING_DIGITS, FIND_LEADING_ALPHANUM, \
@@ -46,21 +63,6 @@ from .myconst.webstuff import STARTHEADER, MAINTITLE, MYCSSAJAMI, MYCSSLATIN, \
                                 CLOSEHEADER, OPENNAVBAR, SUMMARYNAVBAR, \
                                 ANAVLINK, FILECSSLATIN
 
-##All are used in preparing_file_scaning_for_tags by exec(a string)...
-from mutagen.id3 import ID3, error, APIC#, \
-#                        TXXX, WXXX, ETCO, MLLT, SYTC, USLT, SYLT, COMM, \
-#                        RVA2, EQU2, RVAD, RVRB, APIC, PCNT, PCST, POPM, \
-#                        GEOB, RBUF, AENC, LINK, POSS, UFID, USER, OWNE, \
-#                        COMR, ENCR, GRID, PRIV, SIGN, SEEK, ASPI, TIPL, \
-#                        TMCL, IPLS, MCDI, TBPM, TLEN, TORY, TSIZ, TYER, \
-#                        TPOS, TRCK, MVIN, MVNM, TALB, TCOM, TCON, TCOP, \
-#                        TCMP, TDAT, TDEN, TDES, TKWD, TCAT, TDLY, TDOR, \
-#                        TDRC, TDRL, TDTG, TENC, TEXT, TFLT, TGID, TIME, \
-#                        TIT1, TIT2, TIT3, TKEY, TLAN, TMED, TMOO, TOAL, \
-#                        TOFN, TOLY, TOPE, TOWN, TPE1, TPE2, TPE3, TPE4, \
-#                        TPRO, TPUB, TRSN, TRSO, TSO2, TSOA, TSOC, TSOP, \
-#                        TSOT, TSRC, TSSE, TSST, WCOM, WCOP, WOAF, WOAR, \
-#                        WOAS, WORS, WPAY, WPUB
 
 from .myconst.audio import AUDIO
 from .threads import MyThread
@@ -100,7 +102,7 @@ class Backend(threading.Thread):
         self.prefix = ''
         self.html_out = ''
         self.script_dir = ''
-        
+
         #bodge to get past WinPython....
         self.Pub2SD = Path(Path.home(), 'Pub2SD')
 #        self.Pub2SD = os.path.normpath(os.path.expanduser('~') + '/Pub2SD')
@@ -116,7 +118,7 @@ class Backend(threading.Thread):
         self.files = dict()
         self.M3UorM3U8 = 2
         self.output_to = list()
-        
+
     def run(self):
 #        self.qr.put(('PRINT', 'backend {}'.format(SCRIPT_DIR)))
         while not self.exitFlag:
@@ -233,7 +235,7 @@ class Backend(threading.Thread):
                 self._childrens_filenames(self.trout.find(".//I00001"), temp_path, project_path_)
             elif 'FOLDERSIZE' in acommand:
                 size_in_Mb = folder_size(\
-                    Path(self.Pub2SD , 'Temp', self.project))/(1024.0 * 1024.0)
+                    Path(self.Pub2SD, 'Temp', self.project))/(1024.0 * 1024.0)
                 self.qr.put(('FOLDERSIZE', size_in_Mb))
             elif 'PUBLISHFILES' in acommand:
                 self._on_publish_files(acommand[1])
@@ -250,9 +252,9 @@ class Backend(threading.Thread):
             elif 'MOVEDOWN' in acommand:
                 self._on_move_down(acommand[1])
             elif 'PROMOTE' in acommand:
-                self._on_promote(acommand[1])                
+                self._on_promote(acommand[1])
             elif 'DEMOTE' in acommand:
-                self._on_demote(acommand[1])  
+                self._on_demote(acommand[1])
                 self._on_reload_tree()
             elif 'ON_SET' in acommand:
                 self._on_set(acommand[1])
@@ -271,7 +273,7 @@ class Backend(threading.Thread):
 #                    fart = codecs.open(artwork, mode='rb').read()
                     fart = partwork.read_bytes()
                     hash_tag, length = self._hash_it(fart)
-                    mime = 'image/' + artwork[-3:]                
+                    mime = 'image/' + artwork[-3:]
                     self._attach_artwork_to(focus, _picture_type, _desc, \
                                             hash_tag, length, mime)
                     self._on_reload_tree()
@@ -297,18 +299,18 @@ class Backend(threading.Thread):
                 self.exitFlag = True
                 self.qr.put(('PRINT', "I'm out of here!!!"))
                 break
-                
+
             else:
                 self.qr.put(('PRINT', 'backend lost, acommand was {}'.format(acommand)))
                 self.qc.task_done()
 
     def _delete_temp_folder(self):
         """delete the temporary folder"""
-        temp = Path(self.Pub2SD,'Temp')
+        temp = Path(self.Pub2SD, 'Temp')
         if temp.exists():
             shutil.rmtree(str(temp))
         self.qr.put(('STATUS', "Deleting old temporary folder."))
-        
+
     def _load_conf_file(self, aconf_file):
         """loads the old project file into etree tree"""
         result = ''
@@ -324,7 +326,7 @@ class Backend(threading.Thread):
         self.qr.put(('CONTINUE_F0_NEXT', result))
 
     def _load_template(self, template_path):
-        """adds tags in template to tag tree displayed in f1, 
+        """adds tags in template to tag tree displayed in f1,
            template_path is Path object"""
         tp = Path(template_path)
 #        print(str(tp),tp, tp.exists())
@@ -337,7 +339,7 @@ class Backend(threading.Thread):
 #            lotslines = tp.read_text(encoding='utf-8')
 #            lines = lotslines.splitlines()
             lines = filein.readlines()
-            
+
 #            fp.close()
             filein.close()
             #load template to backend
@@ -357,7 +359,7 @@ class Backend(threading.Thread):
                 if 'OKCANCEL' in aresponce:
                     return  aresponce[1]
                 self.qc.task_done()
-                
+
     def _get_idiot_case_mode_for_load_project(self):
         """calculate idiot_case"""
         #idiot_case
@@ -370,14 +372,13 @@ class Backend(threading.Thread):
                                                 + 2 * int(self.mode == 1)
         else:
             idiot_case = 0
-            
+
         return idiot_case
 
     def _fix_old_proj_iid(self, parent):
-            for child in list(parent):
-                child.tag = 'I{:05X}'.format(int(child.tag[1:], 16))
-                self._fix_old_proj_iid(child)
-        
+        for child in list(parent):
+            child.tag = 'I{:05X}'.format(int(child.tag[1:], 16))
+            self._fix_old_proj_iid(child)
 
     def _load_project(self, thefile):
         """loads an existing project (.prj) file, adapting it's contents
@@ -385,7 +386,7 @@ class Backend(threading.Thread):
         pthefile = Path(thefile)
         if not (pthefile.exists() and pthefile.is_file()): #no file specified so fail!
             return False
-        
+
         linesin = list()
         filein = codecs.open(thefile, mode='r', encoding='utf-8')
         for aline in filein.readlines():
@@ -404,11 +405,11 @@ class Backend(threading.Thread):
         self.sf4 = self.settings.find("f4")
         self.trout = self.root.find("tree")
         self._fix_old_proj_iid(self.trout)
-            
+
         self.old_mode = dict(self.smode.attrib)
         if 'version' not in self.smode.attrib:
             self.qr.put(('MESSAGEBOXASKOKCANCEL', (\
-                                        'Project created in old format!', \
+                        'Project created in old format!', \
                         "This will attempt to update the project file " + \
                         "format to the current standard, every field " + \
                         "must be verified. It may be faster to " + \
@@ -417,7 +418,7 @@ class Backend(threading.Thread):
             if not self._wait_for_responce():
                 return False
             self.smode.attrib['version'] = THIS_VERSION
-                
+
             if 'idiot' in self.old_mode and self.old_mode['idiot'] == 'True':
                 self._upgrade_child_of(self.trout)
         else:
@@ -435,14 +436,14 @@ class Backend(threading.Thread):
             self.preferred = 0
         #now pass self.preferred back to gui!
         self.qr.put(('PREFERRED', self.preferred))
-        
+
         #now check the mode radio buttons
         idiot_case = self._get_idiot_case_mode_for_load_project()
         if idiot_case == 1: # downgrade
             self.mode = 0
             self.qr.put(('MESSAGEBOXASKOKCANCEL', ('Confirm Downgrade?', \
                         "This will downgrade this project from 'Advanced' " \
-                        + "to 'Simple'. Some data may be lost." )))
+                        + "to 'Simple'. Some data may be lost.")))
             #if not OK give up
             if not self._wait_for_responce():
                 return ''
@@ -452,11 +453,11 @@ class Backend(threading.Thread):
                                             difference(set(IDIOT_TAGS.keys))
             etree.strip_attributes(self.trout, difference)
             etree.strip_attributes(self.sf1, difference)
-            pass
+#            pass
         elif idiot_case == 2: # upgrade:
             self.qr.put(('MESSAGEBOXASKOKCANCEL', ('Confirm Upgrade?', \
                         "This will upgrade this project from 'Simple' to " \
-                        + "'Advanced'." )))
+                        + "'Advanced'.")))
             #if not OK give up
             if not self._wait_for_responce():
                 return ''
@@ -467,7 +468,7 @@ class Backend(threading.Thread):
 
         if self.mode == 0:
             self.smode.attrib['Idiot'] = 'True'
-            self.list_of_tags =list(set(IDIOT_TAGS.keys()))
+            self.list_of_tags = list(set(IDIOT_TAGS.keys()))
             #so list_of_tags is a set of all idiot tags
             all_tags = self.recommendedTags + list(set(self.recommendedTags)\
                                         .difference(set(IDIOT_TAGS.keys())))
@@ -484,7 +485,7 @@ class Backend(threading.Thread):
             # followed by any advanced tags left out
         self.preferred = int(self.smode.attrib['preferred'] == 'True')
         self.qr.put(('TXTPREFCHARDEL', (0.0, 9999.9999)))
-        if self.sf2.text != None:
+        if self.sf2.text is not None:
             self.qr.put(('TXTPREFCHARINSERT', (9999.9999, self.sf2.text)))
 
         #clear tagtree
@@ -495,7 +496,7 @@ class Backend(threading.Thread):
         for item in self.sf1.attrib.keys():
             self.qr.put(('SELECTIONTAGTREE', item))
         #f4 feature phone folders
-        self.qr.put(('ENTERLIST',self.sf4.get('folderList')))
+        self.qr.put(('ENTERLIST', self.sf4.get('folderList')))
         if 'is_copy_playlists_to_top' in self.sf4.attrib:
             self.qr.put(('IS_COPY_PLAYLISTS_TO_TOP', \
                 0 if self.sf4.attrib['is_copy_playlists_to_top'] == 'False' \
@@ -504,14 +505,14 @@ class Backend(threading.Thread):
             self.qr.put(('M3UorM3U8', int(self.sf4.attrib['M3UorM3U8'])))
 
         # unpickle hashed graphic
-        if thefile[:-4]:      
+        if thefile[:-4]:
             picklein = thefile[:-4] + '.pkl'
             self.hashed_graphics = pickle.load(open(picklein, 'rb')) \
                                               if Path(picklein).is_file \
                                               else dict()
         return 'True'
 
-    def _downgrade_child_of(self, parent, difference):
+    def _downgrade_child_of(self, parent, difference=None):
         for child in parent.getchildren():
             for tag in difference:
                 child.attrib.pop(tag, None)
@@ -519,8 +520,8 @@ class Backend(threading.Thread):
 
 
     def _downgrade_data(self, item, child):
-        """reduce all idiot tags to core data, 
-            (e.g. on a text frame, [3, ['astring', ]] becomes 'a string') 
+        """reduce all idiot tags to core data,
+            (e.g. on a text frame, [3, ['astring', ]] becomes 'a string')
             chucking all advanced tabs
             N.B. this is for display purposes only!"""
         #by default data is unchanged unless is a file
@@ -529,13 +530,13 @@ class Backend(threading.Thread):
             return child.attrib[item]
         if child.attrib['Type'] in ['file',]:
             #is file so process
-            #idiot mode so split into frames on '|' and 
+            #idiot mode so split into frames on '|' and
             # pick last frame read for this tag
             this_frame = child.attrib[item].split('|')[-1]
             if this_frame not in ['-', '']:
                 #not an 'empty' frame
                 this_frame = escape_tab_return_feed(this_frame)
-                if item in IDIOT_TAGS: 
+                if item in IDIOT_TAGS:
                     param = ast.literal_eval(str(this_frame))
                     if item == 'APIC':
                         result = param[-1]
@@ -564,8 +565,7 @@ class Backend(threading.Thread):
                     self.list_of_tags.add(tag)
                     child.attrib[tag] = self._upgrade_data(tag, child)
             self._upgrade_child_of(child)
-                
-                
+
     def _upgrade_data(self, item, child):
         """smarten data up from simple(idiot) mode to advanced with encoding
            and full structure for each tag of the specified item.
@@ -678,7 +678,7 @@ class Backend(threading.Thread):
                          if self.mode == 0 else 'False'
         self.smode.attrib['preferred'] = 'False' \
                          if self.preferred == 0 else 'True'
-        self.smode.attrib['version'] = THIS_VERSION 
+        self.smode.attrib['version'] = THIS_VERSION
         self.old_mode = dict(self.smode.attrib)
 
         if self.mode == 0:
@@ -691,7 +691,7 @@ class Backend(threading.Thread):
         for atag in self.recommendedTags:
             self.sf1.attrib[atag] = 'show'
         self.qr.put(('SELECTIONTAGTREE', self.recommendedTags))
-            
+
         self.sf2.text = ''
 
         self.sf4.attrib['folderList'] = ''
@@ -700,7 +700,6 @@ class Backend(threading.Thread):
 #        print("created project, returning 'True'")
         return 'True'
 
-    
     def _load_tree_from(self, _trout):
         if not _trout:
             tree = self.trout
@@ -710,16 +709,17 @@ class Backend(threading.Thread):
             parent = tree.tag
 #        self.qr.put(('PRINT', etree.tostring(tree, pretty_print=True)))
 #        if len(tree):
-        
+
 #        self.qr.put(('PRINT', 'load >{}< children of >{}<'.\
 #                     format(len(tree.getchildren()), parent)))
 #        self.qr.put(('PRINT', 'list children >{}<'.format(list(tree.getchildren()), parent)))
 #        self.qr.put(('PRINT', 'list children >{}<'.\
 #                     format([c.tag for c in tree.getchildren()], parent)))
-        if len(tree.getchildren()) and tree.getchildren()[0].tag != parent:
+#        if len(tree.getchildren()) and tree.getchildren()[0].tag != parent:
+        if tree.getchildren() and tree.getchildren()[0].tag != parent:
             for child in tree.getchildren():
 #                self.qr.put(('PRINT', 'for child>{}< of >{}<'.format(child.tag, parent)))
-                vout= list()
+                vout = list()
                 for k in self.columns:
                     if k not in ['adummy', 'APIC_'] and k in child.attrib:
                         if self.mode: #is advanced
@@ -729,7 +729,8 @@ class Backend(threading.Thread):
                             vout.append(data)
                     else:
                         vout.append('-')
-                self.to_be_inserted.append([child.tag, [parent, vout, child.text if child.text else '']])
+                self.to_be_inserted.append([child.tag, \
+                            [parent, vout, child.text if child.text else '']])
                 if child.attrib['Type'] in ['project', 'collection']:
                     self._load_tree_from(child.tag)
 
@@ -787,7 +788,7 @@ class Backend(threading.Thread):
         self.to_be_inserted.append([iid, [e_parent.tag, somevalues, 'file']])
         e_child = etree.SubElement(e_parent, iid)
         e_child.text = 'file'
-        for c,v in zip(self.columns, somevalues):
+        for c, v in zip(self.columns, somevalues):
             e_child.attrib[c] = v
 
     def _add_tree(self, the_focus, adir_path, noTop=False):
@@ -820,7 +821,7 @@ class Backend(threading.Thread):
 #                         format(e_focus.tag, e_parent.tag, e_parent.text)))
 #            self.qr.put(('PRINT', self.columns))
 #            self.qr.put(('PRINT', vout))
-            for c,v in zip(self.columns, vout):
+            for c, v in zip(self.columns, vout):
                 e_parent.attrib[c] = v
 #            self.qr.put(('PRINT', 'got past c,v, added {}'.\
 #                                    format(e_parent.tag)))
@@ -887,7 +888,7 @@ class Backend(threading.Thread):
 
         the_format = '{0:0' + '{}'.format(nos_digits) + 'd}'
         alpha_format = '{0:A>' + '{}'.format(nos_chars) + 's}'
-                         
+
         for child in children:
 #            self.qr.put(('PRINT', 'for {} of {}'.format(child.tag, parent)))
             self.qr.put(('PROGSTEP', 1))
@@ -931,14 +932,14 @@ class Backend(threading.Thread):
                     title = self._my_unidecode(tit2)
                     child.attrib['Name'] = "{0}-{1:02d}".format(\
                                                      ancestor_name, my_num)
-                    child.text="{0}{1}-{2:02d}-{3}".format(self.prefix, \
+                    child.text = "{0}{1}-{2:02d}-{3}".format(self.prefix, \
                                          ancestor_name, my_num, title)
 #                    self.qr.put(('PRINT', 'mp3 file {}'.format(child.text)))
                     if self.mode: #advanced
                         vout = [['Name', child.attrib['Name']],\
                                                ['TIT2', child.attrib['TIT2']]]
                     else: #simple
-                        vout = [['Name', child.attrib['Name']],['TIT2', tit2]]
+                        vout = [['Name', child.attrib['Name']], ['TIT2', tit2]]
                 self.to_be_renamed[child.tag] = [vout, child.text]
                 my_num += 1
             self.qr.put(('PROGSTEP', 1))
@@ -959,7 +960,8 @@ class Backend(threading.Thread):
             #normalization disabled
             return text
         else:
-            self.qr.put(('PRINT', "Error, unrecognised value for self.preferred=>{}< should be [0, 1, 2]".format(self.preferred)))
+            self.qr.put(('PRINT', \
+                         "Error, unrecognised value for self.preferred=>{}< should be [0, 1, 2]".format(self.preferred)))
             return text
         self._fix_eng_bug_in_unidecode()
         #got this far so either aggressive with 'empty' list or used preferred
@@ -1024,7 +1026,7 @@ class Backend(threading.Thread):
                                hash_tag]
             #There may be multiple APIC tags in a file
             # displayed in APIC as multiple frames in sequence order
-            #the hash tag for each frame will be held as part of a frame 
+            #the hash tag for each frame will be held as part of a frame
             #in APIC_ in the corresponding order
             apic_params.extend([str(theParameters)])
             theParameters[4] = length
@@ -1067,16 +1069,18 @@ class Backend(threading.Thread):
                         #accumulate COMM tags in comms all others in aresult
                         if k in ['COMM',] and theParameters:
                             if theParameters[1] in comms.keys():
-                                comms[theParameters[1]][theParameters[1] + theParameters[2]] = theParameters
+                                comms[theParameters[1]][theParameters[1] + \
+                                      theParameters[2]] = theParameters
                             else:
                                 comms[theParameters[1]] = dict()
-                                comms[theParameters[1]][theParameters[1] + theParameters[2]] = theParameters
+                                comms[theParameters[1]][theParameters[1] + \
+                                      theParameters[2]] = theParameters
                         elif theParameters:
                             aresult.extend([str(theParameters)])
                     #now if idiot mode choose one frame and force lang='XXX'
-                    #   choice if more than one pick first XXX, 
-                    #                       if no XXX pick first eng, 
-                    #                       if no eng pick first fra, 
+                    #   choice if more than one pick first XXX,
+                    #                       if no XXX pick first eng,
+                    #                       if no eng pick first fra,
                     #                       if no fra pick first
                     # else if advanced mode list langs
                     if k in ['COMM',]:
@@ -1123,7 +1127,7 @@ class Backend(threading.Thread):
                                             comms[l][y][3]]
                                     aresult.append(this)
                         if not self.mode:
-                            aresult =[xresult,]
+                            aresult = [xresult,]
 #                        self.qr.put(('PRINT', "COMM in read mp3 tags =>{}<".format(aresult)))
                     result.append('|'.join([str(s) for s in aresult]))
                 else:
@@ -1168,8 +1172,8 @@ class Backend(threading.Thread):
 #                final_path = os.path.normpath(project_path_ + '/' + new_dir)
                 thispath = str(tp / new_dir)
                 final_path = str(pp / new_dir)
-#                self.qr.put(('PRINT', thispath))                
-#                self.qr.put(('PRINT', final_path))                
+#                self.qr.put(('PRINT', thispath))
+#                self.qr.put(('PRINT', final_path))
                 os.makedirs(thispath, mode=0o777, exist_ok=True)
 #                self.qr.put(('PRINT','is collection {}'.format(final_path)))
                 self._childrens_filenames(e_child, thispath, final_path)
@@ -1255,7 +1259,7 @@ class Backend(threading.Thread):
         self._on_generate_playlists()
         self.qr.put(('FILES_PREPARED', None))
         self.qr.put(('UNLOCKGUI', None))
-        
+
     def _preparing_file_scaning_for_tags_idiot_mode(self, atag, child):
         """preparing file scaning for tags idiot mode"""
         #idiot so just one front cover
@@ -1314,7 +1318,7 @@ class Backend(threading.Thread):
         tindex = thetags.index(atag)
         if param[4][0:2] in ['b"', "b'"]:
             apic_params = child.attrib['APIC_'].split('|')
-            
+
             para = ast.literal_eval(\
                             apic_params[tindex])
             if para[4] in self.hashed_graphics:
@@ -1338,8 +1342,8 @@ class Backend(threading.Thread):
                 self.qr.put(('MESSAGEBOXERROR', (\
                             "Can't find artwork.", \
                             "Can't find image for", child.text, \
-                            "file may have been moved or no longer exists." )))
-                
+                            "file may have been moved or no longer exists.")))
+
         return [_encoding, _mime, _type, _desc, _data]
 
 
@@ -1372,9 +1376,9 @@ class Backend(threading.Thread):
                     # is not empty so add it!
                     lang = None
                     if k in AUDIO:
-                        """insert test if tit2, if so insert prefix to atag"""
+                        #insert test if tit2, if so insert prefix to atag
                         if k == 'TIT2':
-                            """atag is [3,['text']]"""
+                            #atag is [3,['text']]
 #                            self.qr.put(('PRINT', '{} TIT2=>{}<'.format(k, atag)))
 #                            mm = 0
 #                            for m in self.files[child.tag]:
@@ -1382,14 +1386,14 @@ class Backend(threading.Thread):
 #                                         'self.files[child.tag][{}]:>{}<'.format(mm,m)))
 #                                mm += 1
 #                            self.qr.put(('PRINT', '{} self.files[child.tag]=>{}<'.format(len(self.files[child.tag]), self.files[child.tag])))
-                            index = atag.find('[',1)
+                            index = atag.find('[', 1)
                             if index > -1:
 #                                index += 1
                                 index += 2
                                 atag = '{}{}-{}'.format(atag[:index], \
                                                         self.files[child.tag][6], \
                                                         atag[index:])
-                            
+
 #                            self.qr.put(('PRINT', '{} atag=>{}<'.format(k,atag)))
                         atuple = (audio, atag, (self.mode != 0), \
                                   list_owners, self.files[child.tag][0])
@@ -1410,7 +1414,7 @@ class Backend(threading.Thread):
         So that they will only sort in the order specified."""
 
         #finally copy all file to final destination):
-        self.qr.put(('STATUS', 'Removing any old project files...' ))
+        self.qr.put(('STATUS', 'Removing any old project files...'))
         if target[1:] != ':\\' and \
                  Path(target, self.project).exists():
             # remove if exists
@@ -1422,7 +1426,7 @@ class Backend(threading.Thread):
         target += '/'
         target = forward_slash_path(target)
         #decide if space avaialable on target - abort if not with error message
-        self.qr.put(('STATUS', 'Calculating needed space...' ))
+        self.qr.put(('STATUS', 'Calculating needed space...'))
         _, _, free = shutil.disk_usage(Path(target))
         needed = folder_size(\
                     Path(self.Pub2SD, 'Temp', self.project))\
@@ -1497,9 +1501,9 @@ class Backend(threading.Thread):
         htmllists = [h for h in os.listdir(str(source)) \
                      if h.endswith('.html') or h.endswith('htm')]
         imglists = [i for i in os.listdir(images) \
-                     if i.endswith('.png') or h.endswith('jpg')]
+                     if i.endswith('.png') or i.endswith('jpg')]
         self.qr.put(('PROGMAX', len(playlists) * \
-                     ( 1 + self.is_copy_playlists_to_top + \
+                     (1 + self.is_copy_playlists_to_top + \
                           len(self.play_list_targets))))
         #main playlists
         for pp in playlists:
@@ -1533,11 +1537,11 @@ class Backend(threading.Thread):
         #copy css and js, actually just unpack from zip
 #        zipdir = os.path.normpath(self.script_dir + "/cssjs.zip")
 #        with zipfile.ZipFile(zipdir,"r") as zip_ref:
-#            zip_ref.extractall(os.path.normpath(target + self.project))        
+#            zip_ref.extractall(os.path.normpath(target + self.project))
         zipdir = Path(self.script_dir, "cssjs.zip")
-        with zipfile.ZipFile(zipdir,"r") as zip_ref:
-            zip_ref.extractall(ptarget / self.project)        
-        
+        with zipfile.ZipFile(zipdir, "r") as zip_ref:
+            zip_ref.extractall(ptarget / self.project)
+
         #now top level?
         if self.is_copy_playlists_to_top:
             self.qr.put(('STATUS', 'Copying playlists to top folder...'))
@@ -1586,7 +1590,7 @@ class Backend(threading.Thread):
     def _make_filename(self, child):
         """make mp3 title = filename after appropriate normalization"""
         e_child = self.trout.find(".//" + child)
-        attributes = e_child.attrib 
+        attributes = e_child.attrib
         title = attributes['TIT2']
         title = self._my_unidecode(title) \
                         if self.mode == 0 \
@@ -1596,7 +1600,8 @@ class Backend(threading.Thread):
     def _on_strip(self, to_strip, focus):
         parent = self.trout.find(".//" + focus)
         if to_strip in STRIPPERS:
-            if len(parent):
+#            if len(parent):
+            if parent:
                 for child in parent.getchildren():
                     if child.attrib['Type'] in ['collection', 'project']:
                         title = child.attrib['TIT2']
@@ -1622,7 +1627,7 @@ class Backend(threading.Thread):
             e_parent.remove(e_child)
         self._on_reload_tree()
         self.qr.put(('UNLOCKGUI', None))
-    
+
     def _on_move_up(self, focus):
         """get parent, find focus in list, move up one"""
         self.qr.put(('LOCKGUI', None))
@@ -1639,7 +1644,7 @@ class Backend(threading.Thread):
         self._on_reload_tree()
         self.qr.put(('SEEFOCUS', focus))
         self.qr.put(('UNLOCKGUI', None))
-    
+
     def _on_move_down(self, focus):
         """get parent, find focus in list, move up one"""
         self.qr.put(('LOCKGUI', None))
@@ -1656,7 +1661,7 @@ class Backend(threading.Thread):
         self._on_reload_tree()
         self.qr.put(('SEEFOCUS', focus))
         self.qr.put(('UNLOCKGUI', None))
-    
+
     def _on_demote(self, focus):
         """demote one level in the hierachy, \
         requires that there be a collection under parent but below child"""
@@ -1693,7 +1698,7 @@ class Backend(threading.Thread):
         self._on_reload_tree()
         self.qr.put(('SEEFOCUS', focus))
         self.qr.put(('UNLOCKGUI', None))
-    
+
     def _on_promote(self, focus):
         """promote item one level in the heirachy"""
         self.qr.put(('LOCKGUI', None))
@@ -1722,18 +1727,18 @@ class Backend(threading.Thread):
         else:
             self.qr.put(('MESSAGEBOXSHOWERRORIN', \
                          ("Can't promote", "Can't find child.")))
-                    
+
         self.qr.put(('SEEFOCUS', focus))
         self.qr.put(('UNLOCKGUI', None))
 
-    def _is_promotable(self,gp,p,c):
+    def _is_promotable(self, gp, p, c):
         if (gp in ['project', 'collection']) and \
                     (p in ['collection',]) and \
                     (c in ['collection',]):
             return True
         elif (gp in ['collection',]) and \
                     (p in ['collection']) and \
-                    (c in ['collection','file']):
+                    (c in ['collection', 'file']):
             return True
         else:
             return False
@@ -1753,10 +1758,11 @@ class Backend(threading.Thread):
             #list mp3 files which are immediate children of focus
             children = [c for c in e_child if c.attrib['Type'] is 'file']
             if len(children) > 1:
-                second_of_silence = AudioSegment.silent(duration=1000) # in milliseconds                second_of_silence = 
-                sound = AudioSegement.from_mp3(children[0].attrib['Location'])
+                # in milliseconds                second_of_silence =
+                second_of_silence = AudioSegment.silent(duration=1000)
+                sound = AudioSegment.from_mp3(children[0].attrib['Location'])
                 for c in children[1:]:
-                    sound += second_of_silence + AudioSegement.from_mp3(c.attrib['Location'])
+                    sound += second_of_silence + AudioSegment.from_mp3(c.attrib['Location'])
                 # now save new file in temp workspace?
                 #create temp workspace
                 #walk up tree creating list of ancestors, stop at project
@@ -1776,12 +1782,13 @@ class Backend(threading.Thread):
                 sound.export(filename, 'mp3')
                 e_parent = e_child.getparent()
                 somevalues = self._read_mp3_tags(echild.attrib['Location'])
-                self._add_a_file(afile, e_parent, somevalues)
+#                self._add_a_file(afile, e_parent, somevalues)
+                self._add_a_file(filename, e_parent, somevalues)
             else:
                 self.qr.put(('MESSAGEBOXSHOWWARNING2', \
                     (e_child.text, "There are no immediate descendants which are mp3 files.")))
 #                    ("No mp3 files", "There are no immediate descendants which are mp3 files.")))
-                
+
         if etree.iselement(e_child):
             e_parent = e_child.getparent()
 #            self.qr.put(('PRINT', [[kid.tag, e_parent.index(kid)] for kid in e_parent.getchildren()]))
@@ -1795,7 +1802,7 @@ class Backend(threading.Thread):
         self.qr.put(('SEEFOCUS', focus))
         self.qr.put(('UNLOCKGUI', None))
         #list children of focus which are mp3 files
-        pass            
+#        pass
 
     def _on_load_tree_from_trout(self):
         self.qr.put(('HASHEDGRAPHICS', self.hashed_graphics))
@@ -1810,7 +1817,7 @@ class Backend(threading.Thread):
         self.qr.put(('CLEARTREE', None))
         self._on_load_tree_from_trout()
 
-    def _on_append(self, atuple ):
+    def _on_append(self, atuple):
         focus, column, text = atuple
         focus_item = self.trout.find(".//" + focus)
         #action only possible in advanced mode with tags that are hashable
@@ -1840,7 +1847,8 @@ class Backend(threading.Thread):
             for test in text.split('|'):
 #                print(">{}<".format(test))
 #                print("len HASHTAG ON={}, len test={}".format(len(HASH_TAG_ON[column]), len(ast.literal_eval(escape_tab_return_feed(test)))))
-                if len(HASH_TAG_ON[column]) != len(ast.literal_eval(escape_tab_return_feed(test))):
+                if len(HASH_TAG_ON[column]) != \
+                        len(ast.literal_eval(escape_tab_return_feed(test))):
                     self.qr.put(('MESSAGEBOXSHOWHASHERROR', (name,\
                                     column, test, len(HASH_TAG_ON[column]))))
                     return
@@ -2037,20 +2045,20 @@ class Backend(threading.Thread):
                         thisframe = ast.literal_eval(escape_tab_return_feed(aFrame))
                         if len(thisframe) != len(HASH_TAG_ON[column]):
                             #error message and give up
-                            pass
+#                            pass
                             return
                     if False in self._list_different_frames(text, column):
                         #reject with not unique frames error message
                         pass
                     else:
-                       parent.attrib[column] = text
+                        parent.attrib[column] = text
                 else:
                     #check if multiple frame in text even though not supported?
                     #so new text replaces old, format not checked here
                     thisframe = ast.literal_eval(escape_tab_return_feed(text))
                     if len(thisframe) != len(HASH_TAG_ON[column]):
                         #insufficient parameters error message show defalt form and give up
-                        pass
+#                        pass
                         return
                     parent.attrib[column] = text
 
@@ -2080,7 +2088,6 @@ class Backend(threading.Thread):
                 #is duplicate tag
                 is_different_to_all.append(False)
         return is_different_to_all
-                    
 
     def _is_different_hash(self, currentFrames, text, tag):
         """true if 'text' not in 'currentFrames' and tag is hashable"""
@@ -2108,7 +2115,7 @@ class Backend(threading.Thread):
         e_project = self.trout.find(".//I00001")
         self._create_play_list(e_project, project_path_, \
                                                           project_file_list)
-       
+
         self.qr.put(('STATUS', ''))
 
     def _create_play_list(self, pid_item, ploc, glist):
@@ -2118,7 +2125,7 @@ class Backend(threading.Thread):
                glist = ancestors list/index to plists
                plistid index to plists which holds all play lists in
                               form [[name, [list/set of targetfilepaths]],]"""
-        
+
         if pid_item.tag in ["I00001",]:
             webpage = os.path.normpath('../{}/index.html'.format(self.project))
         else:
@@ -2130,12 +2137,12 @@ class Backend(threading.Thread):
         page_links = list()
         if self.M3UorM3U8 == 1:
             #use m3u file
-            page_links.insert(0,['{}/Temp/{}/{}.M3U'.\
+            page_links.insert(0, ['{}/Temp/{}/{}.M3U'.\
                                         format(self.Pub2SD, self.project, \
                                                pid_item.text), \
                                 'Play all.'])
         else: #use m3u8 file
-            page_links.insert(0,['{}/Temp/{}/{}.M3U8'.\
+            page_links.insert(0, ['{}/Temp/{}/{}.M3U8'.\
                                         format(self.Pub2SD, self.project, \
                                                pid_item.text), \
                                 'Play all.'])
@@ -2201,7 +2208,7 @@ class Backend(threading.Thread):
 #                fileout = codecs.open(filepath, mode='w', encoding='utf-8')
 #                fileout.write('\r\n'.join(playlist))
 #                fileout.close()
-                filepath = Path(self.Pub2SD, 'Temp',self.project, \
+                filepath = Path(self.Pub2SD, 'Temp', self.project, \
                                                    (pid_item.text + '.M3U8'))
                 filepath.write_text('\r\n'.join(playlist), encoding='utf-8')
             elif self.M3UorM3U8 == 1:
@@ -2253,7 +2260,7 @@ class Backend(threading.Thread):
                                                    (pid_item.text + '.M3U'))
                 fileout.write_text('\r\n'.join(playlist), encoding='cp1252')
             #this list not empty
-    
+
         else:
             #no files in this collection with length greater than zero!
             #so skip it!!!
@@ -2265,11 +2272,12 @@ class Backend(threading.Thread):
         linesout.extend(MYCSSLATIN)
         linesout.extend(CLOSEHEADER)
         linesout.extend(['  <nav id="navbar">',\
-                         '    <img src="./images/image000.png" alt="Album cover art" title="" align="bottom" width="270">',\
+        '    <img src="./images/image000.png" alt="Album cover art" title="" align="bottom" width="270">',\
                          '    <div class="container col">',\
                          ])
         for alink in page_links:
-            linesout.append(ANAVLINK.format(os.path.normpath(alink[0]),alink[1]))
+            linesout.append(ANAVLINK.format(os.path.normpath(\
+                                                        alink[0]), alink[1]))
         linesout.extend(['    </div>',\
                          '  </nav>',\
                          '</body>',\
@@ -2282,7 +2290,7 @@ class Backend(threading.Thread):
 
     def _from_playlist_create_webpage(self, playlist=""):
         """Create web page for current 'playlist' all stored under project
-        directory with pages named after node name, titles will be displayed 
+        directory with pages named after node name, titles will be displayed
         on web page not in web page file name."""
 #        self.qr.put(('PRINT', 'ploc is {}'.format(ploc)))
 #        if not playlist:
@@ -2293,7 +2301,7 @@ class Backend(threading.Thread):
         if not playlist:
             webpagefile = Path(self.Pub2SD, 'Temp', self.project, 'index.html')
         else:
-            webpagefile =  Path(self.Pub2SD, 'Temp', self.project, \
+            webpagefile = Path(self.Pub2SD, 'Temp', self.project, \
                                                     (playlist +'.html'))
 #        self.qr.put(('PRINT', 'fileout is {}'.format(ploc)))
 #        webpagefile = codecs.open(fileout, mode='w',encoding='utf-8')
@@ -2365,8 +2373,6 @@ class Backend(threading.Thread):
         linesout.append('</html>')
         linesout.append('')
         webpagefile.write_text('\n'.join(linesout), encoding='utf-8')
-        
-        pass
 
     def _attach_artwork_to(self, target, _picture_type, _desc, hash_tag, length, mime):
         """attaches the artwork to item in focus or to its dependants
@@ -2384,7 +2390,7 @@ class Backend(threading.Thread):
             else:
                 currentTag = e_target.attrib['APIC']
                 if currentTag is '-' or self.mode == 0:
-                    e_target.attrib['APIC']  = dumbPara
+                    e_target.attrib['APIC'] = dumbPara
                     e_target.attrib['APIC_'] = theParameters
                 else:
                     currentFrames = currentTag.split('|')
@@ -2415,7 +2421,7 @@ class Backend(threading.Thread):
         """publish files and playlists to SDs"""
 
         threads = []
-        self.usb_status = ['','','','','','','','']
+        self.usb_status = ['', '', '', '', '', '', '', '']
         self.qr.put(('PROGMAX', (2 * int(len(self.files)/20) * len(self.output_to))))
 
         i = 1
@@ -2438,7 +2444,8 @@ class Backend(threading.Thread):
                     self.qr.put(('MESSAGEBOXSHOWERRORTHREADS', ("Invalid path", \
                                         "Can't find {}", atarget)))
 #thinks... this is same as [athread.join() for athread in threads]
-        while len(threads):
+#        while len(threads):
+        while threads:
             for athread in threads:
                 if not athread.is_alive():
                     athread.join()
@@ -2453,9 +2460,10 @@ class Backend(threading.Thread):
         else:
             tree = self.trout.find(".//" + _trout)
             parent = tree.tag
-        if len(tree):
+#        if len(tree):
+        if tree:
             for child in tree.getchildren():
-                vout= list()
+                vout = list()
                 for k in self.columns:
                     if k not in ['adummy', ] and k in child.attrib:
                         if self.mode: #is advanced
@@ -2467,20 +2475,22 @@ class Backend(threading.Thread):
                         vout.append('-')
                 if child.attrib['Type'] in ['file',]:
                     self.html_out.append('<tr>' + \
-                                            '<td>' + child.tag + '</td>' + \
-                                            '<td>' + (child.text if child.text else '-') + \
-                                            '.mp3'  + '</td>' + \
-                                            ''.join(['<td>' + v + '</td>' for v in vout]) + '</tr>')
+                            '<td>' + child.tag + '</td>' + \
+                            '<td>' + (child.text if child.text else '-') + \
+                            '.mp3'  + '</td>' + \
+                       ''.join(['<td>' + v + '</td>' for v in vout]) + '</tr>')
                 else: #is 'collection' or 'project'
                     self.html_out.append('<tr>' + \
-                                            '<td>' + child.tag + '</td>' + \
-                                    '<td>' + (child.text if child.text else '-') + '</td>' + '</tr>')
+                            '<td>' + child.tag + '</td>' + \
+                            '<td>' + (child.text if child.text else '-') + \
+                                '</td>' + '</tr>')
                 self.qr.put(('PROGSTEP', 1))
                 self._html_tree_from(child.tag)
 
 
     def _export_to_html(self):
-        """produce html tree, showing final file/dir name, location of source, title and the rest of the display"""
+        """produce html tree, showing final file/dir name,
+        location of source, title and the rest of the display"""
         self.qr.put(('STATUS', "Exporting to HTML..."))
         the_headings = ['<th>Id Tag</th>', '<th>File/Dir</th>',]
         for c in self.columns:
@@ -2535,14 +2545,14 @@ class Backend(threading.Thread):
                         '<h1>' + self.project + '</h1>', \
                     '<table style="width:100%">', \
                     '<tr>' + ''.join(the_headings) + '</tr>']
-        
+
         self._html_tree_from('')
         self.html_out.append('')
 #        output = codecs.open(fileout, mode='w',encoding='utf-8')
 #        output.write( '\n'.join(self.html_out))
 #        output.flush()
 #        output.close()
-        fileout.write_text('\n'.join(self.html_out),encoding='utf-8')
+        fileout.write_text('\n'.join(self.html_out), encoding='utf-8')
         #now open in browser
 #        url = os.path.normpath("file://" + fileout)
 #        webbrowser.open(url)
@@ -2570,10 +2580,10 @@ class Backend(threading.Thread):
            [self.hashed_graphics[m] for m in list(self.hashed_graphics.keys())]
         m = 0
         for data in self.list_images:
-            fout = codecs.open('{}/image{:03d}.png'.format(tt,m), mode='wb')
+            fout = codecs.open('{}/image{:03d}.png'.format(tt, m), mode='wb')
             fout.write(data)
             fout.close()
-            m +=1
+            m += 1
         #now add css dir and file
 #        cssdir = os.path.normpath(tt[:-6] + '/css/')
 #        self.qr.put(("PRINT", cssdir))
@@ -2583,8 +2593,8 @@ class Backend(threading.Thread):
 #        fout.close()
 #        zipdir = os.path.normpath(self.script_dir + "/cssjs.zip")
         zipdir = Path(self.script_dir, "cssjs.zip")
-        with zipfile.ZipFile(zipdir,"r") as zip_ref:
-            zip_ref.extractall(Path(self.Pub2SD, 'Temp', self.project))        
+        with zipfile.ZipFile(zipdir, "r") as zip_ref:
+            zip_ref.extractall(Path(self.Pub2SD, 'Temp', self.project))
 
 def get_rid_of_multiple_spaces(tin):
     """replace multiple spaces with single space and strip leading and
@@ -2597,7 +2607,7 @@ def count_mp3_files_below(adir_path):
     for root, dirnames, filenames in os.walk(adir_path):
         for filename in fnmatch.filter(filenames, '*.mp3'):
             matches.append(os.path.join(root, filename))
-    return(len(matches))
+    return len(matches)
 
 def folder_size(top):
     '''return size used by folder in bytes'''
@@ -2608,11 +2618,10 @@ def folder_size(top):
             this_folder_size += os.path.getsize(filename)
     return this_folder_size
 
-
 def forward_slash_path(apath):
     '''replace all backslashes with forward slash'''
     return '/'.join(apath.split('\\'))
-    
+
 def sort_key_for_filenames(filename):
     """build the sort key for imported file names, attempting to guess
        which order is implied by various numbering schemes
@@ -2665,19 +2674,18 @@ def to_alpha(anumber):
             anumber = anumber // 26
     return output[::-1]
 
-def escape_tab_return_feed(text):
-    result = TAB.sub(r'&#9;', text)
-    result = RETURN.sub(r'&#13;', result)
-    result = NEWLINE.sub(r'&#10;', result)
-    return result
-
-def unescape_tab_return_feed(text):
-    result = RETAB.sub(r'\t', text)
-    result = RERETURN.sub(r'\r', result)
-    result = RENEWLINE.sub(r'\n', result)
-    return result
+#def escape_tab_return_feed(text):
+#    result = TAB.sub(r'&#9;', text)
+#    result = RETURN.sub(r'&#13;', result)
+#    result = NEWLINE.sub(r'&#10;', result)
+#    return result
+#
+#def unescape_tab_return_feed(text):
+#    result = RETAB.sub(r'\t', text)
+#    result = RERETURN.sub(r'\r', result)
+#    result = RENEWLINE.sub(r'\n', result)
+#    return result
 
 def is_hashable(tag):
     '''return true if tag hashable'''
     return True if True in HASH_TAG_ON[tag] else False
-
