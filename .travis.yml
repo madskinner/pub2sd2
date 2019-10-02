@@ -2,7 +2,7 @@ language: python
 os: LINUX
 
 python:
-  - "3.4"
+  - "3.7"
 
 # command to install dependencies
 install:

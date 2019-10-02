@@ -21,13 +21,16 @@ from urllib.parse import urlparse
 import json
 import re
 from tkinter import font, Tk, filedialog, messagebox, StringVar, \
-                    IntVar, NO, Text, FALSE, Menu
+                    IntVar, NO, Text, FALSE, Menu, PhotoImage
 from tkinter.ttk import Button, Checkbutton, Entry, Frame, Label, LabelFrame, \
                         Radiobutton, Scrollbar, Combobox, Notebook, \
                         Progressbar, Treeview, Style
 
+from pathlib import Path
+
 import ast
 import psutil
+from PIL import Image, ImageTk
 from lxml import etree
 from unidecode import unidecode
 from mutagen.mp3 import MP3
@@ -46,55 +49,48 @@ from .tooltip import CreateToolTip
 from .threads import MyThread
 from .backend import Backend
 
-def get_script_directory():
-    """return path to current script"""
-    return os.path.dirname(__file__)
-
-SCRIPT_DIR = get_script_directory()
-#qcommand = queue.Queue()
-#qreport = queue.Queue()
-#aqr = [queue.Queue(), queue.Queue(), queue.Queue(), queue.Queue(), \
-#       queue.Queue(), queue.Queue(), queue.Queue(), queue.Queue()]
+#def get_script_directory():
+#    """return path to current script"""
+#    return os.path.dirname(__file__)
 #
+#SCRIPT_DIR = get_script_directory()
+
 class PQueue(queue.PriorityQueue):
-  '''
-  A custom queue subclass that provides a :meth:`clear` method.
-  '''
+  '''A custom queue subclass that provides a :meth:`clear` method.'''
 
   def clear(self):
-    '''
-    Clears all items from the queue.
-    '''
+    ''' Clears all items from the queue.'''
 
     with self.mutex:
-      unfinished = self.unfinished_tasks - len(self.queue)
-      if unfinished <= 0:
-        if unfinished < 0:
-          raise ValueError('task_done() called too many times')
-        self.all_tasks_done.notify_all()
-      self.unfinished_tasks = unfinished
-      self.queue.clear()
-      self.not_full.notify_all()
-
+        unfinished = self.unfinished_tasks - len(self.queue)
+        if unfinished <= 0:
+            if unfinished < 0:
+                raise ValueError('task_done() called too many times')
+            self.all_tasks_done.notify_all()
+        self.unfinished_tasks = unfinished
+        self.queue.clear()
+        self.not_full.notify_all()
 
 qcommand = queue.Queue()
 qreport = queue.Queue()
 aqr = [PQueue(), PQueue(), PQueue(), PQueue(), \
        PQueue(), PQueue(), PQueue(), PQueue()]
 
-
 class GuiCore(Tk):
     """Handle the graphical interface for Pub2SDwizard and the gui logic"""
-    def __init__(self, parent):
+    def __init__(self, parent, scriptdir):
         Tk.__init__(self, parent)
         self.parent = parent
+        self.script_dir = scriptdir
         self._initialize()
 
     def _initialize(self):
         """initialize the GuiCore"""
         self.backendthread = Backend(qcommand, qreport, aqr) #, self.threadlock)
         self.backendthread.start()
-        
+#        self.script_dir = 'frontend'
+#        print(self.script_dir)
+
         self._initialize_variables()
 
         lang = 'en-US'
@@ -127,7 +123,7 @@ class GuiCore(Tk):
                                 background='white', foreground='green')
         pud2sd_styles.configure('wleft.TRadiobutton', \
                                 anchor='w', justify='left')
-        
+
         self._initialize_f0(lang) # so on f1, recommended mp3tags
         self._initialize_f1(lang) # so on f2, special characters
         self._initialize_f2(lang) # so on f3 tab Edit Hierarchy
@@ -135,11 +131,11 @@ class GuiCore(Tk):
         self._initialize_f4(lang) # on f5 - publish to...
         self._initialize_f5(lang)
 
-        
-        if platform.system() == 'Linux': #create on f6
-            self._initialize_f6(lang) #will be for locking/unlocking SD cards
+        if platform.system() == 'Linux': 
+            #create on f6,will be for locking/unlocking SD cards
+            self._initialize_f6(lang) 
         self._process_report_queue()
-        
+
     def _process_report_queue(self):
         lang = self.ddnGuiLanguage.get()
         if not qreport.empty():
@@ -194,7 +190,7 @@ class GuiCore(Tk):
                     #so now rename them
                     for iid in areport[1].keys():
                         vout = areport[1][iid][0]
-                        for c,v in vout:
+                        for c, v in vout:
                             self.tree.set(iid, c, v)
                         self.tree.item(iid, text=areport[1][iid][1])
                         self.progbar.step()
@@ -317,7 +313,6 @@ class GuiCore(Tk):
         for i in range(0, 8):
             if not aqr[i].empty():
                 aqreport = aqr[i].get()
-#                print("seen item in queue{}, =>{}<".format(i,aqreport))
                 if 'PROGSTEP' in aqreport:
                     self.progbar.step(1)
                     aqr[i].task_done()
@@ -363,6 +358,8 @@ class GuiCore(Tk):
         self.pref = list()
         self.pref_char = list()
         self.hashed_graphics = dict()
+        self.list_images = list()
+        self.next_image = PhotoImage(file='mainc.png')
         self.illegalChars = [chr(i) for i in range(1, 0x20)] + \
                             [chr(0x7F), '"', '*', '/', ':', '<', '>', \
                                                               '?', '\\', '|']
@@ -387,7 +384,6 @@ class GuiCore(Tk):
         self.set_trim = StringVar()
         self.next_track = 0
         self.is_copy_playlists_to_top = IntVar()
-#        self.isCoolMusic = IntVar()
         self.EnterList = StringVar()
         self.additionalTags = StringVar()
         self.folderList = StringVar()
@@ -432,13 +428,15 @@ class GuiCore(Tk):
                                   command=on_copyright)
     def _quit(self):
         qcommand.put(('DELETETEMP', None))
-#        self.destroy()
+#        qcommand.put(('DIE_DIE_DIE', None))
 
     def _initialize_main_window_notebook(self, lang):
         """initializes notebook widget on main window"""
-        #self.n = Notebook(self, width=1400)
         #notebook
-        self.n = Notebook(self, width=1015)
+        if platform.system() == 'Windows':
+            self.n = Notebook(self, width=1015)
+        elif platform.system() == 'Linux':
+            self.n = Notebook(self, width=1070)
         self.n.grid(column=0, columnspan=7, row=1, padx=5, pady=5, sticky='ew')
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
@@ -508,7 +506,8 @@ class GuiCore(Tk):
         self.btnHTMLProject = Button(self.f_1, \
                                      text=LOCALIZED_TEXT[lang]["HTML"], \
                                                 command=self._on_html_project)
-        self.btnHTMLProject.grid(column=2, row=0, columnspan=2, padx=5, pady=5, sticky='news')
+        self.btnHTMLProject.grid(column=2, row=0, columnspan=2, \
+                                 padx=5, pady=5, sticky='news')
         self.btnHTMLProject['state'] = 'disabled'
         self.btnHTMLProject_ttp = CreateToolTip(self.btnHTMLProject, \
                                         LOCALIZED_TEXT[lang]['HTML_ttp'])
@@ -537,7 +536,8 @@ class GuiCore(Tk):
         #and save settings button
         self._initialize_main_window_notebook(lang)
 
-        self.progbar = Progressbar(self, maximum=100, variable=self.int_var, mode="determinate" )
+        self.progbar = Progressbar(self, maximum=100, variable=self.int_var, \
+                                   mode="determinate" )
         self.progbar.grid(column=0, row=6, columnspan=8, padx=5, pady=5, \
                           sticky='news')
         self.status = Label(self, text=LOCALIZED_TEXT[lang]['empty string'], \
@@ -771,22 +771,6 @@ class GuiCore(Tk):
         self.btnF2Next.grid(column=3, row=20, columnspan=2, padx=5, pady=5, \
                                                                  sticky='news')
 
-
-#    def popup(self, event):
-#        """action in event of button 3 on tree view"""
-#        # select row under mouse
-#        iid = self.tree.identify_row(event.y)
-#        if iid:
-#            # mouse pointer over item
-#            #grab hash tag(s) from APIC_
-#            #and open window for each graphic
-#            qcommand.put(('POPUPIMAGES', iid))
-#        else:
-#            # mouse pointer not over item
-#            # occurs when items do not fill frame
-#            # no action required
-#            pass
-
     def _initialize_f3(self, lang='en-US'):
         """initialize the Edit... tab"""
 
@@ -799,8 +783,6 @@ class GuiCore(Tk):
         ysb.grid(row=0, column=11, rowspan=20, padx=5, sticky='nse')
         xsb.grid(row=20, column=0, columnspan=12, padx=5, sticky='ews')
 
-#        self.tree.bind("<Button-3>", self.popup)
-        
         self.m = Notebook(self.f3, width=1000)
         self.m.grid(column=0, row=21, \
                     columnspan=12, padx=5, pady=5, sticky='news')
@@ -977,6 +959,12 @@ class GuiCore(Tk):
         self.btnMoveDown.grid(column=1, row=0, padx=5, pady=5, sticky='news')
         self.btnMoveDown_ttp = CreateToolTip(self.btnMoveDown, \
                                         LOCALIZED_TEXT[lang]['MoveDown_ttp'])
+        self.btnMergeFiles = Button(self.m1, \
+                                    text=LOCALIZED_TEXT[lang]["Merge files"], \
+                                                      command=self._on_merge)
+        self.btnMergeFiles.grid(column=0, row=1, padx=5, pady=5, sticky='news')
+        self.btnMergeFilesm_ttp = CreateToolTip(self.btnDeleteItem, \
+                                         LOCALIZED_TEXT[lang]['Merge_ttp'])
 
         # next buttons moves to m2
         self.btnF3M1Next = Button(self.m1, text=LOCALIZED_TEXT[lang]["Next"], \
@@ -1137,12 +1125,18 @@ class GuiCore(Tk):
         self.M3UorM3U8.set(2)
         #next button - this create project folder under  ~/Pub2SD/Temp
         #  and process and place all files within
+        self.imgCover = Label(self.f4, text='placeholder', anchor='w')
+#        self.next_image = PhotoImage(data=self.list_images[0])
+        self.imgCover.configure(image=self.next_image)
+#        self.imgCover.image = self.next_image
+        self.imgCover.grid(column=1, row=4, padx=5, pady=5, sticky='news')
+
         self.btnF4Next = Button(self.f4, text=LOCALIZED_TEXT[lang]["Next"], \
                                 command=self._on_click_f4_next, \
                                 style='highlight.TButton')
         self.btnF4Next_ttp = CreateToolTip(self.btnF4Next, \
                                          LOCALIZED_TEXT[lang]['btnF4Next_ttp'])
-        self.btnF4Next.grid(column=2, row=4, padx=5, pady=5, sticky='news')
+        self.btnF4Next.grid(column=2, row=5, padx=5, pady=5, sticky='news')
 
     def _initialize_f5(self, lang='en-US'):
         """initialize the 'Output to...' tab"""
@@ -1241,8 +1235,7 @@ class GuiCore(Tk):
         """Export the whole project tree to an HTML file and open it with 
                                                       your default browser."""
         qcommand.put(('EXPORTHTML', None))
-#        print("in _on_html_project")
-        pass
+
     def _on_loadPrefChar(self, dummy, _prefchar=None, _lst='', _filein=''):
         """load a set of preferred character pairs from LATIN1 constant
                                                  or a utf8 coded  .csv file"""
@@ -1300,14 +1293,13 @@ class GuiCore(Tk):
         self.btnImportContents.focus_set()
 
         self.update_idletasks()
-        
+
     def _enable_tabs(self):
         self._set_tabs("normal")
 
-            
     def _disable_tabs(self):
         self._set_tabs("disable")
-            
+
     def _on_SavePref(self, _lang='en-US', _fileout='', _text=""):
         """save your list of preferred character pairs to a utf-8 coded 
         .csv file. If _fileout is supplied the filedialog
@@ -1353,13 +1345,15 @@ class GuiCore(Tk):
                                           initialfile=project, \
                                           title=LOCALIZED_TEXT[lang]['Save'], \
                                           defaultextension='.prj')
-        new_project = fileout.split('/')[-1]
-        new_project = new_project[:-4]
+#        new_project = fileout.split('/')[-1]
+        new_project = Path(fileout).stem
+#        new_project = new_project
         if new_project != project:
             self.lblProject['text'] = \
                            LOCALIZED_TEXT[lang]['Current Project>'] + \
                            ' ' + new_project
         #create new project tree, throwing away any existing tree
+        #fileout is full path as string
         qcommand.put(('ONSAVEPROJECT', fileout))
 
     def _set_default_tags(self):
@@ -1371,7 +1365,6 @@ class GuiCore(Tk):
     def _on_create_template(self, _lang='', _template=None, _fileout=''):
         """saves the currently selected combination of tags
                                                to a utf-8 encoded .json file"""
-        print("running _on_create_template")
         lang = _lang if _lang else self.ddnGuiLanguage.get()
             
         a_template = _template if _template is not None \
@@ -1525,12 +1518,12 @@ class GuiCore(Tk):
         self.btnMoveDown['state'] = astate
 
     def _on_click_f0_next(self):
-        """loads the setting on the 'Project Name' tab
-                                  and proceeds to the 'Choose MP3 tags' tab"""
-
+        """loads the setting on the 'Project Name' tab and proceeds to the 
+        'Choose MP3 tags' tab"""
+        qcommand.put(('SCRIPT_DIR', self.script_dir))
         lang = self.ddnGuiLanguage.get()
 
-        qcommand.put(('INITIALDIGIT', self.InitialDigit.get() ))
+        qcommand.put(('INITIALDIGIT', self.InitialDigit.get()))
 
         
         qcommand.put(('MODE', self.mode.get()))
@@ -1542,7 +1535,7 @@ class GuiCore(Tk):
                                 "{}".format(LOCALIZED_TEXT[lang][\
                                      'Please enter a name for your project.']))
             return
-        #load old project to backend
+#        print("load old project to backend")
         qcommand.put(('CONF_FILE', conf_file))
 
 
@@ -1550,21 +1543,17 @@ class GuiCore(Tk):
         """conf file loaded or project created so continue"""
         #now load template if any
         if self.ddnCurTemplate.get():
-            thisone = os.path.normpath(self.Pub2SD + '/'+ \
-                                   self.ddnCurTemplate.get() + '.json')
-            if os.path.isfile(thisone):
-#                filein = codecs.open(thisone, mode='r', encoding='utf-8')
-#                lines = filein.readlines()
-#                #load template to backend
-#                self.template = json.loads(''.join(lines))
-##                self.stemp.text = self.ddnCurTemplate.get()
-#                attributes = self.stemp.attrib
-#                for k in self.template.keys():
-#                    attributes[k] = self.template[k]
-#                filein.close()
-                qcommand.put(('LOAD_TEMPLATE', thisone))
+#            thisone = os.path.normpath(self.Pub2SD + '/'+ \
+#                                   self.ddnCurTemplate.get() + '.json')
+#            print("self.Pub2SD =>{}<, self.ddnCurTemplate.get()=>{}< .json".format(self.Pub2SD, self.ddnCurTemplate.get()))
+            thisone = Path(self.Pub2SD, (self.ddnCurTemplate.get() + '.json'))
+            if thisone.exists() and thisone.is_file():
+#                print(str(thisone))
+                qcommand.put(('LOAD_TEMPLATE', str(thisone)))
         elif not self.ddnCurTemplate.get():
-            qcommand.put(('LOAD_TEMPLATE', ''))
+#            print("self.ddnCurTemplate.get() is empty, so do nothing?" )
+#            qcommand.put(('LOAD_TEMPLATE', ''))
+            pass
         else:
             messagebox.showerror(\
                     LOCALIZED_TEXT[lang]['Template file not found!'], \
@@ -1622,16 +1611,16 @@ class GuiCore(Tk):
         self.selected_tags = [i for i in self.tagtree.selection()]
         if 'TIT2' not in self.selected_tags:
             self.selected_tags.insert(0, 'TIT2')
-        qcommand.put(('SELECTED_TAGS', self.selected_tags ))
+        qcommand.put(('SELECTED_TAGS', self.selected_tags))
         self.columns = ['Type', 'Name', 'Location'] #+ self.recommendedTags
         self.columns.extend(self.selected_tags)
         self.displayColumns = [item for item in self.columns]
         self.displayColumns.remove('Location')
-        self.displayColumns.remove('Name')
+#        self.displayColumns.remove('Name')
         
         qcommand.put(('DISPLAYCOLUMNS', (self.displayColumns, self.columns)))
         self.Treed = True
-        
+
         # now got full list of all tags to display! So display tree columns
         # add adummy column
         if 'adummy' not in self.columns:
@@ -1739,6 +1728,8 @@ class GuiCore(Tk):
         self.n.add(self.f3)
         self.n.select(3)
         self.btnHTMLProject['state'] = 'normal'
+        self.tree.focus('I00001')
+        self.tree.selection_set('I00001')
         self.update()
 
 
@@ -1751,8 +1742,9 @@ class GuiCore(Tk):
         self.m.select(1)
 
     def _on_strip_leading_numbers(self):
-        qcommand.put(('STRIPTITLE', (self.ddnTrimFromTitle.get(), self.tree.focus())))
-        
+        qcommand.put(('STRIPTITLE', \
+                      (self.ddnTrimFromTitle.get(), self.tree.focus())))
+
     def _on_click_f3m1_next(self):
         """proceed to 'Edit MP3 tags' sub-tab"""
         self.status['text'] = ''
@@ -1765,6 +1757,14 @@ class GuiCore(Tk):
         """proceed to 'Feature-phone options' tab"""
         #create self.files here? 
         qcommand.put(('HASHEDGRAPHICS', self.hashed_graphics))
+#        self.list_images = [self.hashed_graphics[ahash] for ahash in list(self.hashed_graphics.keys())]
+#        if self.list_images:
+#            self.next_image = PhotoImage(data=self.list_images[0])
+#            self.imgCover.image = self.next_image
+#        else:
+#            self.next_image = PhotoImage(file='mainc.png')
+#            self.imgCover.image = self.next_image
+
         self.status['text'] = ''
         self.progbar['value'] = 0
         self.update()
@@ -1801,13 +1801,11 @@ class GuiCore(Tk):
                 return
         project_path_ = os.path.normpath(self.project)
         # trailling '\\' will be removed
+#        print("self.project_id =>{}<,temp_path =>{}<, project_path_ =>{}<".\
+#              format(self.project_id, temp_path, project_path_))
         qcommand.put(('CHILDRENS_FILENAMES', (self.project_id, \
                                                temp_path, project_path_)))
         self.play_list_targets = set()
-        #chkbutton nologer there
-#        if self.isCoolMusic.get() == 1:
-#            self.play_list_targets.add('COOL_MUSIC')
-        #if list
         if self.EnterList.get():
             self.play_list_targets.update(set(self.EnterList.get().split(',')))
         qcommand.put(('SETCOPYPLAYLISTS', (self.play_list_targets, \
@@ -1912,6 +1910,8 @@ class GuiCore(Tk):
         """demote item one level in the heirachy"""
         qcommand.put(('DEMOTE', self.tree.focus()))
 
+    def _on_merge(self):
+        qcommand.put(('MERGE', self.tree.focus()))
 
     def _on_delete(self):
         """delete the current item selected in Treeview widget"""
@@ -2024,14 +2024,17 @@ class GuiCore(Tk):
             if fart:
                 for focus in list_of_items:
                     if self.mode.get() == 0:
-                        qcommand.put(('ATTACH_ARTWORK_TO', (focus, PICTURE_TYPE['COVER_FRONT'], '', fart)))
+                        qcommand.put(('ATTACH_ARTWORK_TO', \
+                            (focus, PICTURE_TYPE['COVER_FRONT'], '', fart)))
                     else:
-                        qcommand.put(('ATTACH_ARTWORK_TO', (focus, _picture_type, _desc, fart)))
+                        qcommand.put(('ATTACH_ARTWORK_TO', \
+                                      (focus, _picture_type, _desc, fart)))
             else:
                 #no file selected so blank apic if idiot
                 if self.mode.get() == 0:
                     for focus in list_of_items:
-                        qcommand.put(('ATTACH_ARTWORK_TO', (focus, '', '', '')))
+                        qcommand.put(('ATTACH_ARTWORK_TO', \
+                                      (focus, '', '', '')))
         else:
             messagebox.showwarning(LOCALIZED_TEXT[lang]['Select Artwork'], \
                           LOCALIZED_TEXT[lang]["no items selected"])
@@ -2049,7 +2052,7 @@ class GuiCore(Tk):
         self.update_idletasks()
         self._disable_tabs()
         qcommand.put(('PREPARE_FILES', None))
-        
+
     def _on_prepare_files_continued(self):
         '''prepared files in temp folder, so now move to publish to...'''
 
@@ -2070,14 +2073,14 @@ class GuiCore(Tk):
         self.status['text'] = \
                    LOCALIZED_TEXT[lang]["Output to SD('s) completed."]
         self.update()
-        
+
     def _on_publish_to_HD(self):
         """publish files and playlists to your HD"""
 
         lang = self.ddnGuiLanguage.get()
         target = os.path.normpath(self.Pub2SD + '/' + \
                                   self.ddnCurProject.get() + '_SD')
-        
+
         self.update_idletasks()
         qcommand.put(('PUBLISHFILES', target))
         self.status['text'] = LOCALIZED_TEXT[lang]["Output to HD completed."]
@@ -2244,7 +2247,6 @@ class GuiCore(Tk):
         self.box1f5['text'] = LOCALIZED_TEXT[lang]['Or']
 
         if self.Treed:
-#            print('headings=>{}'.format(self.columns))
             self.tree.heading('#0', text=LOCALIZED_TEXT[lang]['#0'])
             self.tree.heading('#1', text=LOCALIZED_TEXT[lang]['Type'])
             for item in self.displayColumns[1:-1]:
@@ -2278,7 +2280,7 @@ def count_mp3_files_below(adir_path):
     for root, dirnames, filenames in os.walk(adir_path):
         for filename in fnmatch.filter(filenames, '*.mp3'):
             matches.append(os.path.join(root, filename))
-    return(len(matches))
+    return len(matches)
 
 def forward_slash_path(apath):
     '''replace all backslashes with forward slash'''
@@ -2288,13 +2290,13 @@ def on_copyright():
     """displays the copyright info when called from menubar"""
     messagebox.showinfo(\
                             "Pub2SDwizard v{}".format(THIS_VERSION), \
-                            "©2016-2017 SIL International\n" + \
+                            "©2016-2019 SIL International\n" + \
                             "License: MIT license\n" + \
                             "Web: https://www.silsenelgal.org\n" + \
                             "Email: Academic_Computing_SEB@sil.org\n\n" + \
                             "Powered by: mutagen\n" + \
                             "(https://mutagen.readthedocs.io/)")
-    
+
 def de_hex(tin):
     """turn hex string to int and return string"""
     tout = ''
@@ -2318,4 +2320,3 @@ def delete_folder(path):
 def is_hashable(tag):
     '''return true if tag hashable'''
     return True if True in HASH_TAG_ON[tag] else False
-

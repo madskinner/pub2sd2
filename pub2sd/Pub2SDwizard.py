@@ -14,19 +14,28 @@
 import sys
 import os
 import platform
+from pathlib import Path
 
 from tkinter import messagebox, PhotoImage
 
-from pkg_resources import resource_filename
+from pub2sd.myclasses.myconst.therest import THIS_VERSION
+from pub2sd.myclasses.gui import GuiCore
+
+#from pkg_resources import resource_filename
 if __name__ == '__main__' and __package__ is None:
     os.sys.path.append(os.path.dirname(os.path.dirname(\
                                                 os.path.abspath(__file__))))
-from pub2sd.myclasses.myconst.therest import THIS_VERSION
-from pub2sd.myclasses.gui import GuiCore
 
 def hello_world():
     '''idiot test function'''
     return 'Hello world!'
+
+def get_script_directory():
+    """return path to current script"""
+#    return os.path.dirname(__file__)
+    return Path(__file__).parent
+
+SCRIPT_DIR = get_script_directory()
 
 
 def main():
@@ -39,17 +48,25 @@ def main():
         bundle_dir = sys._MEIPASS
     else:
         # we are running in a normal Python environment
-        bundle_dir = os.path.dirname(os.path.abspath(__file__))
+#        bundle_dir = os.path.dirname(os.path.abspath(__file__))
+        bundle_dir = str(Path(__file__).resolve().parent)
 
-    gui = GuiCore(None) # see GuiCore's __init__ method
+    gui = GuiCore(None, bundle_dir) # see GuiCore's __init__ method
     gui.title(' Pub2SDwizard v{}'.format(THIS_VERSION))
-
+#    print('in main() gui.script_dir {}'.format(gui.script_dir))
     if platform.system() == 'Windows':
-        gui.wm_iconbitmap(os.path.normpath((\
-                                    resource_filename(__name__, 'mainc.ico'))))
+#        gui.wm_iconbitmap(os.path.normpath((\
+#                                    resource_filename(__name__, 'mainc.ico'))))
+        gui.wm_iconbitmap(Path(SCRIPT_DIR, 'mainc.ico'))
+#        gui.wm_iconbitmap(Path(SCRIPT_DIR, 'myclasses/myimages/mainc.ico'))
     elif platform.system() == 'Linux':
+#        if Path(SCRIPT_DIR, 'myclasses/myimages/mainc.png').exists():
+#            print("mainc.png exists!")
+#        else:
+#            print("mainc.png does not exist!")
         img = PhotoImage(\
-                        file=(resource_filename(__name__, 'images/mainc.png')))
+                        file=str(Path(SCRIPT_DIR, 'mainc.png')))
+#                        file=str(Path(SCRIPT_DIR, 'myclasses/myimages/mainc.png')))
 #        img = PhotoImage(file=(get_script_directory() + '/images/mainc.png'))
         gui.tk.call('wm', 'iconphoto', gui._w, img)
     else:

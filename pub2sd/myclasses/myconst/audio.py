@@ -648,11 +648,7 @@ def _audio_equ2(atuple):
 def _audio_comm(atuple):
     audio, atag, advanced, _, _ = atuple
     if advanced:
-#        print('in _audio_comm')
-#        print(atag)
         param = ast.literal_eval(escape_tab_return_feed(atag))
-#        print(param)
-#        print(">{}<".format(param[3]))
         param[3] = [unescape_tab_return_feed(p) for p in param[3]]
         audio.add(COMM(param[0], param[1], param[2], param[3]))
     else:
@@ -708,9 +704,6 @@ def _audio_grid(atuple):
     audio, atag, _, list_owners, filechild = atuple
     param = ast.literal_eval(atag)
     if param[0] in list_owners:
-#        messagebox.showwarning('GRID', LOCALIZED_TEXT[lang][\
-#                "Only the first frame with this owner will be written to {}"].\
-#                format(filechild))
         pass
     else:
         list_owners.extend([param[0]])

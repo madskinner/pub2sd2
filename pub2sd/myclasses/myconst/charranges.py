@@ -20,3 +20,9 @@ PHONETIC_EXTENSIONS_SUPPLEMENT = [char(c) for c in range(0x1D80, 0x1DC0)]
 SUPERSCRIPTS_AND_SUBSCRIPTS = [char(c) for c in range(0x1D80, 0x1DC0)]
 LETTERLIKE_SYMBOLS = [char(c) for c in range(0x2070, 0x20A0)]
 NUMBER_FORMS = [char(c) for c in range(0x2150, 0x2190)]
+ARABIC_MARKS = list()
+ARABIC_MARKS.extend([char(c) for c in range(0x064B, 0x0660)])
+ARABIC_MARKS.extend([char(c) for c in range(0x06D6, 0x06DD)])
+ARABIC_MARKS.extend([char(c) for c in range(0x06DF, 0x06E5)])
+ARABIC_MARKS.extend([char(c) for c in range(0x06EA, 0x06EE)])
+ARABIC_MARKS.extend([char(c) for c in range(0x08E4, 0x08FF)])

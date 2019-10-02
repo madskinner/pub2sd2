@@ -3,6 +3,7 @@ INTERFACE_LANGS = {'langs':{'0':'en-US', '1':'fr-FR', '2':'pt-PT'},}
 
 SET_TAGS = {\
         'en-US':{ \
+            'Name':'Name',\
             'AENC':'Audio encryption', \
             'APIC':'Cover', \
             'ASPI':'Audio seek point index', \
@@ -102,6 +103,7 @@ SET_TAGS = {\
             'WXXX':'User defined URL link frame' \
             }, \
         'fr-FR':{ \
+            'Name':'Nom', \
             'AENC':'Audio encryption', \
             'APIC':'Pochette', \
             'ASPI':'Audio seek point index', \
@@ -201,6 +203,7 @@ SET_TAGS = {\
             'WXXX':'User defined URL link frame' \
             }, \
         'pt-PT':{ \
+            'Name':'Nome', \
             'AENC':'Audio encryption', \
             'APIC':'Attached picture', \
             'ASPI':'Audio seek point index', \
@@ -304,6 +307,10 @@ SET_TAGS = {\
 
 LOCALIZED_TEXT = { \
         'en-US':{ \
+            "Merge files":"Merge files", \
+            "Merge_ttp":"Merge the mp3 files in this collection and insert the combine mp3 file at the same level as the collection.", \
+            "There are no immediate descendants which are mp3 files.":"There are no immediate descendants which are mp3 files.", \
+            "No MP3 files":"No MP3 files", \
             "Append":"Append", \
             "Append_ttp":"Appends the contents of the entry box to the currently selected tag. This command is only available in 'Advanced' mode and only when the currently selected tag can hold multiple frames.", \
             "Can't find artwork.":"Can't find artwork.", \
