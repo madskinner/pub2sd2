@@ -117,54 +117,57 @@ def _aenc(atag, advanced):
     return [v if not isinstance(v, bytes) else list(v) \
             for v in \
             [atag.owner, atag.preview_start, atag.preview_length, atag.data]]
-    
+
 def _aspi(atag, advanced):
     return [v if not isinstance(v, bytes) else list(v) \
             for v in [atag.S, atag.L, atag.N, atag.b, atag.Fi]]
-    
+
 def _comm(atag, advanced):
     return [int(atag.encoding), atag.lang, atag.desc, atag.text] \
                                                 if advanced else atag.text[0]
+
 def _comr(atag, advanced):
     return [v if not isinstance(v, bytes) else list(v) \
             for v in [int(atag.encoding), atag.price, atag.valid_until, \
                       atag.contact, atag.format, atag.seller, atag.desc, \
                       atag.mime, atag.logo]]
-    
+
 def _encr(atag, advanced):
     return [v if not isinstance(v, bytes) else list(v) \
             for v in [atag.owner, atag.method, atag.data]]
-    
+
 def _equ2(atag, advanced):
     return [atag.method, atag.desc, atag.adjustments]
 
 def _etco(atag, advanced):
     return [v if not isinstance(v, bytes) else list(v) \
             for v in [bytes(atag.format), bytes(atag.events)]]
-    
+
 def _geob(atag, _):
     return [v if not isinstance(v, bytes) else list(v) \
             for v in [int(atag.encoding), atag.mime, atag.filename, \
                       atag.desc, atag.data]]
-    
+
 def _grid(atag, advanced):
     return [v if not isinstance(v, bytes) else list(v) \
             for v in [atag.owner, atag.group, atag.data]]
+
 def _ipls(atag, advanced):
     return [int(atag.encoding), atag.people]
 
 def _link(atag, advanced):
     return [v if not isinstance(v, bytes) else list(v) \
             for v in [atag.frameid, atag.url, atag.data]]
-    
+
 def _mcdi(atag, advanced):
     return [v if not isinstance(v, bytes) else list(v) for v in [atag.data]]
+
 def _mllt(atag, advanced):
     return [v if not isinstance(v, bytes) else list(v) \
             for v in [int(atag.frames), int(atag.bytes), \
                       int(atag.milliseconds), bytes(atag.bits_for_bytes), \
                       bytes(atag.bits_for_milliseconds), bytes(atag.data)]]
-    
+
 def _mvin(atag, advanced):
     return [int(atag.encoding), atag.text] if advanced else atag.text[0]
 
@@ -189,11 +192,11 @@ def _poss(atag, advanced):
 def _priv(atag, advanced):
     return [v if not isinstance(v, bytes) else list(v) \
             for v in [atag.owner, atag.data]]
-    
+
 def _rbuf(atag, advanced):
     return [v if not isinstance(v, bytes) else list(v) \
             for v in [atag.size, atag.info, atag.offset]]
-    
+
 def _rva2(atag, advanced):
     return [atag.desc, atag.channel, atag.gain, atag.peak]
 
@@ -204,19 +207,19 @@ def _rvrb(atag, advanced):
     return [atag.left, atag.right, atag.bounce_left, atag.bounce_right, \
             atag.feedback_ltl, atag.feedback_ltr, atag.feedback_rtr, \
             atag.feedback_rtl, atag.premix_ltr, atag.premix_rtl]
-    
+
 def _seek(atag, advanced):
     return [atag.offset]
 
 def _sign(atag, advanced):
     return [v if not isinstance(v, bytes) else list(v) \
             for v in [atag.group, atag.sig]]
-    
+
 def _sylt(atag, advanced):
     return [v if not isinstance(v, bytes) else list(v) \
             for v in [int(atag.encoding), atag.lang, atag.format, \
                       atag.type, atag.desc, atag.text]]
-    
+
 def _sytc(atag, advanced):
     return [atag.format, atag.data]
 
@@ -397,7 +400,7 @@ def _tyer(atag, advanced):
 def _ufid(atag, advanced):
     return [v if not isinstance(v, bytes) else list(v) \
             for v in [atag.owner, atag.data]]
-    
+
 def _user(atag, advanced):
     return [int(atag.encoding), atag.lang, atag.text]
 
@@ -610,6 +613,6 @@ THIS_VERSION = '1.1.8'
 RECOMMENDED_COLUMNS = ['Type', 'Name', 'Location', 'TIT2', 'TALB', 'TPE1', \
                       'TPE2', 'TCOP', 'APIC', 'TDRC', 'TRCK', 'TPOS', 'COMM', \
                       'TCON', 'TCOM', 'adummy']
- 
+
 URL_TAGS = ['WCOM', 'WCOP', 'WOAF', 'WOAR', 'WOAS', 'WORS', 'WPAY', 'WPUB']
 SORT_TAGS = ['TSOA', 'TSOC', 'TSOP', 'TSOT', 'TSO2']

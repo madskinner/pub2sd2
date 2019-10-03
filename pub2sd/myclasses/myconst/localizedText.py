@@ -325,7 +325,8 @@ LOCALIZED_TEXT = { \
                 "format to the current standard, every field " + \
                 "must be verified. It may be faster to " + \
                 "recreate the project from scratch. " +
-                "Do you wish to continue?":"This will attempt to update " + \
+                "Do you wish to continue?":\
+                "This will attempt to update " + \
                 "the project file " + \
                 "format to the current standard, every field " + \
                 "must be verified. It may be faster to " + \
@@ -336,7 +337,7 @@ LOCALIZED_TEXT = { \
             "HTML":"Export to html.", \
             "Disable Normalization":"Disable Normalization.", \
             "Delete temporary files and exit.":"Delete temporary files and exit.", \
-            "Publishing completed.":"Publishing completed.", 
+            "Publishing completed.":"Publishing completed.", \
             "Project can't hold '.mp3' files directly.":"Project can't hold '.mp3' files directly.", \
             "Add a collection first or use 'Add Folder...'.":"Add a collection first or use 'Import a Folder...'.", \
             "Can't promote.":"Can't promote.", \
@@ -386,10 +387,6 @@ LOCALIZED_TEXT = { \
             'Available':\
                     'Available USB/SDs, total size, used, free, percentage.', \
             'Error in on_publish_files()':"Error in on_publish_files()", \
-            "Folder <{}> may be in use by another program. Close all other " + \
-                "programs and try again.":\
-                "Folder <{}> may be in use by another program. Close all " + \
-                    "other programs and try again.", \
             'Discarding duplicate mapping {}':\
                                         'Discarding duplicate mapping {}', \
             'Only one mapping allowed for each string.':\
@@ -474,7 +471,7 @@ LOCALIZED_TEXT = { \
             'is empty':'is empty', \
             'Please enter a name for your project.':'Please enter a name for your project.', \
             'Delete Project':'Delete Project', \
-            'Delete Project_ttp':'Deletes the configuration file, which is held in the "~\Pub2SD" folder, for the selected Project.', \
+            'Delete Project_ttp':'Deletes the configuration file, which is held in the "~\\Pub2SD" folder, for the selected Project.', \
             'Refresh':'Refresh', \
             'Refresh_ttp':'Refreshes the "Output to" list of available removable drives.', \
             'Next':'Next', \
@@ -487,7 +484,7 @@ LOCALIZED_TEXT = { \
             'f0_ttp':'The project name shown here will be used as the top level directory on the SD card.\n' + \
                         'Either select one of the existing projects from the dropdown list, or enter a new project name.\n' + \
                         '\n' + \
-                        "The configuration file for the project will be held in your '~\Pub2SD' directory.", \
+                        "The configuration file for the project will be held in your '~\\Pub2SD' directory.", \
             'ddnOutputTo_ttp':'The removable drive shown here is the drive to which the project will be published. ' + \
                         "If your drive is not shown in the dropdown list, click on the 'Refresh' button\n" + \
                         'to show all currently connected removable drives.', \
@@ -513,7 +510,7 @@ LOCALIZED_TEXT = { \
             'MoveUp_ttp':'This moves the currently selected item up one position, within the collection it is part of.', \
             'MoveDown_ttp':'This moves the currently selected item down one position, within the collection it is part of.', \
             'Delete_ttp':'This deletes the currently selected item. If the item is a collection, all the items contained within it will also be deleted.', \
-            'Save_ttp':'This saves the current project to a ".prj" file of the same name, stored in the "~\My Documents\Pub2SD" folder.', \
+            'Save_ttp':'This saves the current project to a ".prj" file of the same name, stored in the "~\\My Documents\\Pub2SD" folder.', \
             'Promote_ttp':'This lifts the currently selected collection up one level of the tree heirarchy.', \
             'Demote_ttp':'This pushes the currently selected items down one level in the tree hierachy.', \
             'AddFolder_ttp':'Create new collection with the same title as the selected folder and add all sub-folders as sub-collections. ' + \
@@ -530,7 +527,7 @@ LOCALIZED_TEXT = { \
                         "If a collection is selected, the artwork will be embedded in all it's MP3 files and all those of it's subcollections… ", \
             'Art_ttp':'Select the cover artwork (.png/.jpg) to be embedded in the currently selected "MP3" file.\n' + \
                         "If a collection is selected, the artwork will be embedded in all it's MP3 files and all those of it's subcollections…\n" + \
-                        "N.B. Recommended size: 300x300 pixels, 800x600 pixels and 25 kilobytes are the practical limits." , \
+                        "N.B. Recommended size: 300x300 pixels, 800x600 pixels and 25 kilobytes are the practical limits.", \
             'no items selected':'No items selected.', \
             'No ID3 tag':'No ID3 tag', \
             'No ID3 tags found in':'No ID3 tags found in', \
@@ -552,14 +549,14 @@ LOCALIZED_TEXT = { \
                         "Then either click on 'Get' or 'Get default' and edit the text. Followed by 'Set'. " + \
                         'Only MP3 files can hold tags so if you selected a collection, all files within it including those in subcollections will be changed. ' + \
                         '(Encoding{0:Latin1. 1:UTF-16. 2:UTF-16BE, 3:UTF-8})', \
-            'btnF4Next_ttp':"This creates a temporary project folder under '~\Pub2SD\Temp' and constructs the folder tree for publication, " + \
+            'btnF4Next_ttp':"This creates a temporary project folder under '~\\Pub2SD\\Temp' and constructs the folder tree for publication, " + \
                         "naming all 'mp3' files and embedding any cover art in the 'mp3' files. Plus moving to the 'Output' tab.", \
             'OutputIntro':'Only the first 8 removable drives found will be listed below. Make sure that any SD cards or USB drives you wish to output to are inserted, have sufficent free space ' + \
                         'and no folder names conflicting with your project name.' + \
                         "For best performance ensure that they are connected to a USB3 port, via a USB3 hub if required.", \
             'OutputSizeText':'This project will use ~', \
             'Publish to SD/USB':'Publish to SD/USB', \
-            "Publish to '~\Pub2SD\{}_SD'":"Publish to '~\Pub2SD\{}_SD'", \
+            "Publish to '~\\Pub2SD\\{}_SD'":"Publish to '~\\Pub2SD\\{}_SD'", \
             'Exit':'Exit', \
             'btnF5Next_ttp':'Exit the program deleting all temporary files.', \
             'additionalTags':'To display any other MP3 tags, list them below as a comma separated list. (See <http://id3.org/id3v2.4.0-frames> for a list of defined tags and their expected use, note actual use may vary.)', \
@@ -629,7 +626,7 @@ LOCALIZED_TEXT = { \
             "This will attempt to update the project file " + \
                 "format to the current standard, every field " + \
                 "must be verified. It may be faster to " + \
-                "recreate the project from scratch. " +
+                "recreate the project from scratch. " + \
                 "Do you wish to continue?":"Cela va tenter de mettre à " + \
                     "jour le format de fichier du projet à la norme " + \
                     "actuelle, chaque champ doit être vérifié. Il peut " + \
@@ -640,7 +637,7 @@ LOCALIZED_TEXT = { \
             "HTML":"Exporter vers html", \
             "Disable Normalization":"Désactiver la normalisation.", \
             "Delete temporary files and exit.":"Supprimez les fichiers temporaires et quittez.", \
-            "Publishing completed.":"Publication terminée.", 
+            "Publishing completed.":"Publication terminée.", \
             "Project can't hold '.mp3' files directly.":\
                 "Le projet ne peut pas contenir les fichiers '.mp3' directement.", \
             "Add a collection first or use 'Add Folder...'.":\
@@ -686,7 +683,6 @@ LOCALIZED_TEXT = { \
             "Can't find {}":"Impossible de trouver {}", \
             'Available':'USB / SD disponibles, taille totale, utilisé, non utilisé, pourcentage.', \
             'Error in on_publish_files()':"Erreur dans on_publish_files()", \
-            "Folder <{}> may be in use by another program. Close all other programs and try again.":"Le dossier <{}> peut être utilisé par un autre programme. Fermez tous les autres programmes et réessayez.", \
             'Discarding duplicate mapping {}':'Supprimer le mappage en double {}', \
             'Only one mapping allowed for each string.':'Un seul mappage autorisé pour chaque chaîne.', \
             'Discarding illegal map {}':"Défausser le mappage illégal {}.", \
@@ -756,7 +752,7 @@ LOCALIZED_TEXT = { \
             'is empty':'est vide', \
             'Please enter a name for your project.':'Veuillez entrer un nom pour votre projet.', \
             'Delete Project':'Supprimer le projet', \
-            'Delete Project_ttp':'Supprime le fichier de configuration, qui se trouve dans le dossier "~\Pub2SD", pour le projet sélectionné.', \
+            'Delete Project_ttp':'Supprime le fichier de configuration, qui se trouve dans le dossier "~\\Pub2SD", pour le projet sélectionné.', \
             'Refresh':'Actualiser', \
             'Refresh_ttp':'Actualise la "Sortie à:" liste des lecteurs amovibles disponibles.', \
             'Next':'Prochain', \
@@ -769,7 +765,7 @@ LOCALIZED_TEXT = { \
             'f0_ttp':'Le nom du projet présenté ici sera utilisé comme répertoire de haut niveau sur la carte SD.\n' + \
                         'Vous pouvez soit sélectionner un des projets existants dans la liste déroulante, ou entrez\n' + \
                         'un nouveau nom de projet.\n' + \
-                        "Le fichier de configuration pour le projet aura lieu dans le répertoire '~\Pub2SD'.", \
+                        "Le fichier de configuration pour le projet aura lieu dans le répertoire '~\\Pub2SD'.", \
             'labelf1':"Par défaut, ces tags sont sélectionnées pour affichage. " + \
             "Notez que seules les tags sélectionnées seront modifiées ou présentées dans les fichiers MP3 finaux.\n" + \
             "N.B. Seules les tags dont le contenu a été spécifié (c'est-à-dire pas seulement un support de lieu '-' pour le montrer est vide) seront présents dans les fichiers MP3 finaux.", \
@@ -798,7 +794,7 @@ LOCALIZED_TEXT = { \
             'MoveUp_ttp':'Cela déplace le item actuellement sélectionné une position plus élevée, au sein de la collection, il fait partie.', \
             'MoveDown_ttp':"Cela déplace l'élément sélectionné vers le bas d'une position, au sein de la collection, il fait partie.", \
             'Delete_ttp':"Cela supprime l'élément sélectionné. Si l'article est une collection, tous les articles qu'elle contient seront également supprimés.", \
-            'Save_ttp':'Cela enregistre le projet en cours à un ".prj" fichier du même nom, stocké dans le "~\Mes Documents\Pub2SD" dossier.', \
+            'Save_ttp':'Cela enregistre le projet en cours à un ".prj" fichier du même nom, stocké dans le "~\\Mes Documents\\Pub2SD" dossier.', \
             'Promote_ttp':"Ce lève actuellement sélectionné collection jusqu'à un niveau de la hiérarchie de l'arborescence.", \
             'Demote_ttp':"Cela pousse les éléments actuellement sélectionnés vers le bas d'un niveau dans la hiérarchie de l'arborescence.", \
             'AddFolder_ttp':'Créez uné nouvelle collection avec le même titre que le dossier sélectionné et ajoutez tous les sous-dossiers sous-collections.\n' + \
@@ -864,7 +860,7 @@ LOCALIZED_TEXT = { \
                         "Pour une meilleure performance, assurez-vous qu'ils sont connectés à un port USB3 (via un concentrateur USB3 si nécessaire).", \
             'OutputSizeText':'Ce projet utilisera ~', \
             'Publish to SD/USB':'Publier à SD/USB', \
-            "Publish to '~\Pub2SD\{}_SD'":"Publier à '~\Pub2SD\{}_SD'", \
+            "Publish to '~\\Pub2SD\\{}_SD'":"Publier à '~\\Pub2SD\\{}_SD'", \
             'URLtags_ttp':"Les balises suivantes contiennent des URL qui, pour une compatibilité maximale, ne doivent contenir que des caractères ASCII 7 bits.", \
             'NumericTextFrames':"Les balises suivantes contiennent des champs numériques tenus comme des chaînes utf-8.", \
             'TimeStampTextFrames':"Les balises suivantes contiennent des informations Date / Heure comme des chaînes utf-8.", \
@@ -903,7 +899,7 @@ LOCALIZED_TEXT = { \
             "This will attempt to update the project file " + \
                 "format to the current standard, every field " + \
                 "must be verified. It may be faster to " + \
-                "recreate the project from scratch. " +
+                "recreate the project from scratch. " + \
                 "Do you wish to continue?":"Isso tentará atualizar o " + \
                     "formato do arquivo de projeto para o padrão atual, " + \
                     "cada campo deve ser verificado. Pode ser mais " + \
@@ -914,7 +910,7 @@ LOCALIZED_TEXT = { \
             "HTML":"Exportar para html.", \
             "Disable Normalization":"Desativar a normalização.", \
             "Delete temporary files and exit.":"Exclua arquivos temporários e saia.", \
-            "Publishing completed.":"Publicação concluída.", 
+            "Publishing completed.":"Publicação concluída.", \
             "Project can't hold '.mp3' files directly.":"O projeto não pode conter arquivos '.mp3' diretamente.", \
             "Add a collection first or use 'Add Folder...'.":"Adicione uma coleção primeiro ou use 'Importar uma Pasta...'.", \
             "Can't promote.":"Não pode promover.", \
@@ -965,7 +961,6 @@ LOCALIZED_TEXT = { \
             "'\\' characters are not allowed.":"'\\' caracteres não são permitidos.", \
             "Initial string can not be null and a sole '/' is mandatory.":"A string inicial não pode ser nula e uma única '/' é manditory.", \
             'Error in on_click_f4_next()':"Erro no on_click_f4_next ().", \
-            "Folder <{}> may be in use by another program. Close all other programs and try again.":"A pasta <{}> pode estar em uso por outro programa. Feche todos os outros programas e tente novamente.", \
             "AddLatin1Example":"Exemplo preferido:", \
             "SavePref":"Guardar", \
             'InitialDigit':"Você pode especificar um prefixo que será adicionado ao início de todos os nomes exclusivos gerados para arquivos e coleções. " + \
@@ -1031,7 +1026,7 @@ LOCALIZED_TEXT = { \
             'is empty':'está vazia', \
             'Please enter a name for your project.':'Insira um nome para seu projeto.', \
             'Delete Project':'Excluir projeto', \
-            'Delete Project_ttp':'Exclui o arquivo de configuração, que é mantido na pasta "~\Pub2SD", para o projeto selecionado.', \
+            'Delete Project_ttp':'Exclui o arquivo de configuração, que é mantido na pasta "~\\Pub2SD", para o projeto selecionado.', \
             'Refresh':'Refrescar', \
             'Refresh_ttp':'Refresca o "Saída para" lista de unidades removíveis disponíveis.', \
             'Next':'Próximo', \
@@ -1043,7 +1038,7 @@ LOCALIZED_TEXT = { \
             'Type':'Tipo', \
             'f0_ttp':'O nome do projeto mostrado aqui será usado como o diretório de nível superior no cartão SD.\n' + \
                         'Selecionar um dos projetos existentes a partir da lista suspensa, ou digite um novo nome do projeto.\n' + \
-                        "O arquivo de configuração para o projeto será realizado em seu diretório '~\Pub2SD'.", \
+                        "O arquivo de configuração para o projeto será realizado em seu diretório '~\\Pub2SD'.", \
             'labelf1':'Por padrão, essas tags são selecionadas para exibição. ' + \
             "Observe que somente as tags selecionadas serão modificadas ou presentes nos arquivos MP3 finais.\n" + \
             "N.B. Somente tags cujo conteúdo foi especificado (ou seja, não apenas um '-' lugar titular para mostrar que está em branco) estará presente nos arquivos MP3 final.", \
@@ -1074,7 +1069,7 @@ LOCALIZED_TEXT = { \
             'MoveUp_ttp':'Isso move o item selecionado uma posição para cima, dentro da coleção que faz parte.', \
             'MoveDown_ttp':'Isso move o item selecionado uma posição para baixo, dentro da coleção que faz parte.', \
             'Delete_ttp':'Isso exclui o item atualmente selecionado. Se o item é um conjunto, todos os itens contidos nele também serão excluídos.', \
-            'Save_ttp':'Isso evita que o projeto atual para um arquivo ".prj" com o mesmo nome, armazenado na pasta "~\Os meus documentos\Pub2SD".', \
+            'Save_ttp':'Isso evita que o projeto atual para um arquivo ".prj" com o mesmo nome, armazenado na pasta "~\\Os meus documentos\\Pub2SD".', \
             'Promote_ttp':'Isto levanta o selecionado coleção para um nível acima da hierarquia de árvore.', \
             'Demote_ttp':'Isso empurra os itens atualmente selecionado um nível abaixo na hierarquia da árvore.', \
             'AddFolder_ttp':'Criar nova coleção com o mesmo título como a pasta selecionada e adicionar todas as subpastas como sub-coleções.\n' + \
@@ -1086,7 +1081,7 @@ LOCALIZED_TEXT = { \
                         'Clicando nas caixas "-" ir¡ recolhê-los, permitindo que você veja a estrutura "pasta / coleção" mais facilmente.\n' + \
                         'Clicando nas caixas "+" irá expandi-los, mostrando o conteúdo.\n' + \
                         'N.B. Verification e ajustamento da ordem em que os arquivos foram adicionados é sempre necessária!', \
-            'btnF3M2Next_ttp':'Isso cria uma pasta de projeto temporário em "~\Os meus documentos\Pub2SD\Temp" e constrói a árvore de pastas para publicação,\n' + \
+            'btnF3M2Next_ttp':'Isso cria uma pasta de projeto temporário em "~\\Os meus documentos\\Pub2SD\\Temp" e constrói a árvore de pastas para publicação,\n' + \
                         'Renomear todos os arquivos "MP3" e incorporação de qualquer arte de capa nos arquivos de "MP3".\n' + \
                         'Além disso, se movendo para a aba "Output".', \
             'SelectArtwork_ttp':'Selecione a arte da capa (.png / .jpeg) para ser incorporado no arquivo selecionado atualmente "MP3".\n' + \
@@ -1156,7 +1151,7 @@ LOCALIZED_TEXT = { \
                 "hub USB3, se necessário).", \
             'OutputSizeText':'Este projeto usará ~', \
             'Publish to SD/USB':'Publicar para SD/USB', \
-            "Publish to '~\Pub2SD\{}_SD'":"Publicar para '~\Pub2SD\{}_SD'", \
+            "Publish to '~\\Pub2SD\\{}_SD'":"Publicar para '~\\Pub2SD\\{}_SD'", \
             'URLtags_ttp':'As tags a seguir contêm URLs que, para máxima compatibilidade, devem conter apenas caracteres ASCII de 7 bits.', \
             'NumericTextFrames':'As seguintes marcas contêm campos numéricos mantidos como seqüências utf-8.', \
             'TimeStampTextFrames':'As seguintes tags contêm informações de data / hora como seqüências de caracteres utf-8.', \
@@ -1310,4 +1305,4 @@ DEFAULT_VALUES = {'ide3v24':{
             'TSST':'[3,[""]]' \
             } \
         }
-
+        

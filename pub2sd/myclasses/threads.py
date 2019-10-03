@@ -9,15 +9,15 @@ import queue
 import os
 import shutil
 import zipfile
+import codecs
 from pathlib import Path
 
 from .myconst.localizedText import LOCALIZED_TEXT
 
-    
 class MyThread(threading.Thread):
     """handle copying to multiple SD cards"""
     def __init__(self, target, pub2sd, project, \
-                play_list_targets, is_copy_playlists_to_top, files, aqr):
+                play_list_targets, is_copy_playlists_to_top, files, aqr, scriptdir):
         threading.Thread.__init__(self)
         self.target = target
 #        self.lang = lang
@@ -27,16 +27,17 @@ class MyThread(threading.Thread):
         self.is_copy_playlists_to_top = is_copy_playlists_to_top
         self.files = files
         self.aqr = aqr
+        self.scriptdir = scriptdir
 
     def run(self):
         """run the thread"""
         on_publish_files(self.target, self.pub2sd, \
                        self.project, self.play_list_targets, \
-                       self.is_copy_playlists_to_top, self.files, self.aqr)
+                       self.is_copy_playlists_to_top, self.files, self.aqr, self.scriptdir)
 
 def on_publish_files(target, Pub2SD, project, play_list_targets, \
                      is_copy_playlists_to_top, files, aqr, scriptdir):
-    #finally copy all file to final destination):
+    """finally copy all file to final destination"""
 #    atarget = os.path.normpath(target)
 #    this_dir = os.path.normpath(target + '/' + project)
     atarget = Path(target)
@@ -107,7 +108,9 @@ def on_publish_files(target, Pub2SD, project, play_list_targets, \
     aqr.clear()
 
 def on_copy_playlists(target, Pub2SD, project, play_list_targets, \
-                                              is_copy_playlists_to_top, aqr, scriptdir):
+                                              is_copy_playlists_to_top, aqr, script_dir):
+    """copy the playlists from temp to play_list_targets and top level dir
+    if required, adjusting relative dir references as necessary"""
     source = os.path.normpath(Pub2SD + '/Temp/'+ project + '/')
     playlists = [p for p in os.listdir(source) \
                      if p.endswith('.M3U8') or p.endswith('.M3U')]
@@ -124,9 +127,9 @@ def on_copy_playlists(target, Pub2SD, project, play_list_targets, \
                         os.path.normpath(target + project + '/' + hh))
     #now for css and js
     #copy css and js, actually just unpack from zip
-    zipdir = os.path.normpath(self.script_dir + "/cssjs.zip")
-    with zipfile.ZipFile(zipdir,"r") as zip_ref:
-        zip_ref.extractall(os.path.normpath(target + self.project))        
+    zipdir = os.path.normpath(script_dir + "/cssjs.zip")
+    with zipfile.ZipFile(zipdir, "r") as zip_ref:
+        zip_ref.extractall(os.path.normpath(target + project))
 
     #now top level?
     if is_copy_playlists_to_top == 1:

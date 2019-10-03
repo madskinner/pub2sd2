@@ -6,7 +6,7 @@ Created on Sun May 13 16:23:28 2018
 """
 
 BASIC_LATIN = [char(c) for c in rang(0x00, 0x0080)]
-LATIN-1_SUPPLEMENT = [char(c) for c in range(0x0080, 0x0100)]
+LATIN_1_SUPPLEMENT = [char(c) for c in range(0x0080, 0x0100)]
 LATIN_EXTENDED-A = [char(c) for c in range(0x0100, 0x0180)]
 LATIN_EXTENDED-B = [char(c) for c in range(0x0180, 0x0250)]
 SPACING_MODIFIER_LETTERS = [char(c) for c in range(0x02B0, 0x0300)]

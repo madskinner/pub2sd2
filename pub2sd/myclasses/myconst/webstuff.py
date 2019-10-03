@@ -6,10 +6,10 @@ Created on Mon Feb  4 11:54:48 2019
 """
 import codecs
 
-STARTHEADER = [codecs.BOM_UTF8.decode(),'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">',\
+STARTHEADER = [codecs.BOM_UTF8.decode(), '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">',\
                "<html>\n  <head>"]
 # title will be supplied via .format()
-MAINTITLE = '    <meta http-equiv="content-type" content="text/html; charset=utf-8"><title>{}</title>' 
+MAINTITLE = '    <meta http-equiv="content-type" content="text/html; charset=utf-8"><title>{}</title>'
 MYCSSAJAMI = ['    <--', \
               '    <link rel="stylesheet" href="./css/ajami.css">', \
               '    -->']
@@ -141,15 +141,15 @@ FILECSSLATIN = [\
 "  min-width:290px;", \
 "  color: black;", \
 "  background-color: #ffffff;", \
-"  font-family: ""Andika Afr"", Andika, Arial, Helvetica, sans-serif;", \
+'  font-family: "Andika Afr", Andika, Arial, Helvetica, sans-serif;', \
 "  line-height: 1.5;", \
 "}", \
 "", \
-"p { font-family : ""Andika Afr"", andika, geneva, arial, helvetica, sans-serif; font-size : 13pt; font-style : normal; color: #000000; margin-top: 0.07in; margin-bottom: 0.07in }", \
-"h1 { font-family : ""Andika Afr"", andika, geneva, arial, helvetica, sans-serif; font-size : 20pt; font-style : normal; color: #000000; margin-top: 0.07in; margin-bottom: 0.07in  }", \
-"h2 { font-family : ""Andika Afr"", andika, geneva, arial, helvetica, sans-serif; font-size : 16pt; font-style : normal; color: #000000; margin-top: 0.07in; margin-bottom: 0.07in  }", \
-"a:link { font-family : ""Andika Afr"", andika, geneva, arial, helvetica, sans-serif; color: #0000ff }", \
-"a:visited { font-family : ""Andika Afr"", andika, geneva, arial, helvetica, sans-serif; color: #800080 }", \
+'p { font-family : "Andika Afr", andika, geneva, arial, helvetica, sans-serif; font-size : 13pt; font-style : normal; color: #000000; margin-top: 0.07in; margin-bottom: 0.07in }', \
+'h1 { font-family : "Andika Afr", andika, geneva, arial, helvetica, sans-serif; font-size : 20pt; font-style : normal; color: #000000; margin-top: 0.07in; margin-bottom: 0.07in  }', \
+'h2 { font-family : "Andika Afr", andika, geneva, arial, helvetica, sans-serif; font-size : 16pt; font-style : normal; color: #000000; margin-top: 0.07in; margin-bottom: 0.07in  }', \
+'a:link { font-family : "Andika Afr", andika, geneva, arial, helvetica, sans-serif; color: #0000ff }', \
+'a:visited { font-family : "Andika Afr", andika, geneva, arial, helvetica, sans-serif; color: #800080 }', \
 "#navbar{", \
 "  position:fixed;", \
 "  min-width:290px;", \
@@ -255,3 +255,4 @@ FILECSSLATIN = [\
 "  }", \
 "}", \
 ""]
+    

@@ -17,7 +17,7 @@ import shutil
 import glob
 import hashlib
 import pickle
-from urllib.parse import urlparse
+#from urllib.parse import urlparse
 import json
 import re
 from tkinter import font, Tk, filedialog, messagebox, StringVar, \
@@ -430,7 +430,6 @@ class GuiCore(Tk):
         self.helpmenu.add_command(label=LOCALIZED_TEXT[lang]['About...'], \
                                   command=on_copyright)
 
-    @staticmethod
     def _quit(self):
         qcommand.put(('DELETETEMP', None))
 #        qcommand.put(('DIE_DIE_DIE', None))
@@ -1236,7 +1235,6 @@ class GuiCore(Tk):
         """The lock unlock SD card tab, to be implemented?"""
         pass
 
-    @staticmethod
     def _on_html_project(self):
         """Export the whole project tree to an HTML file and open it with
                                                       your default browser."""
@@ -1427,7 +1425,7 @@ class GuiCore(Tk):
         for i in range(0, the_range_limit):
             self.update_idletasks()
             i_get = self.cbv[i].get()
-            if i_get is 't':
+            if i_get == 't':
                 if self.needed < self.tlist[i][1]:
                     the_drive = self.tlist[i][0].split(',')
                     self.output_to.append(the_drive[0].strip())
@@ -2316,4 +2314,5 @@ def delete_folder(path):
 
 def is_hashable(tag):
     '''return true if tag hashable'''
-    return True if True in HASH_TAG_ON[tag] else False
+#    return True if True in HASH_TAG_ON[tag] else False
+    return (True in HASH_TAG_ON[tag])
