@@ -74,7 +74,7 @@ from .threads import MyThread
 class Backend(threading.Thread):
     """handle processing files"""
 
-    def __init__(self, qc, qr, aqr): #, tl):
+    def __init__(self, qc, qr, aqr, scriptdir): #, tl):
         threading.Thread.__init__(self)
         self.threadID = 1
         self.name = 'backend'
@@ -103,7 +103,7 @@ class Backend(threading.Thread):
         self.initial_digit = ''
         self.prefix = ''
         self.html_out = ''
-        self.script_dir = ''
+        self.script_dir = scriptdir
 
         #bodge to get past WinPython....
         self.Pub2SD = Path(Path.home(), 'Pub2SD')
@@ -2564,13 +2564,13 @@ def sort_key_for_filenames(filename):
 def to_alpha(anumber):
     """Convert a positive number n to its digit representation in base 26."""
     output = ''
+    a_number = anumber
     if anumber == 0:
         pass
     else:
-        while anumber > 0:
-            anumber = anumber
-            output += chr(anumber % 26 + ord('A'))
-            anumber = anumber // 26
+        while a_number > 0:
+            output += chr(a_number % 26 + ord('A'))
+            a_number = a_number // 26
     return output[::-1]
 
 

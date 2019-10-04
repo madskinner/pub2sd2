@@ -86,7 +86,7 @@ class GuiCore(Tk):
 
     def _initialize(self):
         """initialize the GuiCore"""
-        self.backendthread = Backend(qcommand, qreport, aqr) #, self.threadlock)
+        self.backendthread = Backend(qcommand, qreport, aqr, SCRIPT_DIR) #, self.threadlock)
         self.backendthread.start()
 #        self.script_dir = 'frontend'
 #        print(self.script_dir)
@@ -666,7 +666,8 @@ class GuiCore(Tk):
         ysb.grid(row=1, column=2, rowspan=20, padx=5, sticky='nse')
 
         #fill tagtree
-        self.listoftags = [item for item in self.recommendedTags]
+#        self.listoftags = [item for item in self.recommendedTags]
+        self.listoftags = list(self.recommendedTags)
         if self.mode.get() == 0:
             #Idiot mode
             for t in sorted(IDIOT_TAGS.keys()):
@@ -1609,13 +1610,15 @@ class GuiCore(Tk):
 
         lang = self.ddnGuiLanguage.get()
         self.ddnPrefChar.current(0)
-        self.selected_tags = [i for i in self.tagtree.selection()]
+#        self.selected_tags = [i for i in self.tagtree.selection()]
+        self.selected_tags = list(self.tagtree.selection())
         if 'TIT2' not in self.selected_tags:
             self.selected_tags.insert(0, 'TIT2')
         qcommand.put(('SELECTED_TAGS', self.selected_tags))
         self.columns = ['Type', 'Name', 'Location'] #+ self.recommendedTags
         self.columns.extend(self.selected_tags)
-        self.displayColumns = [item for item in self.columns]
+#        self.displayColumns = [item for item in self.columns]
+        self.displayColumns = list(self.columns)
         self.displayColumns.remove('Location')
 #        self.displayColumns.remove('Name')
 
@@ -2297,7 +2300,7 @@ def de_hex(tin):
     tout = ''
     i = 0
     while i < len(tin) - 5:
-        if tin[i:i+1] is 'Ox':
+        if tin[i:i+1] == 'Ox':
             tout += chr(int(tin[i:i+6], 16))
             i += 6
         else:

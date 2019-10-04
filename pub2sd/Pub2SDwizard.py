@@ -18,8 +18,10 @@ from pathlib import Path
 
 from tkinter import messagebox, PhotoImage
 
-from pub2sd.myclasses.myconst.therest import THIS_VERSION
-from pub2sd.myclasses.gui import GuiCore
+#from pub2sd.myclasses.myconst.therest import THIS_VERSION
+#from pub2sd.myclasses.gui import GuiCore
+from myclasses.myconst.therest import THIS_VERSION
+from myclasses.gui import GuiCore
 
 #from pkg_resources import resource_filename
 if __name__ == '__main__' and __package__ is None:

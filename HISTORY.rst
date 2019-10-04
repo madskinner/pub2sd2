@@ -2,6 +2,13 @@
 
 History
 -------
+1.1.9(2019/10)
+-----
+Ast bug fixes for Linux including changed size of window, relocated mainc.ico and mainc.png to script dir.
+
+1.1.8(2019/09)
+-----
+Ast bug fixes for Windows
 
 1.1.0alpha(2018/04)
 ____________
