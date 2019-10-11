@@ -39,30 +39,32 @@ def _leading_aphanum(title):
     return title
 
 STRIPPERS = {
-            #en-US
-            "Nothing":_nothing, \
-            "Leading digits":_leading_digits, \
-            "Trailing digits":_trailing_digits, \
-            "Leading alphanumerics":_leading_aphanum, \
-            #fr-FR
-            "Rien":_nothing, \
-            "Chiffres initiauxs":_leading_digits, \
-            "Alphanumériques précédents":_trailing_digits, \
-            "Derniers chiffres":_leading_aphanum, \
-            #pt-PT
-            "Nada":_nothing, \
-            "Dígitos iniciais":_leading_digits, \
-            "Alfanuméricos iniciais":_trailing_digits, \
-            "Dígitos finais":_leading_aphanum, \
-            }
+    #en-US
+    "Nothing":_nothing, \
+    "Leading digits":_leading_digits, \
+    "Trailing digits":_trailing_digits, \
+    "Leading alphanumerics":_leading_aphanum, \
+    #fr-FR
+    "Rien":_nothing, \
+    "Chiffres initiauxs":_leading_digits, \
+    "Alphanumériques précédents":_trailing_digits, \
+    "Derniers chiffres":_leading_aphanum, \
+    #pt-PT
+    "Nada":_nothing, \
+    "Dígitos iniciais":_leading_digits, \
+    "Alfanuméricos iniciais":_trailing_digits, \
+    "Dígitos finais":_leading_aphanum, \
+    }
 
 def escape_tab_return_feed(text):
+    """escape tab char"""
     result = TAB.sub(r'&#9;', text)
     result = RETURN.sub(r'&#13;', result)
     result = NEWLINE.sub(r'&#10;', result)
     return result
 
 def unescape_tab_return_feed(text):
+    """unescape tab char"""
     result = RETAB.sub(r'\t', text)
     result = RERETURN.sub(r'\r', result)
     result = RENEWLINE.sub(r'\n', result)
