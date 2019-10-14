@@ -4,7 +4,7 @@ History
 -------
 1.1.9(2019/10)
 -----
-Ast bug fixes for Linux including changed size of window, relocated mainc.ico and mainc.png to script dir.
+Ast bug fixes for Linux including changed size of window, relocated mainc.ico and mainc.png to script dir and made queue explicitly close on exit.
 
 1.1.8(2019/09)
 -----
