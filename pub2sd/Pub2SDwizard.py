@@ -50,26 +50,21 @@ def main():
         bundle_dir = sys._MEIPASS
     else:
         # we are running in a normal Python environment
-#        bundle_dir = os.path.dirname(os.path.abspath(__file__))
         bundle_dir = str(Path(__file__).resolve().parent)
 
     gui = GuiCore(None, bundle_dir) # see GuiCore's __init__ method
     gui.title(' Pub2SDwizard v{}'.format(THIS_VERSION))
 #    print('in main() gui.script_dir {}'.format(gui.script_dir))
     if platform.system() == 'Windows':
-#        gui.wm_iconbitmap(os.path.normpath((\
-#                                    resource_filename(__name__, 'mainc.ico'))))
         gui.wm_iconbitmap(Path(SCRIPT_DIR, 'mainc.ico'))
-#        gui.wm_iconbitmap(Path(SCRIPT_DIR, 'myclasses/myimages/mainc.ico'))
     elif platform.system() == 'Linux':
-#        if Path(SCRIPT_DIR, 'myclasses/myimages/mainc.png').exists():
-#            print("mainc.png exists!")
-#        else:
-#            print("mainc.png does not exist!")
-        img = PhotoImage(\
-                        file=str(Path(SCRIPT_DIR, 'mainc.png')))
-#                        file=str(Path(SCRIPT_DIR, 'myclasses/myimages/mainc.png')))
-#        img = PhotoImage(file=(get_script_directory() + '/images/mainc.png'))
+        t = (Path('/usr/share/pub2sdwizard/mainc.png'))
+        if t.exists() and t.is_file():
+            print(' found =>/usr/share/pub2sdwizard/mainc.png')
+        else:
+            print(' lost =>/usr/share/pub2sdwizard/mainc.png')
+
+        img = PhotoImage(file=str(Path('/usr/share/pub2sdwizard/mainc.png')))
         gui.tk.call('wm', 'iconphoto', gui._w, img)
     else:
         messagebox.showwarning('Warning', "Help I've been kidnaped by {}!!!".\

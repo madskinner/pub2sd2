@@ -35,6 +35,9 @@ from lxml import etree
 from unidecode import unidecode
 from mutagen.mp3 import MP3
 
+from .closeableQueue import CloseableQueue as CQ
+from .closeableQueue import CloseablePriorityQueue as CPQ
+
 from .myconst.audio import AUDIO
 from .myconst.regexs import FIND_LEADING_DIGITS, FIND_LEADING_ALPHANUM, \
                             FIND_TRAILING_DIGITS, TRIM_LEADING_DIGITS, \
@@ -55,7 +58,8 @@ def get_script_directory():
 
 SCRIPT_DIR = get_script_directory()
 
-class PQueue(queue.PriorityQueue):
+#class PQueue(queue.PriorityQueue):
+class PQueue(CPQ):
     '''A custom queue subclass that provides a :meth:`clear` method.'''
 
     def clear(self):
@@ -71,10 +75,12 @@ class PQueue(queue.PriorityQueue):
             self.queue.clear()
             self.not_full.notify_all()
 
-qcommand = queue.Queue()
-qreport = queue.Queue()
-aqr = [PQueue(), PQueue(), PQueue(), PQueue(), \
-       PQueue(), PQueue(), PQueue(), PQueue()]
+#qcommand = queue.Queue()
+#qreport = queue.Queue()
+qcommand = CQ()
+qreport = CQ()
+aqr = [CPQ(), CPQ(), CPQ(), CPQ(), \
+       CPQ(), CPQ(), CPQ(), CPQ()]
 
 class GuiCore(Tk):
     """Handle the graphical interface for Pub2SDwizard and the gui logic"""
@@ -305,6 +311,7 @@ class GuiCore(Tk):
                 elif 'FILES_PREPARED' in areport:
                     self._on_prepare_files_continued()
                 elif 'DELETEDTEMP' in areport:
+                    qcommand.put(('DIE_DIE_DIE',''))
                     self.destroy()
                     return
                 elif 'PREFERRED' in areport:
@@ -362,7 +369,14 @@ class GuiCore(Tk):
         self.pref_char = list()
         self.hashed_graphics = dict()
         self.list_images = list()
-        self.next_image = PhotoImage(file='mainc.png')
+#        self.next_image = PhotoImage(file='mainc.png')
+        if platform.system() == 'Windows':
+            self.next_image = PhotoImage(file='mainc.png')
+        elif platform.system() == 'Linux':
+            self.next_image = PhotoImage(file='/usr/share/pub2sdwizard/mainc.png')
+        else:
+            messagebox.showwarning('Warning', "Gui:Help I've been kidnaped by {}!!!".\
+                                   format(platform.system()))
         self.illegalChars = [chr(i) for i in range(1, 0x20)] + \
                             [chr(0x7F), '"', '*', '/', ':', '<', '>', \
                                                               '?', '\\', '|']

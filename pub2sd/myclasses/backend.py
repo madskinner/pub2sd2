@@ -300,6 +300,12 @@ class Backend(threading.Thread):
             elif 'DIE_DIE_DIE' in acommand:
                 self.exitFlag = True
                 self.qr.put(('PRINT', "I'm out of here!!!"))
+                for pq in aqr:
+                    pq.clear()
+                    pq.close()
+                self.qc.close()
+                self.qr.close()
+                
                 break
 
             else:
