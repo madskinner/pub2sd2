@@ -58,11 +58,11 @@ def main():
     if platform.system() == 'Windows':
         gui.wm_iconbitmap(Path(SCRIPT_DIR, 'mainc.ico'))
     elif platform.system() == 'Linux':
-        t = (Path('/usr/share/pub2sdwizard/mainc.png'))
-        if t.exists() and t.is_file():
-            print(' found =>/usr/share/pub2sdwizard/mainc.png')
-        else:
-            print(' lost =>/usr/share/pub2sdwizard/mainc.png')
+#        t = str(Path('/usr/share/pub2sdwizard/mainc.png'))
+#        if t.exists() and t.is_file():
+#            print(' found =>/usr/share/pub2sdwizard/mainc.png')
+#        else:
+#            print(' lost =>/usr/share/pub2sdwizard/mainc.png')
 
         img = PhotoImage(file=str(Path('/usr/share/pub2sdwizard/mainc.png')))
         gui.tk.call('wm', 'iconphoto', gui._w, img)

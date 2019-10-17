@@ -28,6 +28,7 @@ from pathlib import Path
 from unidecode import unidecode
 from pydub import AudioSegment
 #import wand
+#from twisted.internet import task, reactor
 
 from lxml import etree
 
@@ -120,197 +121,449 @@ class Backend(threading.Thread):
         self.files = dict()
         self.M3UorM3U8 = 2
         self.output_to = list()
+        self._command_queue = {'EXIT':self._EXIT, \
+                     'SCRIPT_DIR':self._SCRIPT_DIR, \
+                     'MODE':self._MODE, \
+                     'INITIALDIGIT':self._INITIALDIGIT, \
+                     'CONF_FILE':self._CONF_FILE, \
+                     'LOAD_TEMPLATE':self._LOAD_TEMPLATE, \
+                     'LOADTREEFROMTROUT':self._LOADTREEFROMTROUT, \
+                     'MERGE':self._MERGE, \
+                     'SELFPREF':self._SELFPREF, \
+                     'DISPLAYCOLUMNS':self._DISPLAYCOLUMNS, \
+                     'SELECTED_TAGS':self._SELECTED_TAGS, \
+                     'STRIPTITLE':self._STRIPTITLE, \
+                     'HASHEDGRAPHICS':self._HASHEDGRAPHICS, \
+                     'ADD_FOLDER':self._ADD_FOLDER, \
+                     'ADD_CONTENTS':self._ADD_CONTENTS, \
+                     'ADD_COLLECTION':self._ADD_COLLECTION, \
+                     'ADD_FILE':self._ADD_FILE, \
+                     'CHILDRENS_FILENAMES':self._CHILDRENS_FILENAMES, \
+                     'FOLDERSIZE':self._FOLDERSIZE, \
+                     'PUBLISHFILES':self._PUBLISHFILES, \
+                     'PREPARE_FILES':self._PREPARE_FILES, \
+                     'ONSAVEPROJECT':self._ONSAVEPROJECT, \
+                     'DELETE':self._DELETE, \
+                     'MOVEUP':self._MOVEUP, \
+                     'MOVEDOWN':self._MOVEDOWN, \
+                     'PROMOTE':self._PROMOTE, \
+                     'DEMOTE':self._DEMOTE, \
+                     'ON_SET':self._ON_SET, \
+                     'ON_APPEND':self._ON_APPEND, \
+                     'ATTACH_ARTWORK_TO':self._ATTACH_ARTWORK_TO, \
+                     'SETCOPYPLAYLISTS':self._SETCOPYPLAYLISTS, \
+                     'M3UorM3U8':self._M3UorM3U8, \
+                     'OUTPUT_TO':self._OUTPUT_TO, \
+                     'PUBLISH_TO_SD':self._PUBLISH_TO_SD, \
+                     'EXPORTHTML':self._EXPORTHTML, \
+                     'DELETETEMP':self._DELETETEMP, \
+                     'DIE_DIE_DIE':self._DIE_DIE_DIE, \
+                     }
+
 
     def run(self):
-#        self.qr.put(('PRINT', 'backend {}'.format(SCRIPT_DIR)))
+        starttime = time.time()
         while not self.exitFlag:
             acommand = self.qc.get()
-            if 'EXIT' in acommand:
-                self.exitFlag = 1
+            if acommand[0]:
+                if acommand[0] in self._command_queue.keys():
+                    self._command_queue[acommand[0]](acommand[1])
+                else:
+                    self.qr.put(('PRINT', 'backend lost, acommand was {}'.\
+                                 format(acommand)))
                 self.qc.task_done()
-                # self.exitFlag can be set by error condition in backend
-            elif 'SCRIPT_DIR' in acommand:
-                self.script_dir = acommand[1]
-#                self.qr.put(('PRINT',self.script_dir))
-                self.qc.task_done()
-            elif 'MODE' in acommand:
-                self.mode = acommand[1]
-                self.qc.task_done()
-            elif 'INITIALDIGIT' in acommand:
-                self.initial_digit = acommand[1].upper()
-                self.prefix = acommand[1]
-                self.qc.task_done()
-            elif 'CONF_FILE' in acommand:
-                self.qc.task_done()
-                self.project = acommand[1]
-                self._load_conf_file(acommand[1])
-            elif 'LOAD_TEMPLATE' in acommand:
-#                self.template = acommand[1]
-                self._load_template(acommand[1])
-                self.qc.task_done()
-            elif 'LOADTREEFROMTROUT' in acommand:
-                self._on_reload_tree()
-                self.qc.task_done()
-            elif 'MERGE' in acommand:
-                self._on_merge_files(acommand[1])
-                self.qc.task_done()
-            elif 'SELFPREF' in acommand:
-                self.pref = acommand[1][0]
-                self.pref_char = acommand[1][1]
-                self.preferred = acommand[1][2]
-                self.template = acommand[1][3]
-                self.qc.task_done()
-            elif 'DISPLAYCOLUMNS' in acommand:
-                self.displayColumns, self.columns = acommand[1]
-                self.qc.task_done()
-            elif 'SELECTED_TAGS' in acommand:
-                map(self.sf1.attrib.pop, self.sf1.attrib.keys())
-                #put tag state into xml
-                self.selected_tags = acommand[1]
-                for i in range(0, len(self.selected_tags)):
-                    self.sf1.attrib[self.selected_tags[i]] = 'show'
-                self.qc.task_done()
-            elif 'STRIPTITLE' in acommand:
-                to_strip, focus = acommand[1]
-                self._on_strip(to_strip, focus)
-                self.to_be_renamed = dict()
-                self._rename_children_of(focus)
-                self.qr.put(('RENAME_CHILDREN', self.to_be_renamed))
-                self.qc.task_done()
-            elif 'HASHEDGRAPHICS' in acommand:
-#                self.qr.put(('PRINT', 'running self._extract_hashed_graphics()'))
-                self.hashed_graphics = acommand[1]
-#                self._extract_hashed_graphics()
-                self.qc.task_done()
-            elif 'ADD_FOLDER' in acommand:
-                self.qr.put(('LOCKGUI', None))
-                self.to_be_inserted = list()
-                the_focus, adir_path = acommand[1]
-                self.qr.put(('PROGMAX', count_mp3_files_below(adir_path) * 2))
-                self._add_tree(the_focus, adir_path, False)
-                self._on_reload_tree()
-                self._rename_children_of('I00001')
-                self.qr.put(('RENAME_CHILDREN', self.to_be_renamed))
-                self.qr.put(('STATUS', "Unpacking complete."))
-                self.qr.put(('PROGVALUE', 0))
-                self.qr.put(('UNLOCKGUI', None))
-                self.qc.task_done()
-            elif 'ADD_CONTENTS' in acommand:
-                the_focus, adir_path = acommand[1]
-                #if the_focus is I00001 then any .mp3 files in current folder
-                # would be directly below project. Need to have at least one
-                # collection in way
-                self.qr.put(('LOCKGUI', None))
-                self.qr.put(('PROGMAX', count_mp3_files_below(adir_path) * 2))
-                self.to_be_inserted = list()
-                self._add_tree(the_focus, adir_path, True)
-#                self.qr.put(('PRINT', "about to reload_tree"))
-                self._on_reload_tree()
-#                self.qr.put(('PRINT', "reloaded tree"))
-                self._rename_children_of('I00001')
-                self.qr.put(('RENAME_CHILDREN', self.to_be_renamed))
-                self.qr.put(('STATUS', "Unpacking complete."))
-                self.qr.put(('PROGVALUE', 0))
-                self.qr.put(('UNLOCKGUI', None))
-                self.qc.task_done()
-            elif 'ADD_COLLECTION' in acommand:
-                focus = acommand[1]
-                self.qr.put(('LOCKGUI', None))
-                self._add_collection(focus)
-                self._on_reload_tree()
-                self.qr.put(('STATUS', "Unpacking complete."))
-                self.qr.put(('PROGVALUE', 0))
-                self.qr.put(('UNLOCKGUI', None))
-                self.qc.task_done()
-            elif 'ADD_FILE' in acommand:
-                focus, filenames = acommand[1]
-                self.qr.put(('LOCKGUI', None))
-                self.qr.put(('PROGMAX', len(filenames) * 2))
-                self.to_be_inserted = list()
-                self._add_files(focus, filenames)
-                self._on_reload_tree()
-                self.qr.put(('UNLOCKGUI', None))
-                self.qc.task_done()
-            elif 'CHILDRENS_FILENAMES' in acommand:
-                self.project_id, temp_path, project_path_ = acommand[1]
-                #self.project_id should be set to 'I00001', but for safety
-                self._childrens_filenames(self.trout.find(".//I00001"), temp_path, project_path_)
-            elif 'FOLDERSIZE' in acommand:
-                size_in_Mb = folder_size(\
-                    Path(self.Pub2SD, 'Temp', self.project))/(1024.0 * 1024.0)
-                self.qr.put(('FOLDERSIZE', size_in_Mb))
-            elif 'PUBLISHFILES' in acommand:
-                self._on_publish_files(acommand[1])
-            elif 'PREPARE_FILES' in acommand:
-                self.qr.put(('LOCKGUI', None))
-                self._on_prepare_files()
-                self.qr.put(('UNLOCKGUI', None))
-            elif 'ONSAVEPROJECT' in acommand:
-                self._on_save_project(acommand[1])
-            elif 'DELETE' in acommand:
-                self._on_delete(acommand[1])
-            elif 'MOVEUP' in acommand:
-                self._on_move_up(acommand[1])
-            elif 'MOVEDOWN' in acommand:
-                self._on_move_down(acommand[1])
-            elif 'PROMOTE' in acommand:
-                self._on_promote(acommand[1])
-            elif 'DEMOTE' in acommand:
-                self._on_demote(acommand[1])
-                self._on_reload_tree()
-            elif 'ON_SET' in acommand:
-                self._on_set(acommand[1])
-            elif 'ON_APPEND' in acommand:
-                self._on_append(acommand[1])
-                self._on_reload_tree()
-            elif 'ATTACH_ARTWORK_TO' in acommand:
-                focus, _picture_type, _desc, artwork = acommand[1]
-                #hash it here, pass hash_tag and length
-                partwork = Path(artwork)
-                if artwork \
-                        and partwork.exists() \
-                        and partwork.suffix in ['.png', 'jpg',]:
+            else:
+                pass
+            time.sleep(0.066 - ((time.time() - starttime) % 0.066))
+
+#    def _scan_command_queue(self):
+#        acommand = self.qc.get()
+#        if 'EXIT' in acommand:
+#            self.exitFlag = 1
+#            self.qc.task_done()
+#            # self.exitFlag can be set by error condition in backend
+#        elif 'SCRIPT_DIR' in acommand:
+#            self.script_dir = acommand[1]
+##            self.qr.put(('PRINT',"received script_dir >{}<".format(self.script_dir)))
+#            self.qc.task_done()
+#        elif 'MODE' in acommand:
+#            self.mode = acommand[1]
+#            self.qc.task_done()
+#        elif 'INITIALDIGIT' in acommand:
+#            self.initial_digit = acommand[1].upper()
+#            self.prefix = acommand[1]
+#            self.qc.task_done()
+#        elif 'CONF_FILE' in acommand:
+##            self.qr.put(('PRINT', 'received CONF_FILE =>{}<'.format(acommand[1])))
+#            self.qc.task_done()
+#            self.project = acommand[1]
+#            self._load_conf_file(acommand[1])
+#        elif 'LOAD_TEMPLATE' in acommand:
+##                self.template = acommand[1]
+#            self._load_template(acommand[1])
+#            self.qc.task_done()
+#        elif 'LOADTREEFROMTROUT' in acommand:
+#            self._on_reload_tree()
+#            self.qc.task_done()
+#        elif 'MERGE' in acommand:
+#            self._on_merge_files(acommand[1])
+#            self.qc.task_done()
+#        elif 'SELFPREF' in acommand:
+#            self.pref = acommand[1][0]
+#            self.pref_char = acommand[1][1]
+#            self.preferred = acommand[1][2]
+#            self.template = acommand[1][3]
+#            self.qc.task_done()
+#        elif 'DISPLAYCOLUMNS' in acommand:
+#            self.displayColumns, self.columns = acommand[1]
+#            self.qc.task_done()
+#        elif 'SELECTED_TAGS' in acommand:
+#            map(self.sf1.attrib.pop, self.sf1.attrib.keys())
+#            #put tag state into xml
+#            self.selected_tags = acommand[1]
+#            for i in range(0, len(self.selected_tags)):
+#                self.sf1.attrib[self.selected_tags[i]] = 'show'
+#            self.qc.task_done()
+#        elif 'STRIPTITLE' in acommand:
+##            to_strip, focus = acommand[1]
+#            self._on_strip(acommand[1][0], acommand[1][1])
+#            self.to_be_renamed = dict()
+#            self._rename_children_of(acommand[1][1])
+#            self.qr.put(('RENAME_CHILDREN', self.to_be_renamed))
+#            self.qc.task_done()
+#        elif 'HASHEDGRAPHICS' in acommand:
+##                self.qr.put(('PRINT', 'running self._extract_hashed_graphics()'))
+#            self.hashed_graphics = acommand[1]
+##                self._extract_hashed_graphics()
+#            self.qc.task_done()
+#        elif 'ADD_FOLDER' in acommand:
+#            self.qr.put(('LOCKGUI', None))
+#            self.to_be_inserted = list()
+##            the_focus, adir_path = acommand[1]
+#            self.qr.put(('PROGMAX', count_mp3_files_below(acommand[1][1]) * 2))
+#            self._add_tree(acommand[1][0], acommand[1][1], False)
+#            self._on_reload_tree()
+#            self._rename_children_of('I00001')
+#            self.qr.put(('RENAME_CHILDREN', self.to_be_renamed))
+#            self.qr.put(('STATUS', "Unpacking complete."))
+#            self.qr.put(('PROGVALUE', 0))
+#            self.qr.put(('UNLOCKGUI', None))
+#            self.qc.task_done()
+#        elif 'ADD_CONTENTS' in acommand:
+#            the_focus, adir_path = acommand[1]
+#            #if the_focus is I00001 then any .mp3 files in current folder
+#            # would be directly below project. Need to have at least one
+#            # collection in way
+#            self.qr.put(('LOCKGUI', None))
+#            self.qr.put(('PROGMAX', count_mp3_files_below(adir_path) * 2))
+#            self.to_be_inserted = list()
+#            self._add_tree(the_focus, adir_path, True)
+##                self.qr.put(('PRINT', "about to reload_tree"))
+#            self._on_reload_tree()
+##                self.qr.put(('PRINT', "reloaded tree"))
+#            self._rename_children_of('I00001')
+#            self.qr.put(('RENAME_CHILDREN', self.to_be_renamed))
+#            self.qr.put(('STATUS', "Unpacking complete."))
+#            self.qr.put(('PROGVALUE', 0))
+#            self.qr.put(('UNLOCKGUI', None))
+#            self.qc.task_done()
+#        elif 'ADD_COLLECTION' in acommand:
+##            focus = acommand[1]
+#            self.qr.put(('LOCKGUI', None))
+#            self._add_collection(acommand[1])
+#            self._on_reload_tree()
+#            self.qr.put(('STATUS', "Unpacking complete."))
+#            self.qr.put(('PROGVALUE', 0))
+#            self.qr.put(('UNLOCKGUI', None))
+#            self.qc.task_done()
+#        elif 'ADD_FILE' in acommand:
+##            focus, filenames = acommand[1]
+#            self.qr.put(('LOCKGUI', None))
+#            self.qr.put(('PROGMAX', len(acommand[1][1]) * 2))
+#            self.to_be_inserted = list()
+#            self._add_files(acommand[1][0], acommand[1][1])
+#            self._on_reload_tree()
+#            self.qr.put(('UNLOCKGUI', None))
+#            self.qc.task_done()
+#        elif 'CHILDRENS_FILENAMES' in acommand:
+#            self.project_id, temp_path, project_path_ = acommand[1]
+#            #self.project_id should be set to 'I00001', but for safety
+#            self._childrens_filenames(self.trout.find(".//I00001"), \
+#                                      temp_path, project_path_)
+#        elif 'FOLDERSIZE' in acommand:
+##            size_in_Mb = folder_size(\
+##                str(Path(self.Pub2SD, 'Temp', self.project)))/(1024.0 * 1024.0)
+#            self.qr.put(('FOLDERSIZE', \
+#                         folder_size(str(Path(self.Pub2SD, \
+#                                    'Temp', self.project)))/(1024.0 * 1024.0)))
+#        elif 'PUBLISHFILES' in acommand:
+#            self._on_publish_files(acommand[1])
+#        elif 'PREPARE_FILES' in acommand:
+#            self.qr.put(('LOCKGUI', None))
+#            self._on_prepare_files()
+#            self.qr.put(('UNLOCKGUI', None))
+#        elif 'ONSAVEPROJECT' in acommand:
+#            self._on_save_project(acommand[1])
+#        elif 'DELETE' in acommand:
+#            self._on_delete(acommand[1])
+#        elif 'MOVEUP' in acommand:
+#            self._on_move_up(acommand[1])
+#        elif 'MOVEDOWN' in acommand:
+#            self._on_move_down(acommand[1])
+#        elif 'PROMOTE' in acommand:
+#            self._on_promote(acommand[1])
+#        elif 'DEMOTE' in acommand:
+#            self._on_demote(acommand[1])
+#            self._on_reload_tree()
+#        elif 'ON_SET' in acommand:
+#            self._on_set(acommand[1])
+#        elif 'ON_APPEND' in acommand:
+#            self._on_append(acommand[1])
+#            self._on_reload_tree()
+#        elif 'ATTACH_ARTWORK_TO' in acommand:
+#            focus, _picture_type, _desc, artwork = acommand[1]
+#            #hash it here, pass hash_tag and length
+##            partwork = Path(artwork)
+#            if artwork \
+#                    and Path(artwork).exists() \
+#                    and Path(artwork).suffix in ['.png', 'jpg',]:
+##                    and os.path.exists(artwork) \
+##                    and artwork[-4:] in ['.png', 'jpg',]:
+##                    fart = codecs.open(artwork, mode='rb').read()
+##                fart = Path(artwork).read_bytes()
+#                hash_tag, length = self._hash_it(Path(artwork).read_bytes())
+#                mime = 'image/' + artwork[-3:]
+#                self._attach_artwork_to(focus, _picture_type, _desc, \
+#                                        hash_tag, length, mime)
+#                self._on_reload_tree()
+#            else:
+#                #clear tag
+#                self._attach_artwork_to(focus, '', '', '', '', '')
+#        elif 'SETCOPYPLAYLISTS' in acommand:
+#            self.play_list_targets, self.is_copy_playlists_to_top = acommand[1]
+#        elif 'M3UorM3U8' in acommand:
+#            self.M3UorM3U8 = acommand[1]
+#        elif 'OUTPUT_TO' in acommand:
+#            self.output_to = acommand[1]
+#        elif 'PUBLISH_TO_SD' in acommand:
+#            self._on_publish_to_SD()
+#        elif 'EXPORTHTML' in acommand:
+#            self._export_to_html()
+#        elif 'DELETETEMP' in acommand:
+#            self.qr.put(('STATUS', \
+#                    "Deleting temporary files, this may take a few minutes."))
+#            self._delete_temp_folder()
+#            self.qr.put(('DELETEDTEMP', None))
+##            break
+#        elif 'DIE_DIE_DIE' in acommand:
+#            self.exitFlag = True
+#            self.qr.put(('IM_OUT_OF_HERE', "I'm out of here!!!"))
+##            for pq in self.aqr:
+##                pq.clear()
+##                    pq.close()
+##                self.qc.close()
+##                self.qr.close()
+##
+##            break
+#
+#        else:
+#            self.qr.put(('PRINT', 'backend lost, acommand was {}'.\
+#                         format(acommand)))
+#            self.qc.task_done()
+
+#    def _scan_command_queue(self):
+#        acommand = self.qc.get()
+
+    def _EXIT(self, dummy):
+        self.exitFlag = 1
+
+    def _SCRIPT_DIR(self, acommand):
+        self.script_dir = acommand
+
+    def _MODE(self, acommand):
+        self.mode = acommand
+
+    def _INITIALDIGIT(self, acommand):
+        self.initial_digit = acommand.upper()
+        self.prefix = acommand
+
+    def _CONF_FILE(self, acommand):
+        self.project = acommand
+        self._load_conf_file(acommand)
+
+    def _LOAD_TEMPLATE(self, acommand):
+        self._load_template(acommand)
+
+    def _LOADTREEFROMTROUT(self, _):
+        self._on_reload_tree()
+
+    def _MERGE(self, acommand):
+        self._on_merge_files(acommand)
+
+    def _SELFPREF(self, acommand):
+        self.pref = acommand[0]
+        self.pref_char = acommand[1]
+        self.preferred = acommand[2]
+        self.template = acommand[3]
+
+    def _DISPLAYCOLUMNS(self, acommand):
+        self.displayColumns, self.columns = acommand
+
+    def _SELECTED_TAGS(self, acommand):
+        map(self.sf1.attrib.pop, self.sf1.attrib.keys())
+        #put tag state into xml
+        self.selected_tags = acommand
+        for i in range(0, len(self.selected_tags)):
+            self.sf1.attrib[self.selected_tags[i]] = 'show'
+
+    def _STRIPTITLE(self, acommand):
+#            to_strip, focus = acommand[1]
+        self._on_strip(acommand[0], acommand[1])
+        self.to_be_renamed = dict()
+        self._rename_children_of(acommand[1])
+        self.qr.put(('RENAME_CHILDREN', self.to_be_renamed))
+
+    def _HASHEDGRAPHICS(self, acommand):
+        self.hashed_graphics = acommand
+
+    def _ADD_FOLDER(self, acommand):
+        self.qr.put(('LOCKGUI', None))
+        self.to_be_inserted = list()
+#            the_focus, adir_path = acommand[1]
+        self.qr.put(('PROGMAX', count_mp3_files_below(acommand[1]) * 2))
+        self._add_tree(acommand[0], acommand[1], False)
+        self._on_reload_tree()
+        self._rename_children_of('I00001')
+        self.qr.put(('RENAME_CHILDREN', self.to_be_renamed))
+        self.qr.put(('STATUS', "Unpacking complete."))
+        self.qr.put(('PROGVALUE', 0))
+        self.qr.put(('UNLOCKGUI', None))
+
+    def _ADD_CONTENTS(self, acommand):
+        the_focus, adir_path = acommand
+        #if the_focus is I00001 then any .mp3 files in current folder
+        # would be directly below project. Need to have at least one
+        # collection in way
+        self.qr.put(('LOCKGUI', None))
+        self.qr.put(('PROGMAX', count_mp3_files_below(adir_path) * 2))
+        self.to_be_inserted = list()
+        self._add_tree(the_focus, adir_path, True)
+        self._on_reload_tree()
+        self._rename_children_of('I00001')
+        self.qr.put(('RENAME_CHILDREN', self.to_be_renamed))
+        self.qr.put(('STATUS', "Unpacking complete."))
+        self.qr.put(('PROGVALUE', 0))
+        self.qr.put(('UNLOCKGUI', None))
+
+    def _ADD_COLLECTION(self, acommand):
+        self.qr.put(('LOCKGUI', None))
+        self._add_collection(acommand)
+        self._on_reload_tree()
+        self.qr.put(('STATUS', "Unpacking complete."))
+        self.qr.put(('PROGVALUE', 0))
+        self.qr.put(('UNLOCKGUI', None))
+
+    def _ADD_FILE(self, acommand):
+#            focus, filenames = acommand[1]
+        self.qr.put(('LOCKGUI', None))
+        self.qr.put(('PROGMAX', len(acommand[1]) * 2))
+        self.to_be_inserted = list()
+        self._add_files(acommand[0], acommand[1])
+        self._on_reload_tree()
+        self.qr.put(('UNLOCKGUI', None))
+
+    def _CHILDRENS_FILENAMES(self, acommand):
+        self.project_id, temp_path, project_path_ = acommand
+        #self.project_id should be set to 'I00001', but for safety
+        self._childrens_filenames(self.trout.find(".//I00001"), \
+                                  temp_path, project_path_)
+    def _FOLDERSIZE(self, _):
+#            size_in_Mb = folder_size(\
+#                str(Path(self.Pub2SD, 'Temp', self.project)))/(1024.0 * 1024.0)
+        self.qr.put(('FOLDERSIZE', \
+                     folder_size(str(Path(self.Pub2SD, \
+                                'Temp', self.project)))/(1024.0 * 1024.0)))
+
+    def _PUBLISHFILES(self, acommand):
+        self._on_publish_files(acommand)
+
+    def _PREPARE_FILES(self, _):
+        self.qr.put(('LOCKGUI', None))
+        self._on_prepare_files()
+        self.qr.put(('UNLOCKGUI', None))
+
+    def _ONSAVEPROJECT(self, acommand):
+        self._on_save_project(acommand)
+
+    def _DELETE(self, acommand):
+        self._on_delete(acommand)
+
+    def _MOVEUP(self, acommand):
+        self._on_move_up(acommand)
+
+    def _MOVEDOWN(self, acommand):
+        self._on_move_down(acommand)
+
+    def _PROMOTE(self, acommand):
+        self._on_promote(acommand)
+
+    def _DEMOTE(self, acommand):
+        self._on_demote(acommand)
+        self._on_reload_tree()
+
+    def _ON_SET(self, acommand):
+        self._on_set(acommand)
+
+    def _ON_APPEND(self, acommand):
+        self._on_append(acommand)
+        self._on_reload_tree()
+
+    def _ATTACH_ARTWORK_TO(self, acommand):
+        focus, _picture_type, _desc, artwork = acommand
+        #hash it here, pass hash_tag and length
+#            partwork = Path(artwork)
+        if artwork \
+                and Path(artwork).exists() \
+                and Path(artwork).suffix in ['.png', 'jpg',]:
 #                    and os.path.exists(artwork) \
 #                    and artwork[-4:] in ['.png', 'jpg',]:
 #                    fart = codecs.open(artwork, mode='rb').read()
-                    fart = partwork.read_bytes()
-                    hash_tag, length = self._hash_it(fart)
-                    mime = 'image/' + artwork[-3:]
-                    self._attach_artwork_to(focus, _picture_type, _desc, \
-                                            hash_tag, length, mime)
-                    self._on_reload_tree()
-                else:
-                    #clear tag
-                    self._attach_artwork_to(focus, '', '', '', '', '')
-            elif 'SETCOPYPLAYLISTS' in acommand:
-                self.play_list_targets, self.is_copy_playlists_to_top = acommand[1]
-            elif 'M3UorM3U8' in acommand:
-                self.M3UorM3U8 = acommand[1]
-            elif 'OUTPUT_TO' in acommand:
-                self.output_to = acommand[1]
-            elif 'PUBLISH_TO_SD' in acommand:
-                self._on_publish_to_SD()
-            elif 'EXPORTHTML' in acommand:
-                self._export_to_html()
-            elif 'DELETETEMP' in acommand:
-                self.qr.put(('STATUS', "Deleting temporary files, this may take a few minutes."))
-                self._delete_temp_folder()
-                self.qr.put(('DELETEDTEMP', None))
-                break
-            elif 'DIE_DIE_DIE' in acommand:
-                self.exitFlag = True
-                self.qr.put(('PRINT', "I'm out of here!!!"))
-                for pq in aqr:
-                    pq.clear()
-                    pq.close()
-                self.qc.close()
-                self.qr.close()
-                
-                break
+#                fart = Path(artwork).read_bytes()
+            hash_tag, length = self._hash_it(Path(artwork).read_bytes())
+            mime = 'image/' + artwork[-3:]
+            self._attach_artwork_to(focus, _picture_type, _desc, \
+                                    hash_tag, length, mime)
+            self._on_reload_tree()
+        else:
+            #clear tag
+            self._attach_artwork_to(focus, '', '', '', '', '')
 
-            else:
-                self.qr.put(('PRINT', 'backend lost, acommand was {}'.format(acommand)))
-                self.qc.task_done()
+    def _SETCOPYPLAYLISTS(self, acommand):
+        self.play_list_targets, self.is_copy_playlists_to_top = acommand
+
+    def _M3UorM3U8(self, acommand):
+        self.M3UorM3U8 = acommand
+
+    def _OUTPUT_TO(self, acommand):
+        self.output_to = acommand
+
+    def _PUBLISH_TO_SD(self, _):
+        self._on_publish_to_SD()
+
+    def _EXPORTHTML(self, _):
+        self._export_to_html()
+
+    def _DELETETEMP(self, _):
+        self.qr.put(('STATUS', \
+                "Deleting temporary files, this may take a few minutes."))
+        self._delete_temp_folder()
+        self.qr.put(('DELETEDTEMP', None))
+
+    def _DIE_DIE_DIE(self, _):
+        self.exitFlag = True
+        self.qr.put(('IM_OUT_OF_HERE', "I'm out of here!!!"))
+
+
 
     def _delete_temp_folder(self):
         """delete the temporary folder"""
@@ -321,10 +574,12 @@ class Backend(threading.Thread):
 
     def _load_conf_file(self, aconf_file):
         """loads the old project file into etree tree"""
+#        self.qr.put(('PRINT', "In _load_conf_file"))
         result = ''
-        the_file = Path(self.Pub2SD, (aconf_file + '.prj'))
-        if aconf_file and the_file.is_file():
-            result = self._load_project(str(the_file))
+#        the_file = Path(self.Pub2SD, (aconf_file + '.prj'))
+        if aconf_file and Path(self.Pub2SD, (aconf_file + '.prj')).is_file():
+            result = self._load_project(\
+                                str(Path(self.Pub2SD, (aconf_file + '.prj'))))
         else:
 #            self.qr.put(("PRINT","Trying to create project"))
             result = self._create_project()
@@ -390,17 +645,18 @@ class Backend(threading.Thread):
     def _load_project(self, thefile):
         """loads an existing project (.prj) file, adapting it's contents
                                       to the current Simple/Advanced choice"""
-        pthefile = Path(thefile)
-        if not (pthefile.exists() and pthefile.is_file()): #no file specified so fail!
+#        pthefile = Path(thefile)
+        if not (Path(thefile).exists() and Path(thefile).is_file()): #no file specified so fail!
             return False
 
-        linesin = list()
-        filein = codecs.open(thefile, mode='r', encoding='utf-8')
-        for aline in filein.readlines():
-            if aline.strip():
-                linesin.extend([aline.strip()])
-        filein.close()
-        lines = ''.join(linesin)
+#        linesin = list()
+#        filein = codecs.open(thefile, mode='r', encoding='utf-8')
+#        for aline in filein.readlines():
+#            if aline.strip():
+#                linesin.extend([aline.strip()])
+#        filein.close()
+#        linesin = Path(thefile).read_text(encoding='utf-8').split()
+        lines = ' '.join(Path(thefile).read_text(encoding='utf-8').split())
         self.root = etree.fromstring(lines)
         self.settings = self.root.find("settings")
         etree.strip_attributes(self.settings, ['template',])
@@ -821,8 +1077,8 @@ class Backend(threading.Thread):
 #            self.qr.put(('PRINT', 'to be inserted ={}'.\
 #                         format(self.to_be_inserted[-1])))
             thisdir = iid
-            e_focus = self.trout.find(".//" + the_focus)
-            e_parent = etree.SubElement(e_focus, iid)
+#            e_focus = self.trout.find(".//" + the_focus)
+            e_parent = etree.SubElement(self.trout.find(".//" + the_focus), iid)
             e_parent.text = 'collection'
 #            self.qr.put(('PRINT', 'e_focus {}, e_parent {}, text {}'.\
 #                         format(e_focus.tag, e_parent.tag, e_parent.text)))
@@ -869,25 +1125,29 @@ class Backend(threading.Thread):
         parent_attribs = e_parent.attrib
 #        children = list(e_parent)
         children = e_parent.getchildren()
-        ancestor_name = parent_attribs['Name']
+#        ancestor_name = parent_attribs['Name']
         my_isalpha = True
-        if ancestor_name:
-            if ancestor_name[-1] == '@':
+        if parent_attribs['Name']:
+            if parent_attribs['Name'][-1] == '@':
                 my_name = '@'
             else:
                 my_name = 1
-                my_isalpha = ancestor_name[-1].isdecimal()
+                my_isalpha = parent_attribs['Name'][-1].isdecimal()
         else:
             my_name = 1
             if self.initial_digit:
                 my_isalpha = self.initial_digit[-1].isdecimal()
             else:
-                my_name = 1
+#                my_name = 1
                 my_isalpha = False
         my_num = 1
 
-        nos_chars = len(to_alpha(len(children))) if my_name == 1 else 0
-        nos_digits = (len(str(len(children)))-1) if my_name == 1 else 0
+        if my_name == 1:
+            nos_chars = len(to_alpha(len(children)))
+            nos_digits = (len(str(len(children)))-1)
+        else:
+            nos_chars = 0
+            nos_digits = 0
 
         the_format = '{0:0' + '{}'.format(nos_digits) + 'd}'
         alpha_format = '{0:A>' + '{}'.format(nos_chars) + 's}'
@@ -901,11 +1161,14 @@ class Backend(threading.Thread):
             if child.attrib['Type'] == 'collection':
                 title = self._my_unidecode(child.attrib['TIT2'])
                 #strip out any unapproved punctuation - done in my_unidecode
-                child.attrib['Name'] = ancestor_name + my_str
+                child.attrib['Name'] = parent_attribs['Name'] + my_str
                 child.text = "{0}{1}{2}-{3}".format(self.prefix, \
-                                               ancestor_name, my_str, title)
-                vout = [['Name', child.attrib['Name']], ['TIT2', title]]
-                self.to_be_renamed[child.tag] = [vout, child.text]
+                                               parent_attribs['Name'], \
+                                               my_str, title)
+#                vout = [['Name', child.attrib['Name']], ['TIT2', title]]
+                self.to_be_renamed[child.tag] = [\
+                        [['Name', child.attrib['Name']], ['TIT2', title]], \
+                        child.text]
                 my_name += 1
                 self._rename_children_of(child.tag)
             else: #is file so use
@@ -921,22 +1184,25 @@ class Backend(threading.Thread):
                                         Path(child.attrib['Location'].stem))
                     #transliterate unicode(utf-8) to 7-bit ascii or Latin-1?
                     #replace spaces and punctuation  - done in my_unidecode
-                    child.attrib['Name'] = ancestor_name + my_str
+                    child.attrib['Name'] = parent_attribs['Name'] + my_str
                     child.text = "{0}{1}{2}-{3}".format(self.prefix, \
-                                   ancestor_name, my_str, title)
+                                   parent_attribs['Name'], my_str, title)
                     vout = [['Name', child.attrib['Name']], ['TIT2', title]]
                 else: #idiot/not idiot always downgrade TIT2 to form title
-                    tit2 = self._downgrade_data('TIT2', child)
-                    title = self._my_unidecode(tit2)
+#                    tit2 = self._downgrade_data('TIT2', child)
+#                    title = self._my_unidecode(tit2)
                     child.attrib['Name'] = "{0}-{1:02d}".format(\
-                                                     ancestor_name, my_num)
+                                parent_attribs['Name'], my_num)
                     child.text = "{0}{1}-{2:02d}-{3}".format(self.prefix, \
-                                         ancestor_name, my_num, title)
+                                        parent_attribs['Name'], my_num, \
+                                         self._my_unidecode(\
+                                        self._downgrade_data('TIT2', child)))
                     if self.mode: #advanced
                         vout = [['Name', child.attrib['Name']],\
                                                ['TIT2', child.attrib['TIT2']]]
                     else: #simple
-                        vout = [['Name', child.attrib['Name']], ['TIT2', tit2]]
+                        vout = [['Name', child.attrib['Name']], ['TIT2', \
+                                self._downgrade_data('TIT2', child)]]
                 self.to_be_renamed[child.tag] = [vout, child.text]
                 my_num += 1
             self.qr.put(('PROGSTEP', 1))
@@ -990,8 +1256,9 @@ class Backend(threading.Thread):
                                         for c in unidecode(text[s:])])
             return result
         else:
-            return ''.join([c if c.isalnum() or c in self.pref_char else '_' \
+            result = ''.join([c if c.isalnum() or c in self.pref_char else '_' \
                             for c in unidecode(text)])
+        return result
 
     def _fix_eng_bug_in_unidecode(self):
         if 'ŋ' not in [v[0] for v in self.pref]:
@@ -1192,7 +1459,9 @@ class Backend(threading.Thread):
 
     def _on_prepare_files(self):
         '''prepare files in temp folder'''
+#        print('prepare files in temp folder')
         self._extract_hashed_graphics()
+#        print('extracted graphics')
         self.qr.put(('PROGMAX', len(self.files)))
         for child in [self.trout.find(".//" + c) \
                       for c in sorted(self.files.keys())]:
@@ -1660,13 +1929,14 @@ class Backend(threading.Thread):
         if (gp in ['project', 'collection']) and \
                     (p in ['collection',]) and \
                     (c in ['collection',]):
-            return True
+            result = True
         elif (gp in ['collection',]) and \
                     (p in ['collection']) and \
                     (c in ['collection', 'file']):
-            return True
+            result = True
         else:
-            return False
+            result = False
+        return result
 
     def _on_merge_files(self, focus):
         """Merge the mp3 files contained in the selected collection, \
@@ -2123,12 +2393,6 @@ class Backend(threading.Thread):
                     playlist.append('#EXTINF:{},{} - {}\r\n../{}'.\
                                     format(item[3], item[2], item[1], \
                                            forward_slash_path(item[0])))
-#                filepath = os.path.normpath('{}/Temp/{}/{}.M3U8'.\
-#                                            format(self.Pub2SD, self.project, \
-#                                                   pid_item.text))
-#                fileout = codecs.open(filepath, mode='w', encoding='utf-8')
-#                fileout.write('\r\n'.join(playlist))
-#                fileout.close()
                 filepath = Path(self.Pub2SD, 'Temp', self.project, \
                                                    (pid_item.text + '.M3U8'))
                 filepath.write_text('\r\n'.join(playlist), encoding='utf-8')
@@ -2139,12 +2403,6 @@ class Backend(threading.Thread):
                                 format(item[3], self._my_unidecode(item[2]), \
                                            self._my_unidecode(item[1]), \
                                            forward_slash_path(item[0])))
-#                filepath = os.path.normpath('{}/Temp/{}/{}.M3U'.\
-#                                            format(self.Pub2SD, self.project, \
-#                                                   pid_item.text))
-#                fileout = codecs.open(filepath, mode='w', encoding='cp1252')
-#                fileout.write('\r\n'.join(playlist))
-#                fileout.close()
                 filepath = Path(self.Pub2SD, 'Temp', self.project, \
                                                    (pid_item.text + '.M3U'))
                 filepath.write_text('\r\n'.join(playlist), encoding='cp1252')
@@ -2181,7 +2439,8 @@ class Backend(threading.Thread):
         linesout.extend(MYCSSLATIN)
         linesout.extend(CLOSEHEADER)
         linesout.extend(['  <nav id="navbar">',\
-        '    <img src="./images/image000.png" alt="Album cover art" title="" align="bottom" width="270">',\
+        '    <img src="./images/image000.png" alt="Album cover art"' + \
+                         'title="" align="bottom" width="270">',\
                          '    <div class="container col">',\
                          ])
         for alink in page_links:
@@ -2217,17 +2476,27 @@ class Backend(threading.Thread):
         linesout = [codecs.BOM_UTF8.decode(),\
 '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">', \
 "<html><head>", \
-'  <meta http-equiv="content-type" content="text/html; charset=utf-8"><title>{}</title>'.format(webpagefile.stem), \
+'  <meta http-equiv="content-type" content="text/html;' + \
+        ' charset=utf-8"><title>{}</title>'.format(webpagefile.stem), \
 '  <style type="text/css">', \
 '	<!--', \
 '       /* global elements */',\
-"       @import 'http://fonts.googleapis.com/css?family=Andika:400,400italic&subset=latin,latin-ext';",\
+"       @import 'http://fonts.googleapis.com/css?family=' + \
+                            'Andika:400,400italic&subset=latin,latin-ext';",\
 "",\
-'		p { font-family : "Andika SEB", geneva, arial, helvetica, sans-serif; font-size : 13pt; font-style : normal; color: #000000; margin-top: 0.07in; margin-bottom: 0.07in }\n' + \
-'		h1 { font-family : "Andika SEB", geneva, arial, helvetica, sans-serif; font-size : 20pt; font-style : normal; color: #000000; margin-top: 0.07in; margin-bottom: 0.07in  }\n' + \
-'		h2 { font-family : "Andika SEB", geneva, arial, helvetica, sans-serif; font-size : 16pt; font-style : normal; color: #000000; margin-top: 0.07in; margin-bottom: 0.07in  }\n' + \
-'		a:link { font-family : "Andika SEB", geneva, arial, helvetica, sans-serif; color: #0000ff }\n' + \
-'		a:visited { font-family : "Andika SEB", geneva, arial, helvetica, sans-serif; color: #800080 }\n' + \
+'		p { font-family : "Andika SEB", geneva, arial, helvetica,' + \
+                ' sans-serif; font-size : 13pt; font-style : normal;' + \
+            'color: #000000; margin-top: 0.07in; margin-bottom: 0.07in }\n' + \
+'		h1 { font-family : "Andika SEB", geneva, arial, helvetica,' + \
+            ' sans-serif; font-size : 20pt; font-style : normal;' + \
+            'color: #000000; margin-top: 0.07in; margin-bottom: 0.07in}\n' + \
+'		h2 { font-family : "Andika SEB", geneva, arial, helvetica,' + \
+            ' sans-serif; font-size : 16pt; font-style : normal;' + \
+            ' color: #000000; margin-top: 0.07in; margin-bottom: 0.07in}\n' + \
+'		a:link { font-family : "Andika SEB", geneva, arial, helvetica,' + \
+            '  sans-serif; color: #0000ff }\n' + \
+'		a:visited { font-family : "Andika SEB", geneva, arial,' + \
+            ' helvetica, sans-serif; color: #800080 }\n' + \
 '       table, td {', \
 '          font-family : "Andika SEB", geneva, arial, helvetica, sans-serif;',\
 '          font-size : 13pt; font-style : normal;',\
@@ -2249,7 +2518,10 @@ class Backend(threading.Thread):
 
         linesout.extend(['	-->', \
 '	</style></head>', \
-'<body dir="ltr" style="background: transparent none repeat scroll 0% 50%; color: rgb(0, 0, 0); -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial; -moz-background-inline-policy: -moz-initial;" lang="en-US">', \
+'<body dir="ltr" style="background: transparent none repeat scroll 0% 50%;' + \
+    ' color: rgb(0, 0, 0); -moz-background-clip: -moz-initial;' + \
+    ' -moz-background-origin: -moz-initial; -moz-background-inline-policy:' + \
+    ' -moz-initial;" lang="en-US">', \
 '<h1 align="center"><b>{}</b></h1>'.format(webpagefile.stem), \
 '', \
 '<ul">', \
@@ -2257,7 +2529,8 @@ class Backend(threading.Thread):
         #open playlist
         #for now assume all are M3U8
         if not playlist:
-            this_file = Path(self.Pub2SD, 'Temp', self.project, (self.project + '.M3U8'))
+            this_file = Path(self.Pub2SD, 'Temp', self.project, \
+                             (self.project + '.M3U8'))
         else:
             this_file = Path(self.Pub2SD, 'Temp', self.project, playlist)
         this_list = this_file.read_text(encoding='utf-8').splitlines()
@@ -2274,7 +2547,8 @@ class Backend(threading.Thread):
         linesout.append('')
         webpagefile.write_text('\n'.join(linesout), encoding='utf-8')
 
-    def _attach_artwork_to(self, target, _picture_type, _desc, hash_tag, length, mime):
+    def _attach_artwork_to(self, target, _picture_type, _desc, hash_tag, \
+                           length, mime):
         """attaches the artwork to item in focus or to its dependants
                                                              if collection"""
         e_target = self.trout.find(".//" + target)
@@ -2478,7 +2752,7 @@ class Backend(threading.Thread):
         #try to make target dir, ok if it already exists
 #        tt = os.path.normpath('{}/Temp/{}/images/'.\
 #                                            format(self.Pub2SD, self.project))
-        tt = Path(self.Pub2SD, 'Temp', self.project, 'images')
+        tt = str(Path(self.Pub2SD, 'Temp', self.project, 'images'))
 #        self.qr.put(("PRINT", tt))
         os.makedirs(tt, exist_ok=True)
         self.list_images = \

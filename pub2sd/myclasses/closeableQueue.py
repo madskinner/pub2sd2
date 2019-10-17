@@ -8,6 +8,7 @@ Defines the CloseableQueue class and the Close exception class.
 
 import queue as _Queue
 from queue import Empty, Full#, _time
+from time import time as _time
 #from Queue import Empty, Full, _time
 #import Queue as _Queue
 #import queue

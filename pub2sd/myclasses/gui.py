@@ -29,11 +29,13 @@ from tkinter.ttk import Button, Checkbutton, Entry, Frame, Label, LabelFrame, \
 from pathlib import Path
 
 import ast
+#import queue
 import psutil
 from PIL import Image, ImageTk
 from lxml import etree
 from unidecode import unidecode
 from mutagen.mp3 import MP3
+
 
 from .closeableQueue import CloseableQueue as CQ
 from .closeableQueue import CloseablePriorityQueue as CPQ
@@ -75,12 +77,12 @@ class PQueue(CPQ):
             self.queue.clear()
             self.not_full.notify_all()
 
-#qcommand = queue.Queue()
-#qreport = queue.Queue()
-qcommand = CQ()
-qreport = CQ()
-aqr = [CPQ(), CPQ(), CPQ(), CPQ(), \
-       CPQ(), CPQ(), CPQ(), CPQ()]
+qcommand = queue.Queue()
+qreport = queue.Queue()
+#qcommand = CQ()
+#qreport = CQ()
+aqr = [PQueue(), PQueue(), PQueue(), PQueue(), \
+       PQueue(), PQueue(), PQueue(), PQueue()]
 
 class GuiCore(Tk):
     """Handle the graphical interface for Pub2SDwizard and the gui logic"""
@@ -89,6 +91,60 @@ class GuiCore(Tk):
         self.parent = parent
         self.script_dir = scriptdir
         self._initialize()
+        self._report_queue = {
+            'CLEARTAGTREE':self._CLEARTAGTREE, \
+            'CLEARTREE':self._CLEARTREE, \
+            'SEEFOCUS':self._SEEFOCUS, \
+            'INSERTTAGTREETAGS':self._INSERTTAGTREETAGS, \
+            'SETTAGTREE':self._SETTAGTREE, \
+            'SELECTIONTAGTREE':self._SELECTIONTAGTREE, \
+            'ENTERLIST':self._ENTERLIST, \
+            'IS_COPY_PLAYLISTS_TO_TOP':self._IS_COPY_PLAYLISTS_TO_TOP, \
+            'M3UorM3U8':self._M3UorM3U8, \
+            'ADD_FILE':self._ADD_FILE, \
+            'ADD_ITEMS':self._ADD_ITEMS, \
+            'RENAME_CHILDREN':self._RENAME_CHILDREN, \
+            'STATUS':self._STATUS, \
+            'STATUS{}':self._STATUSBB, \
+            'MESSAGEBOXASKOKCANCEL':self._MESSAGEBOXASKOKCANCEL, \
+            'MESSAGEBOXERROR':self._MESSAGEBOXERROR, \
+            'MESSAGEBOXWARNTRACK':self._MESSAGEBOXWARNTRACK, \
+            'MESSAGEBOXSHOWWARNING2':self._MESSAGEBOXSHOWWARNING2, \
+            'MESSAGEBOXWARNTRACK2':self._MESSAGEBOXWARNTRACK2, \
+            'MESSAGEBOXSHOWWARNINGMULTPLEFILEICONS':\
+                        self._MESSAGEBOXSHOWWARNINGMULTPLEFILEICONS, \
+            'MESSAGEBOXSHOWERRORIN':self._MESSAGEBOXSHOWERRORIN, \
+            'MESSAGEBOXSHOWERRORERRORINON_PREPARE_FILES':\
+                        self._MESSAGEBOXSHOWERRORERRORINON_PREPARE_FILES, \
+            'MESSAGEBOXSHOWERRORINSUFFICENT':\
+                        self._MESSAGEBOXSHOWERRORINSUFFICENT, \
+            'MESSAGEBOXSHOWHASHERROR':self._MESSAGEBOXSHOWHASHERROR, \
+            'MESSAGEBOXSHOWERRORLOSTGRAPHIC':\
+                        self._MESSAGEBOXSHOWERRORLOSTGRAPHIC, \
+            'MESSAGEBOXSHOWERRORTHREADS':self._MESSAGEBOXSHOWERRORTHREADS, \
+            'PROGSTEP':self._PROGSTEP, \
+            'PROGSTOP':self._PROGSTOP, \
+            'PROGMAX':self._PROGMAX, \
+            'PROGVALUE':self._PROGVALUE, \
+            'COMPLETE':self._COMPLETE, \
+            'LOCKGUI':self._LOCKGUI, \
+            'UNLOCKGUI':self._UNLOCKGUI, \
+            'FOLDERSIZE':self._FOLDERSIZE, \
+            'TXTPREFCHARDEL':self._TXTPREFCHARDEL, \
+            'TXTPREFCHARINSERT':self._TXTPREFCHARINSERT, \
+            'CONTINUE_F0_NEXT':self._CONTINUE_F0_NEXT, \
+            'HASHEDGRAPHICS':self._HASHEDGRAPHICS, \
+            'FILES_PREPARED':self._FILES_PREPARED, \
+            'DELETEDTEMP':self._DELETEDTEMP, \
+            'IM_OUT_OF_HERE':self._IM_OUT_OF_HERE, \
+            'PREFERRED':self._PREFERRED, \
+            'PRINT':self._PRINT, \
+            }
+        self._usb_report_queue = {
+            'PROGSTEP':self._PROGSTEP, \
+            'PRINT':self._USBPRINT, \
+            'STATUS':self._USBSTATUS, \
+            }
 
     def _initialize(self):
         """initialize the GuiCore"""
@@ -137,204 +193,235 @@ class GuiCore(Tk):
         self._initialize_f4(lang) # on f5 - publish to...
         self._initialize_f5(lang)
 
-        if platform.system() == 'Linux':
-            #create on f6,will be for locking/unlocking SD cards
-            self._initialize_f6(lang)
+#        if platform.system() == 'Linux':
+#            #create on f6,will be for locking/unlocking SD cards
+#            self._initialize_f6(lang)
         self._process_report_queue()
 
     def _process_report_queue(self):
         lang = self.ddnGuiLanguage.get()
-        if not qreport.empty():
-            while not qreport.empty():
-                areport = qreport.get()
-                if 'CLEARTAGTREE' in areport:
-                    map(self.tagtree.delete, self.tagtree.get_children())
-                elif 'CLEARTREE' in areport:
-                    self.tree.delete(*self.tree.get_children())
-                elif 'SEEFOCUS' in areport:
-                    self.tree.see(areport[1])
-                    self.tree.focus(areport[1])
-                    self.tree.selection_set(areport[1])
-                elif 'INSERTTAGTREETAGS' in areport:
-                    for item in areport[1]:
-                        if item not in self.tagtree.get_children():
-                            self.tagtree.insert('', index='end', iid=item, \
-                                    open=True, values=[0], \
-                                    text="({}) {}".format(\
-                                          item, SET_TAGS[lang][item]))
-                elif 'SETTAGTREE' in areport:
-                    self.tagtree.selection_set(areport[1])
-                elif 'SELECTIONTAGTREE' in areport:
-                    self.tagtree.selection_add(areport[1])
-                elif 'ENTERLIST' in areport:
-                    self.EnterList.set(areport[1])
-                elif 'IS_COPY_PLAYLISTS_TO_TOP' in areport:
-                    self.is_copy_playlists_to_top.set(areport[1])
-                elif 'M3UorM3U8' in areport:
-                    self.M3UorM3U8.set(areport[1])
-                elif 'ADD_FILE' in areport:
-#                    focus = areport[1]
-#                    iid = areport[2]
-#                    vout = areport[3]
-                    self.tree.insert(areport[1], index='end', iid=areport[2], \
-                                     values=areport[3], open=True, text='file')
-                elif 'ADD_ITEMS' in areport:
-                    #items handled in the order thet were added to the list
-                    for item in areport[1]:
-#                        iid = item[0]
-#                        v = item[1]
-#                        focus = v[0]
-#                        vout = v[1]
-#                        text = v[2]
-                        newItem = self.tree.insert(item[1][0], index='end', \
-                                            iid=item[0], values=item[1][1], \
-                                            open=True, text=item[1][2])
-                        self.progbar.step()
-                    self._enable_tabs()
-                    self.update()
-                elif 'RENAME_CHILDREN' in areport:
-                    #so now rename them
-                    for iid in areport[1].keys():
-                        vout = areport[1][iid][0]
-                        for c, v in vout:
-                            self.tree.set(iid, c, v)
-                        self.tree.item(iid, text=areport[1][iid][1])
-                        self.progbar.step()
-                    self._enable_tabs()
-                    self.update()
-                elif 'PRINT' in areport:
-                    print(areport[1])
-                elif 'LISTPROJECTS' in areport:
-                    self.list_projects = [f.rstrip('.prj') \
-                                          for f in os.listdir(self.Pub2SD) \
-                                                         if f.endswith('.prj')]
-                    self.ddnCurProject['values'] = self.list_projects
-                    self.ddnCurProject.set(areport[1])
-                elif 'STATUS' in areport:
-                    self.status['text'] = LOCALIZED_TEXT[lang][areport[1]] \
-                                                        if areport[1] else ''
-                elif 'STATUS{}' in areport:
-                    self.status['text'] = LOCALIZED_TEXT[lang][areport[1][0]].\
-                                                        format(areport[1][1]) \
-                                                        if areport[1] else ''
-                elif 'MESSAGEBOXASKOKCANCEL' in areport:
-                    result = messagebox.askokcancel(\
-                                        LOCALIZED_TEXT[lang][areport[1][0]], \
-                                        LOCALIZED_TEXT[lang][areport[1][1]])
-                    qcommand.put(('OKCANCEL', result))
-                elif 'MESSAGEBOXERROR' in areport:
-#                    title, m1, m2, m3 = areport[1]
-#                    title = LOCALIZED_TEXT[lang][title]
-#                    m1 = LOCALIZED_TEXT[lang][m1]
-#                    m3 = LOCALIZED_TEXT[lang][m3]
-                    messagebox.showerror(areport[1][0], \
-                                        "{} <{}>, {}".format(\
-                                        LOCALIZED_TEXT[lang][areport[1][1]], \
-                                        areport[1][2], \
-                                        LOCALIZED_TEXT[lang][areport[1][3]]))
-                elif 'MESSAGEBOXWARNTRACK' in areport:
-                    title, m1, m2, m3 = areport[1]
-                    messagebox.showwarning(title, \
-                        LOCALIZED_TEXT[lang]['Set'] + ' TRCK, >{}< {}'.format(\
-                                          m2, \
-                                          LOCALIZED_TEXT[lang][\
-                       "'track in/set_of' doesn't contain a valid integers."]))
-                elif 'MESSAGEBOXSHOWWARNING2' in areport:
-                    messagebox.showwarning(areport[1][0], \
-                                    LOCALIZED_TEXT[lang][areport[1][1]])
-                elif 'MESSAGEBOXWARNTRACK2' in areport:
-#                    title, column, url_str = areport[1]
-                    messagebox.showwarning(LOCALIZED_TEXT[lang][areport[1][0]] + \
-                                           ' {}'.format(areport[1][1]), \
-                                    LOCALIZED_TEXT[lang][areport[1][2]])
-                elif 'MESSAGEBOXSHOWWARNINGMULTPLEFILEICONS' in areport:
-                    messagebox.showwarning('', \
-                        LOCALIZED_TEXT[lang][areport[1][0]].\
-                        format(areport[1][1]))
-                elif 'MESSAGEBOXSHOWERRORIN' in areport:
-                    messagebox.showerror(areport[1][0], areport[1][1])
-                elif "MESSAGEBOXSHOWERRORERRORINON_PREPARE_FILES" in areport:
-                    messagebox.showerror(areport[1][0], areport[1][1])
-                elif 'MESSAGEBOXSHOWERRORINSUFFICENT' in areport:
-                    messagebox.showerror(\
-                                        LOCALIZED_TEXT[lang][areport[1][0]], \
-                                        LOCALIZED_TEXT[lang][areport[1][1]].\
-                                        format(areport[1][2], areport[1][3]))
-                elif 'MESSAGEBOXSHOWHASHERROR' in areport:
-                    name, column, test, mhash = areport[1]
-                    self.complete = messagebox.showerror("Invalid number of parameters", \
-                                    "In row {}, {} tag=>{}<, {} required.".\
-                                    format(name,\
-                                    column, test, mhash))
-                    qcommand.put(('OKCANCEL', self.complete))
-                elif 'MESSAGEBOXSHOWERRORLOSTGRAPHIC' in areport:
-                    messagebox.showerror('', areport[1])
-                elif 'MESSAGEBOXSHOWERRORTHREADS' in areport:
-                    messagebox.showerror(LOCALIZED_TEXT[lang][areport[1][0]], \
-                                         LOCALIZED_TEXT[lang][areport[1][1]].\
-                                         format(areport[1][2]))
-                elif 'PROGSTEP' in areport:
-                    self.progbar.step(areport[1])
-                elif 'PROGSTOP' in areport:
-                    self.progbar.stop()
-                elif 'PROGMAX' in areport:
-                    self.progbar['maximum'] = areport[1]
-                    self.progbar['value'] = 0
-                    self.update()
-                elif 'PROGVALUE' in areport:
-                    self.progbar['value'] = areport[1]
-                    self.update()
-                elif 'COMPLETE' in areport:
-                    self.complete = areport[1]
-                elif 'LOCKGUI' in areport:
-                    self._disable_tabs()
-                elif 'UNLOCKGUI' in areport:
-                    self._enable_tabs()
-                    self.update()
-                elif 'FOLDERSIZE' in areport:
-                    self.needed = areport[1]
-                    self.lblOutputSize['text'] = \
-                                                "{:0.1f} MB".format(areport[1])
-                elif 'TXTPREFCHARDEL' in areport:
-                    self.txtPrefChar.delete(areport[1][0], areport[1][1])
-                elif 'TXTPREFCHARINSERT' in areport:
-                    self.txtPrefChar.insert(areport[1][0], areport[1][1])
-                elif 'CONTINUE_F0_NEXT' in areport:
-                    if areport[1]:
-                        self._on_click_f0_next_continued(lang)
-                    else:
-                        print("can't continue")
-#                        pass
-                    self.update()
-                elif 'HASHEDGRAPHICS' in areport:
-                    self.hashed_graphics = areport[1]
-                elif 'FILES_PREPARED' in areport:
-                    self._on_prepare_files_continued()
-                elif 'DELETEDTEMP' in areport:
-                    qcommand.put(('DIE_DIE_DIE',''))
-                    self.destroy()
-                    return
-                elif 'PREFERRED' in areport:
-                    self.preferred.set(areport[1])
-                else:
-                    print('Unknown report >{}<'.format(areport))
-                qreport.task_done()
+        while not qreport.empty():
+            areport = qreport.get()
+            if areport[0] in self._report_queue.keys():
+                self._report_queue[areport[0]](areport[1], lang)
+            else:
+                print('Unknown report >{}<'.format(areport))
+            qreport.task_done()
         #now scan queues from pub to SD threads
         for i in range(0, 8):
             if not aqr[i].empty():
                 aqreport = aqr[i].get()
-                if 'PROGSTEP' in aqreport:
-                    self.progbar.step(1)
-                    aqr[i].task_done()
-                elif 'PRINT' in aqreport:
-                    print(aqreport[2])
-                elif 'STATUS' in aqreport:
-                    self.usb_status[i] = aqreport[2]
-                    self.status['text'] = ';'.join([t for t in self.usb_status if t])
+                if aqreport[0] in self._usbreport_queue.keys():
+                    self._report_queue[areport[0]](areport[1], i)
                 else:
                     pass
+                aqr[i].task_done()
+#        self.update()
+        self.lblProject.after(100, self._process_report_queue)
+
+    def _CLEARTAGTREE(self, _, __):
+        map(self.tagtree.delete, self.tagtree.get_children())
+
+    def _CLEARTREE(self, _, __):
+        self.tree.delete(*self.tree.get_children())
+
+    def _SEEFOCUS(self, areport, _):
+        self.tree.see(areport)
+        self.tree.focus(areport)
+        self.tree.selection_set(areport)
+
+    def _INSERTTAGTREETAGS(self, areport, lang):
+        for item in areport:
+            if item not in self.tagtree.get_children():
+                self.tagtree.insert('', index='end', iid=item, \
+                        open=True, values=[0], \
+                        text="({}) {}".format(\
+                              item, SET_TAGS[lang][item]))
+    def _SETTAGTREE(self, areport, _):
+        self.tagtree.selection_set(areport)
+
+    def _SELECTIONTAGTREE(self, areport, _):
+        self.tagtree.selection_add(areport)
+
+    def _ENTERLIST(self, areport, _):
+        self.EnterList.set(areport)
+
+    def _IS_COPY_PLAYLISTS_TO_TOP(self, areport, _):
+        self.is_copy_playlists_to_top.set(areport)
+
+    def _M3UorM3U8(self, areport, _):
+        self.M3UorM3U8.set(areport)
+
+    def _ADD_FILE(self, areport, _):
+        self.tree.insert(areport[1], index='end', iid=areport[2], \
+                         values=areport[3], open=True, text='file')
+    def _ADD_ITEMS(self, areport, _):
+        #items handled in the order thet were added to the list
+        for item in areport:
+            newItem = self.tree.insert(item[1][0], index='end', \
+                                iid=item[0], values=item[1][1], \
+                                open=True, text=item[1][2])
+            self.progbar.step()
+        self._enable_tabs()
         self.update()
-        self.lblProject.after(200, self._process_report_queue)
+
+    def _RENAME_CHILDREN(self, areport, _):
+        #so now rename them
+        for iid in areport.keys():
+            vout = areport[iid][0]
+            for c, v in vout:
+                self.tree.set(iid, c, v)
+            self.tree.item(iid, text=areport[iid][1])
+            self.progbar.step()
+        self._enable_tabs()
+        self.update()
+
+    def _PRINT(self, areport, _):
+        print(areport)
+
+    def _USBPRINT(self, areport, _):
+        print(areport[2])
+
+    def _LISTPROJECTS(self, areport, _):
+        self.list_projects = [f.rstrip('.prj') \
+                              for f in os.listdir(self.Pub2SD) \
+                                             if f.endswith('.prj')]
+        self.ddnCurProject['values'] = self.list_projects
+        self.ddnCurProject.set(areport[1])
+
+    def _STATUS(self, areport, lang):
+        self.status['text'] = LOCALIZED_TEXT[lang][areport] \
+                                            if areport else ''
+    def _USBSTATUS(self, areport, i):
+        self.usb_status[i] = areport[2]
+        self.status['text'] = ';'.join(\
+                   [t for t in self.usb_status if t])
+
+    def _STATUSBB(self, areport, lang):
+        self.status['text'] = LOCALIZED_TEXT[lang][areport[0]].\
+                                            format(areport[1]) \
+                                            if areport else ''
+
+    def _MESSAGEBOXASKOKCANCEL(self, areport, lang):
+        qcommand.put(('OKCANCEL', messagebox.askokcancel(\
+                            LOCALIZED_TEXT[lang][areport[0]], \
+                            LOCALIZED_TEXT[lang][areport[1]])))
+
+    def _MESSAGEBOXERROR(self, areport, lang):
+        messagebox.showerror(areport[1][0], \
+                            "{} <{}>, {}".format(\
+                            LOCALIZED_TEXT[lang][areport[1]], \
+                            areport[2], \
+                            LOCALIZED_TEXT[lang][areport[3]]))
+
+    def _MESSAGEBOXWARNTRACK(self, areport, lang):
+        messagebox.showwarning(areport[0], \
+            LOCALIZED_TEXT[lang]['Set'] + ' TRCK, >{}< {}'.format(\
+                              areport[2], \
+                              LOCALIZED_TEXT[lang][\
+           "'track in/set_of' doesn't contain a valid integers."]))
+
+    def _MESSAGEBOXSHOWWARNING2(self, areport, lang):
+        messagebox.showwarning(areport[0], \
+                        LOCALIZED_TEXT[lang][areport[1][1]])
+
+    def _MESSAGEBOXWARNTRACK2(self, areport, lang):
+        messagebox.showwarning(LOCALIZED_TEXT[lang][areport[0]] + \
+                               ' {}'.format(areport[1]), \
+                        LOCALIZED_TEXT[lang][areport[2]])
+
+    def _MESSAGEBOXSHOWWARNINGMULTPLEFILEICONS(self, areport, lang):
+        messagebox.showwarning('', \
+                        LOCALIZED_TEXT[lang][areport[0]].format(areport[1]))
+
+    def _MESSAGEBOXSHOWERRORIN(self, areport, _):
+        messagebox.showerror(areport[0], areport[1])
+
+    def _MESSAGEBOXSHOWERRORERRORINON_PREPARE_FILES(self, areport, _):
+        messagebox.showerror(areport[0], areport[1])
+
+    def _MESSAGEBOXSHOWERRORINSUFFICENT(self, areport, lang):
+        messagebox.showerror(\
+                            LOCALIZED_TEXT[lang][areport[0]], \
+                            LOCALIZED_TEXT[lang][areport[1]].\
+                            format(areport[2], areport[3]))
+
+    def _MESSAGEBOXSHOWHASHERROR(self, areport, _):
+        self.complete = messagebox.showerror("Invalid number of parameters", \
+                        "In row {}, {} tag=>{}<, {} required.".\
+                        format(areport[0],\
+                        areport[1], \
+                        areport[2], \
+                        areport[3]))
+        qcommand.put(('OKCANCEL', self.complete))
+
+    def _MESSAGEBOXSHOWERRORLOSTGRAPHIC(self, areport, _):
+        messagebox.showerror('', areport)
+
+    def _MESSAGEBOXSHOWERRORTHREADS(self, areport, lang):
+        messagebox.showerror(LOCALIZED_TEXT[lang][areport[0]], \
+                             LOCALIZED_TEXT[lang][areport[1]].\
+                             format(areport[2]))
+
+    def _PROGSTEP(self, areport, _):
+        self.progbar.step(areport)
+
+    def _PROGSTOP(self, areport, _):
+        self.progbar.stop()
+
+    def _PROGMAX(self, areport, _):
+        self.progbar['maximum'] = areport
+        self.progbar['value'] = 0
+        self.update()
+
+    def _PROGVALUE(self, areport, _):
+        self.progbar['value'] = areport
+        self.update()
+
+    def _COMPLETE(self, areport, _):
+        self.complete = areport[1]
+
+    def _LOCKGUI(self, areport, _):
+        self._disable_tabs()
+
+    def _UNLOCKGUI(self, areport, _):
+        self._enable_tabs()
+        self.update()
+
+    def _FOLDERSIZE(self, areport, _):
+        self.lblOutputSize['text'] = \
+                                    "{:0.1f} MB".format(areport)
+
+    def _TXTPREFCHARDEL(self, areport, _):
+        self.txtPrefChar.delete(areport[0], areport[1])
+
+    def _TXTPREFCHARINSERT(self, areport, _):
+        self.txtPrefChar.insert(areport[0], areport[1])
+
+    def _CONTINUE_F0_NEXT(self, areport, lang):
+        if areport:
+            self._on_click_f0_next_continued(lang)
+        else:
+            print("can't continue")
+        self.update()
+
+    def _HASHEDGRAPHICS(self, areport, _):
+        self.hashed_graphics = areport
+
+    def _FILES_PREPARED(self, areport, _):
+        self._on_prepare_files_continued()
+
+    def _DELETEDTEMP(self, areport, _):
+        qcommand.put(('DIE_DIE_DIE', ''))
+
+    def _IM_OUT_OF_HERE(self, areport, _):
+        for pq in aqr:
+            pq.clear()
+            pq.close()
+        self.destroy()
+
+    def _PREFERRED(self, areport, _):
+        self.preferred.set(areport)
 
     def _initialize_project_variables(self):
         """The project variables that will be saved on clicking 'save project'.
@@ -380,15 +467,18 @@ class GuiCore(Tk):
         self.illegalChars = [chr(i) for i in range(1, 0x20)] + \
                             [chr(0x7F), '"', '*', '/', ':', '<', '>', \
                                                               '?', '\\', '|']
-
         self.output_to = set()
         self.play_list_targets = set()
         self.needed = 0 #in Mb
         self.temp_dir_deleted = False
         self.usb_status = ['', '', '', '', '', '', '', '']
         self.Treed = False
+        self.next_track = 0
 
-        #define all StringVar(), BooleanVar(), etc… needed to hold info
+        self._initialize_Vars()
+
+    def _initialize_Vars(self):
+        """define all StringVar(), BooleanVar(), etc… needed to hold info"""
         self.selected_lang = StringVar()
         self.int_var = IntVar()
         self.current_project = StringVar()
@@ -399,7 +489,6 @@ class GuiCore(Tk):
         self.playLists = StringVar()
         self.set_tag = StringVar()
         self.set_trim = StringVar()
-        self.next_track = 0
         self.is_copy_playlists_to_top = IntVar()
         self.EnterList = StringVar()
         self.additionalTags = StringVar()
@@ -662,6 +751,7 @@ class GuiCore(Tk):
         self.btnF0Next.grid(column=2, row=7, padx=5, pady=5, sticky='news')
         self.btnF0Next_ttp = CreateToolTip(self.btnF0Next, \
                                            LOCALIZED_TEXT[lang]['F0Next_ttp'])
+#        print('Initialized f0')
 
     def _initialize_f1(self, lang='en-US'):
         """initialize Choose MP3 Tags tab"""
@@ -1007,9 +1097,9 @@ class GuiCore(Tk):
 
         set_tagb = []
         for tag in SET_TAGS[lang]:
-            tagname = SET_TAGS[lang][tag]
+#            tagname = SET_TAGS[lang][tag]
             #??? need to ensure tagname is translated to fr and pt
-            set_tagb.append('{}:({})'.format(tagname, tag.upper()))
+            set_tagb.append('{}:({})'.format(SET_TAGS[lang][tag], tag.upper()))
         self.ddnSelectTag = Combobox(self.boxEnter, state='readonly', \
                                      textvariable=self.set_tag, width=70)
         self.ddnSelectTag.bind("<<ComboboxSelected>>", self._on_get)
@@ -1071,7 +1161,7 @@ class GuiCore(Tk):
 
         self.btnSelectArtwork = Button(self.boxArt, \
                                 text=LOCALIZED_TEXT[lang]["Select Artwork"], \
-                                                command=self._on_select_artwork)
+                                command=self._on_select_artwork)
         self.btnSelectArtwork.grid(column=0, row=0, padx=5, pady=5, \
                                    sticky='news')
 
@@ -1246,9 +1336,9 @@ class GuiCore(Tk):
                             columnspan=2, padx=5, pady=5, sticky='news')
 
 
-    def _initialize_f6(self, lang):
-        """The lock unlock SD card tab, to be implemented?"""
-        pass
+#    def _initialize_f6(self, lang):
+#        """The lock unlock SD card tab, to be implemented?"""
+#        pass
 
     def _on_html_project(self):
         """Export the whole project tree to an HTML file and open it with
@@ -1540,6 +1630,7 @@ class GuiCore(Tk):
     def _on_click_f0_next(self):
         """loads the setting on the 'Project Name' tab and proceeds to the
         'Choose MP3 tags' tab"""
+#        print('In on_next_f0, SCRIPT_DIR is >{}<'.format(self.script_dir))
         qcommand.put(('SCRIPT_DIR', self.script_dir))
         lang = self.ddnGuiLanguage.get()
 
@@ -1560,6 +1651,7 @@ class GuiCore(Tk):
 
     def _on_click_f0_next_continued(self, lang):
         """conf file loaded or project created so continue"""
+#        print('In _on_click_f0_next_continued' )
         #now load template if any
         if self.ddnCurTemplate.get():
             thisone = Path(self.Pub2SD, (self.ddnCurTemplate.get() + '.json'))
@@ -2063,6 +2155,7 @@ class GuiCore(Tk):
                                             'files to a working directory...']
         self.update_idletasks()
         self._disable_tabs()
+#        print('PREPARE_FILES')
         qcommand.put(('PREPARE_FILES', None))
 
     def _on_prepare_files_continued(self):
@@ -2223,16 +2316,16 @@ class GuiCore(Tk):
                                         LOCALIZED_TEXT[lang]['AddContents_ttp']
         self.etrTagValue_ttp.text = LOCALIZED_TEXT[lang]['entry1_ttp']
         self.ddnSelectTag_ttp.text = LOCALIZED_TEXT[lang]['ddnSelectTag_ttp']
+
+    def _change_lang_3(self, lang):
+        '''change lang of labels to interfacelang'''
+
         self.btnGet['text'] = LOCALIZED_TEXT[lang]["Get"]
         self.btnSet['text'] = LOCALIZED_TEXT[lang]['Set']
         self.btnSet_ttp.text = LOCALIZED_TEXT[lang]['Set_ttp']
         self.btnAppend['text'] = LOCALIZED_TEXT[lang]['Append']
         self.btnAppend_ttp.text = LOCALIZED_TEXT[lang]['Append_ttp']
         self.btnGetDefault['text'] = LOCALIZED_TEXT[lang]['Get default']
-
-    def _change_lang_3(self, lang):
-        '''change lang of labels to interfacelang'''
-
         self.btnTrimTitle['text'] = LOCALIZED_TEXT[lang]['Trim Title']
         self.btnPub2SD['text'] = LOCALIZED_TEXT[lang]["Publish to SD/USB"]
         self.btnExit['text'] = LOCALIZED_TEXT[lang][\
@@ -2332,4 +2425,4 @@ def delete_folder(path):
 def is_hashable(tag):
     '''return true if tag hashable'''
 #    return True if True in HASH_TAG_ON[tag] else False
-    return (True in HASH_TAG_ON[tag])
+    return True in HASH_TAG_ON[tag]
