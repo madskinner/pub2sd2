@@ -82,7 +82,6 @@ class Backend(threading.Thread):
         self.qc = qc
         self.qr = qr
         self.aqr = aqr
-#        self.threadlock = tl
         self.exitFlag = 0
         self.mode = 0
         self.displayColumns = list()
@@ -108,10 +107,6 @@ class Backend(threading.Thread):
 
         #bodge to get past WinPython....
         self.Pub2SD = Path(Path.home(), 'Pub2SD')
-#        self.Pub2SD = os.path.normpath(os.path.expanduser('~') + '/Pub2SD')
-#        if platform.system() == 'Windows':
-#            temp = self.Pub2SD.split('\\')
-#            self.Pub2SD = '\\'.join(temp[:3]) + '\\Pub2SD'
 
         self.selected_tags = list()
         self.project = ''
@@ -171,243 +166,52 @@ class Backend(threading.Thread):
                 else:
                     self.qr.put(('PRINT', 'backend lost, acommand was {}'.\
                                  format(acommand)))
-                self.qc.task_done()
-            else:
-                pass
-            time.sleep(0.066 - ((time.time() - starttime) % 0.066))
-
-#    def _scan_command_queue(self):
-#        acommand = self.qc.get()
-#        if 'EXIT' in acommand:
-#            self.exitFlag = 1
-#            self.qc.task_done()
-#            # self.exitFlag can be set by error condition in backend
-#        elif 'SCRIPT_DIR' in acommand:
-#            self.script_dir = acommand[1]
-##            self.qr.put(('PRINT',"received script_dir >{}<".format(self.script_dir)))
-#            self.qc.task_done()
-#        elif 'MODE' in acommand:
-#            self.mode = acommand[1]
-#            self.qc.task_done()
-#        elif 'INITIALDIGIT' in acommand:
-#            self.initial_digit = acommand[1].upper()
-#            self.prefix = acommand[1]
-#            self.qc.task_done()
-#        elif 'CONF_FILE' in acommand:
-##            self.qr.put(('PRINT', 'received CONF_FILE =>{}<'.format(acommand[1])))
-#            self.qc.task_done()
-#            self.project = acommand[1]
-#            self._load_conf_file(acommand[1])
-#        elif 'LOAD_TEMPLATE' in acommand:
-##                self.template = acommand[1]
-#            self._load_template(acommand[1])
-#            self.qc.task_done()
-#        elif 'LOADTREEFROMTROUT' in acommand:
-#            self._on_reload_tree()
-#            self.qc.task_done()
-#        elif 'MERGE' in acommand:
-#            self._on_merge_files(acommand[1])
-#            self.qc.task_done()
-#        elif 'SELFPREF' in acommand:
-#            self.pref = acommand[1][0]
-#            self.pref_char = acommand[1][1]
-#            self.preferred = acommand[1][2]
-#            self.template = acommand[1][3]
-#            self.qc.task_done()
-#        elif 'DISPLAYCOLUMNS' in acommand:
-#            self.displayColumns, self.columns = acommand[1]
-#            self.qc.task_done()
-#        elif 'SELECTED_TAGS' in acommand:
-#            map(self.sf1.attrib.pop, self.sf1.attrib.keys())
-#            #put tag state into xml
-#            self.selected_tags = acommand[1]
-#            for i in range(0, len(self.selected_tags)):
-#                self.sf1.attrib[self.selected_tags[i]] = 'show'
-#            self.qc.task_done()
-#        elif 'STRIPTITLE' in acommand:
-##            to_strip, focus = acommand[1]
-#            self._on_strip(acommand[1][0], acommand[1][1])
-#            self.to_be_renamed = dict()
-#            self._rename_children_of(acommand[1][1])
-#            self.qr.put(('RENAME_CHILDREN', self.to_be_renamed))
-#            self.qc.task_done()
-#        elif 'HASHEDGRAPHICS' in acommand:
-##                self.qr.put(('PRINT', 'running self._extract_hashed_graphics()'))
-#            self.hashed_graphics = acommand[1]
-##                self._extract_hashed_graphics()
-#            self.qc.task_done()
-#        elif 'ADD_FOLDER' in acommand:
-#            self.qr.put(('LOCKGUI', None))
-#            self.to_be_inserted = list()
-##            the_focus, adir_path = acommand[1]
-#            self.qr.put(('PROGMAX', count_mp3_files_below(acommand[1][1]) * 2))
-#            self._add_tree(acommand[1][0], acommand[1][1], False)
-#            self._on_reload_tree()
-#            self._rename_children_of('I00001')
-#            self.qr.put(('RENAME_CHILDREN', self.to_be_renamed))
-#            self.qr.put(('STATUS', "Unpacking complete."))
-#            self.qr.put(('PROGVALUE', 0))
-#            self.qr.put(('UNLOCKGUI', None))
-#            self.qc.task_done()
-#        elif 'ADD_CONTENTS' in acommand:
-#            the_focus, adir_path = acommand[1]
-#            #if the_focus is I00001 then any .mp3 files in current folder
-#            # would be directly below project. Need to have at least one
-#            # collection in way
-#            self.qr.put(('LOCKGUI', None))
-#            self.qr.put(('PROGMAX', count_mp3_files_below(adir_path) * 2))
-#            self.to_be_inserted = list()
-#            self._add_tree(the_focus, adir_path, True)
-##                self.qr.put(('PRINT', "about to reload_tree"))
-#            self._on_reload_tree()
-##                self.qr.put(('PRINT', "reloaded tree"))
-#            self._rename_children_of('I00001')
-#            self.qr.put(('RENAME_CHILDREN', self.to_be_renamed))
-#            self.qr.put(('STATUS', "Unpacking complete."))
-#            self.qr.put(('PROGVALUE', 0))
-#            self.qr.put(('UNLOCKGUI', None))
-#            self.qc.task_done()
-#        elif 'ADD_COLLECTION' in acommand:
-##            focus = acommand[1]
-#            self.qr.put(('LOCKGUI', None))
-#            self._add_collection(acommand[1])
-#            self._on_reload_tree()
-#            self.qr.put(('STATUS', "Unpacking complete."))
-#            self.qr.put(('PROGVALUE', 0))
-#            self.qr.put(('UNLOCKGUI', None))
-#            self.qc.task_done()
-#        elif 'ADD_FILE' in acommand:
-##            focus, filenames = acommand[1]
-#            self.qr.put(('LOCKGUI', None))
-#            self.qr.put(('PROGMAX', len(acommand[1][1]) * 2))
-#            self.to_be_inserted = list()
-#            self._add_files(acommand[1][0], acommand[1][1])
-#            self._on_reload_tree()
-#            self.qr.put(('UNLOCKGUI', None))
-#            self.qc.task_done()
-#        elif 'CHILDRENS_FILENAMES' in acommand:
-#            self.project_id, temp_path, project_path_ = acommand[1]
-#            #self.project_id should be set to 'I00001', but for safety
-#            self._childrens_filenames(self.trout.find(".//I00001"), \
-#                                      temp_path, project_path_)
-#        elif 'FOLDERSIZE' in acommand:
-##            size_in_Mb = folder_size(\
-##                str(Path(self.Pub2SD, 'Temp', self.project)))/(1024.0 * 1024.0)
-#            self.qr.put(('FOLDERSIZE', \
-#                         folder_size(str(Path(self.Pub2SD, \
-#                                    'Temp', self.project)))/(1024.0 * 1024.0)))
-#        elif 'PUBLISHFILES' in acommand:
-#            self._on_publish_files(acommand[1])
-#        elif 'PREPARE_FILES' in acommand:
-#            self.qr.put(('LOCKGUI', None))
-#            self._on_prepare_files()
-#            self.qr.put(('UNLOCKGUI', None))
-#        elif 'ONSAVEPROJECT' in acommand:
-#            self._on_save_project(acommand[1])
-#        elif 'DELETE' in acommand:
-#            self._on_delete(acommand[1])
-#        elif 'MOVEUP' in acommand:
-#            self._on_move_up(acommand[1])
-#        elif 'MOVEDOWN' in acommand:
-#            self._on_move_down(acommand[1])
-#        elif 'PROMOTE' in acommand:
-#            self._on_promote(acommand[1])
-#        elif 'DEMOTE' in acommand:
-#            self._on_demote(acommand[1])
-#            self._on_reload_tree()
-#        elif 'ON_SET' in acommand:
-#            self._on_set(acommand[1])
-#        elif 'ON_APPEND' in acommand:
-#            self._on_append(acommand[1])
-#            self._on_reload_tree()
-#        elif 'ATTACH_ARTWORK_TO' in acommand:
-#            focus, _picture_type, _desc, artwork = acommand[1]
-#            #hash it here, pass hash_tag and length
-##            partwork = Path(artwork)
-#            if artwork \
-#                    and Path(artwork).exists() \
-#                    and Path(artwork).suffix in ['.png', 'jpg',]:
-##                    and os.path.exists(artwork) \
-##                    and artwork[-4:] in ['.png', 'jpg',]:
-##                    fart = codecs.open(artwork, mode='rb').read()
-##                fart = Path(artwork).read_bytes()
-#                hash_tag, length = self._hash_it(Path(artwork).read_bytes())
-#                mime = 'image/' + artwork[-3:]
-#                self._attach_artwork_to(focus, _picture_type, _desc, \
-#                                        hash_tag, length, mime)
-#                self._on_reload_tree()
-#            else:
-#                #clear tag
-#                self._attach_artwork_to(focus, '', '', '', '', '')
-#        elif 'SETCOPYPLAYLISTS' in acommand:
-#            self.play_list_targets, self.is_copy_playlists_to_top = acommand[1]
-#        elif 'M3UorM3U8' in acommand:
-#            self.M3UorM3U8 = acommand[1]
-#        elif 'OUTPUT_TO' in acommand:
-#            self.output_to = acommand[1]
-#        elif 'PUBLISH_TO_SD' in acommand:
-#            self._on_publish_to_SD()
-#        elif 'EXPORTHTML' in acommand:
-#            self._export_to_html()
-#        elif 'DELETETEMP' in acommand:
-#            self.qr.put(('STATUS', \
-#                    "Deleting temporary files, this may take a few minutes."))
-#            self._delete_temp_folder()
-#            self.qr.put(('DELETEDTEMP', None))
-##            break
-#        elif 'DIE_DIE_DIE' in acommand:
-#            self.exitFlag = True
-#            self.qr.put(('IM_OUT_OF_HERE', "I'm out of here!!!"))
-##            for pq in self.aqr:
-##                pq.clear()
-##                    pq.close()
-##                self.qc.close()
-##                self.qr.close()
-##
-##            break
-#
-#        else:
-#            self.qr.put(('PRINT', 'backend lost, acommand was {}'.\
-#                         format(acommand)))
-#            self.qc.task_done()
-
-#    def _scan_command_queue(self):
-#        acommand = self.qc.get()
+                    self.qc.task_done()
 
     def _EXIT(self, dummy):
         self.exitFlag = 1
+        self.qc.task_done()
 
     def _SCRIPT_DIR(self, acommand):
         self.script_dir = acommand
+        self.qc.task_done()
 
     def _MODE(self, acommand):
         self.mode = acommand
+        self.qc.task_done()
 
     def _INITIALDIGIT(self, acommand):
         self.initial_digit = acommand.upper()
         self.prefix = acommand
+        self.qc.task_done()
 
     def _CONF_FILE(self, acommand):
         self.project = acommand
         self._load_conf_file(acommand)
+        self.qc.task_done()
 
     def _LOAD_TEMPLATE(self, acommand):
         self._load_template(acommand)
+        self.qc.task_done()
 
     def _LOADTREEFROMTROUT(self, _):
         self._on_reload_tree()
+        self.qc.task_done()
 
     def _MERGE(self, acommand):
         self._on_merge_files(acommand)
+        self.qc.task_done()
 
     def _SELFPREF(self, acommand):
         self.pref = acommand[0]
         self.pref_char = acommand[1]
         self.preferred = acommand[2]
         self.template = acommand[3]
+        self.qc.task_done()
 
     def _DISPLAYCOLUMNS(self, acommand):
         self.displayColumns, self.columns = acommand
+        self.qc.task_done()
 
     def _SELECTED_TAGS(self, acommand):
         map(self.sf1.attrib.pop, self.sf1.attrib.keys())
@@ -415,6 +219,7 @@ class Backend(threading.Thread):
         self.selected_tags = acommand
         for i in range(0, len(self.selected_tags)):
             self.sf1.attrib[self.selected_tags[i]] = 'show'
+        self.qc.task_done()
 
     def _STRIPTITLE(self, acommand):
 #            to_strip, focus = acommand[1]
@@ -422,9 +227,11 @@ class Backend(threading.Thread):
         self.to_be_renamed = dict()
         self._rename_children_of(acommand[1])
         self.qr.put(('RENAME_CHILDREN', self.to_be_renamed))
+        self.qc.task_done()
 
     def _HASHEDGRAPHICS(self, acommand):
         self.hashed_graphics = acommand
+        self.qc.task_done()
 
     def _ADD_FOLDER(self, acommand):
         self.qr.put(('LOCKGUI', None))
@@ -438,6 +245,7 @@ class Backend(threading.Thread):
         self.qr.put(('STATUS', "Unpacking complete."))
         self.qr.put(('PROGVALUE', 0))
         self.qr.put(('UNLOCKGUI', None))
+        self.qc.task_done()
 
     def _ADD_CONTENTS(self, acommand):
         the_focus, adir_path = acommand
@@ -454,6 +262,7 @@ class Backend(threading.Thread):
         self.qr.put(('STATUS', "Unpacking complete."))
         self.qr.put(('PROGVALUE', 0))
         self.qr.put(('UNLOCKGUI', None))
+        self.qc.task_done()
 
     def _ADD_COLLECTION(self, acommand):
         self.qr.put(('LOCKGUI', None))
@@ -462,6 +271,7 @@ class Backend(threading.Thread):
         self.qr.put(('STATUS', "Unpacking complete."))
         self.qr.put(('PROGVALUE', 0))
         self.qr.put(('UNLOCKGUI', None))
+        self.qc.task_done()
 
     def _ADD_FILE(self, acommand):
 #            focus, filenames = acommand[1]
@@ -471,64 +281,75 @@ class Backend(threading.Thread):
         self._add_files(acommand[0], acommand[1])
         self._on_reload_tree()
         self.qr.put(('UNLOCKGUI', None))
+        self.qc.task_done()
 
     def _CHILDRENS_FILENAMES(self, acommand):
         self.project_id, temp_path, project_path_ = acommand
         #self.project_id should be set to 'I00001', but for safety
         self._childrens_filenames(self.trout.find(".//I00001"), \
                                   temp_path, project_path_)
+        self.qc.task_done()
+
     def _FOLDERSIZE(self, _):
 #            size_in_Mb = folder_size(\
 #                str(Path(self.Pub2SD, 'Temp', self.project)))/(1024.0 * 1024.0)
         self.qr.put(('FOLDERSIZE', \
                      folder_size(str(Path(self.Pub2SD, \
                                 'Temp', self.project)))/(1024.0 * 1024.0)))
+        self.qc.task_done()
 
     def _PUBLISHFILES(self, acommand):
         self._on_publish_files(acommand)
+        self.qc.task_done()
 
     def _PREPARE_FILES(self, _):
-        self.qr.put(('LOCKGUI', None))
+        #tabs disabled in gui
         self._on_prepare_files()
-        self.qr.put(('UNLOCKGUI', None))
+        self.qr.put(('FILES_PREPARED', None))
+        self.qc.task_done()
 
     def _ONSAVEPROJECT(self, acommand):
         self._on_save_project(acommand)
+        self.qc.task_done()
 
     def _DELETE(self, acommand):
         self._on_delete(acommand)
+        self.qc.task_done()
 
     def _MOVEUP(self, acommand):
         self._on_move_up(acommand)
+        self.qc.task_done()
 
     def _MOVEDOWN(self, acommand):
         self._on_move_down(acommand)
+        self.qc.task_done()
 
     def _PROMOTE(self, acommand):
         self._on_promote(acommand)
+        self.qc.task_done()
 
     def _DEMOTE(self, acommand):
         self._on_demote(acommand)
         self._on_reload_tree()
+        self.qc.task_done()
 
     def _ON_SET(self, acommand):
         self._on_set(acommand)
+        self.qc.task_done()
 
     def _ON_APPEND(self, acommand):
         self._on_append(acommand)
         self._on_reload_tree()
+        self.qc.task_done()
 
     def _ATTACH_ARTWORK_TO(self, acommand):
         focus, _picture_type, _desc, artwork = acommand
         #hash it here, pass hash_tag and length
-#            partwork = Path(artwork)
         if artwork \
                 and Path(artwork).exists() \
                 and Path(artwork).suffix in ['.png', 'jpg',]:
 #                    and os.path.exists(artwork) \
 #                    and artwork[-4:] in ['.png', 'jpg',]:
-#                    fart = codecs.open(artwork, mode='rb').read()
-#                fart = Path(artwork).read_bytes()
             hash_tag, length = self._hash_it(Path(artwork).read_bytes())
             mime = 'image/' + artwork[-3:]
             self._attach_artwork_to(focus, _picture_type, _desc, \
@@ -537,31 +358,39 @@ class Backend(threading.Thread):
         else:
             #clear tag
             self._attach_artwork_to(focus, '', '', '', '', '')
+        self.qc.task_done()
 
     def _SETCOPYPLAYLISTS(self, acommand):
         self.play_list_targets, self.is_copy_playlists_to_top = acommand
+        self.qc.task_done()
 
     def _M3UorM3U8(self, acommand):
         self.M3UorM3U8 = acommand
+        self.qc.task_done()
 
     def _OUTPUT_TO(self, acommand):
         self.output_to = acommand
+        self.qc.task_done()
 
     def _PUBLISH_TO_SD(self, _):
         self._on_publish_to_SD()
+        self.qc.task_done()
 
     def _EXPORTHTML(self, _):
         self._export_to_html()
+        self.qc.task_done()
 
     def _DELETETEMP(self, _):
         self.qr.put(('STATUS', \
                 "Deleting temporary files, this may take a few minutes."))
         self._delete_temp_folder()
         self.qr.put(('DELETEDTEMP', None))
+        self.qc.task_done()
 
     def _DIE_DIE_DIE(self, _):
         self.exitFlag = True
         self.qr.put(('IM_OUT_OF_HERE', "I'm out of here!!!"))
+        self.qc.task_done()
 
 
 
@@ -574,35 +403,22 @@ class Backend(threading.Thread):
 
     def _load_conf_file(self, aconf_file):
         """loads the old project file into etree tree"""
-#        self.qr.put(('PRINT', "In _load_conf_file"))
         result = ''
-#        the_file = Path(self.Pub2SD, (aconf_file + '.prj'))
         if aconf_file and Path(self.Pub2SD, (aconf_file + '.prj')).is_file():
             result = self._load_project(\
                                 str(Path(self.Pub2SD, (aconf_file + '.prj'))))
         else:
-#            self.qr.put(("PRINT","Trying to create project"))
             result = self._create_project()
-#            self.qr.put(("PRINT","Created project = {}".format(result)))
-#        print("succeeded creating/loading project = {}".format(result))
         self.qr.put(('CONTINUE_F0_NEXT', result))
 
     def _load_template(self, template_path):
         """adds tags in template to tag tree displayed in f1,
            template_path is Path object"""
         tp = Path(template_path)
-#        print(str(tp),tp, tp.exists())
         if tp.exists():
-#            filein = codecs.open(template_path.resolve(), mode='r', encoding='utf-8')
             filein = codecs.open(str(tp), mode='r', encoding='utf-8')
-#            filein = template_path.open(mode='r', encoding='utf-8')
-
-#            fp = tp.open(mode='r', encoding='utf-8')
-#            lotslines = tp.read_text(encoding='utf-8')
-#            lines = lotslines.splitlines()
             lines = filein.readlines()
 
-#            fp.close()
             filein.close()
             #load template to backend
             self.template = json.loads(''.join(lines))
@@ -645,17 +461,9 @@ class Backend(threading.Thread):
     def _load_project(self, thefile):
         """loads an existing project (.prj) file, adapting it's contents
                                       to the current Simple/Advanced choice"""
-#        pthefile = Path(thefile)
         if not (Path(thefile).exists() and Path(thefile).is_file()): #no file specified so fail!
             return False
 
-#        linesin = list()
-#        filein = codecs.open(thefile, mode='r', encoding='utf-8')
-#        for aline in filein.readlines():
-#            if aline.strip():
-#                linesin.extend([aline.strip()])
-#        filein.close()
-#        linesin = Path(thefile).read_text(encoding='utf-8').split()
         lines = ' '.join(Path(thefile).read_text(encoding='utf-8').split())
         self.root = etree.fromstring(lines)
         self.settings = self.root.find("settings")
@@ -690,10 +498,8 @@ class Backend(threading.Thread):
         if 'preferred' in self.smode.attrib:
             if self.smode.attrib['preferred'] == 'True':
                 self.smode.attrib['preferred'] = '1'
-#                self.preferred = 1
             elif self.smode.attrib['preferred'] == 'False':
                 self.smode.attrib['preferred'] = '0'
-#                self.preferred = 0
             self.preferred = int(self.smode.attrib['preferred'])
         else:
             self.preferred = 0
@@ -770,9 +576,10 @@ class Backend(threading.Thread):
         # unpickle hashed graphic
         if thefile[:-4]:
             picklein = thefile[:-4] + '.pkl'
-            self.hashed_graphics = pickle.load(open(picklein, 'rb')) \
-                                              if Path(picklein).is_file \
-                                              else dict()
+            if Path(picklein).exists and Path(picklein).is_file:
+                self.hashed_graphics = pickle.load(open(picklein, 'rb'))
+            else:
+                self.hashed_graphics = dict()
         return 'True'
 
     def _downgrade_child_of(self, parent, difference=None):
@@ -916,7 +723,6 @@ class Backend(threading.Thread):
 
     def _create_project(self):
         """create new project"""
-#        print("in _create_project")
         #create new project tree, throwing away any existing tree
         self.root = etree.Element('root')
         #add child 'settings', all user configurable bits under here
@@ -960,7 +766,6 @@ class Backend(threading.Thread):
         self.sf4.attrib['folderList'] = ''
         self.sf4.attrib['is_copy_playlists_to_top'] = 'False'
         self.sf4.attrib['M3UorM3U8'] = '2'
-#        print("created project, returning 'True'")
         return 'True'
 
     def _load_tree_from(self, _trout):
@@ -970,18 +775,8 @@ class Backend(threading.Thread):
         else:
             tree = self.trout.find(".//" + _trout)
             parent = tree.tag
-#        self.qr.put(('PRINT', etree.tostring(tree, pretty_print=True)))
-#        if len(tree):
-
-#        self.qr.put(('PRINT', 'load >{}< children of >{}<'.\
-#                     format(len(tree.getchildren()), parent)))
-#        self.qr.put(('PRINT', 'list children >{}<'.format(list(tree.getchildren()), parent)))
-#        self.qr.put(('PRINT', 'list children >{}<'.\
-#                     format([c.tag for c in tree.getchildren()], parent)))
-#        if len(tree.getchildren()) and tree.getchildren()[0].tag != parent:
         if tree.getchildren() and tree.getchildren()[0].tag != parent:
             for child in tree.getchildren():
-#                self.qr.put(('PRINT', 'for child>{}< of >{}<'.format(child.tag, parent)))
                 vout = list()
                 for k in self.columns:
                     if k not in ['adummy', 'APIC_'] and k in child.attrib:
@@ -1002,7 +797,6 @@ class Backend(threading.Thread):
         """save current project, thisproject is full path in str"""
         aproject = Path(thisproject)
         if aproject.exists():
-#            os.remove(aproject)
             aproject.unlink()
 
         if aproject:
@@ -1016,7 +810,6 @@ class Backend(threading.Thread):
             # list projects in Pub2SD and update list in self.ddnCurProject
             pout.close()
             self.qr.put(('LISTPROJECTS', aproject.stem))
-#            self.qr.put(('LISTPROJECTS', os.path.basename(aproject[:-4])))
         else:
             pass
 
@@ -1047,7 +840,6 @@ class Backend(threading.Thread):
             somevalues = self._read_mp3_tags(afile)
         iid = "I{:05X}".format(self.next_iid)
         self.next_iid += 1
-#        self.qr.put(('PRINT', 'inserting iid ={} and next iid {}'.format(iid, self.next_iid)))
         self.to_be_inserted.append([iid, [e_parent.tag, somevalues, 'file']])
         e_child = etree.SubElement(e_parent, iid)
         e_child.text = 'file'
@@ -1062,32 +854,20 @@ class Backend(threading.Thread):
         if noTop:
             thisdir = the_focus
             e_parent = self.trout.find(".//" + the_focus)
-#            self.qr.put(('PRINT', 'noTop =True, e_parent = {}'.\
-#                         format(e_parent.tag)))
         else:
             vout = ['collection', '-', '-']
             if 'TIT2' in self.displayColumns:
-#                vout.extend([self._my_unidecode(os.path.split(adir_path)[-1]),])
                 vout.extend([self._my_unidecode(Path(adir_path).name),])
             vout.extend(['-' for item in self.displayColumns[2:-1]])
-#            self.qr.put(('PRINT', 'next iid ={}'.format(self.next_iid)))
             iid = "I{:05X}".format(self.next_iid)
             self.next_iid += 1
             self.to_be_inserted.append([iid, [the_focus, vout, 'collection']])
-#            self.qr.put(('PRINT', 'to be inserted ={}'.\
-#                         format(self.to_be_inserted[-1])))
             thisdir = iid
 #            e_focus = self.trout.find(".//" + the_focus)
             e_parent = etree.SubElement(self.trout.find(".//" + the_focus), iid)
             e_parent.text = 'collection'
-#            self.qr.put(('PRINT', 'e_focus {}, e_parent {}, text {}'.\
-#                         format(e_focus.tag, e_parent.tag, e_parent.text)))
-#            self.qr.put(('PRINT', self.columns))
-#            self.qr.put(('PRINT', vout))
             for c, v in zip(self.columns, vout):
                 e_parent.attrib[c] = v
-#            self.qr.put(('PRINT', 'got past c,v, added {}'.\
-#                                    format(e_parent.tag)))
 
         _ff = dict()
         flist = dict()
@@ -1098,22 +878,18 @@ class Backend(threading.Thread):
             _ff[sort_key_for_filenames(_pf.stem)] = \
                                                     _pf.stem
             flist[_pf.stem] = f_
-#        self.qr.put(('PRINT', 'got past f_'))
 
         for _ll in sorted(_ff):
             self._add_a_file(flist[_ff[_ll]], e_parent)
             self.qr.put(('PROGSTEP', 1))
-#            self.qr.put(('PRINT', 'got past add a file'))
 
         # recurse through sub-dirs
         for adir in sorted([os.path.normpath(adir_path + '/' + d) \
                             for d in os.listdir(adir_path) \
                                 if os.path.isdir(adir_path + '/' + d) \
                                             and len(d) > 0]):
-#            self.qr.put(('PRINT', 'Unpacking{}'.format(adir)))
             self.qr.put(('STATUS{}', ('Unpacking{}', adir)))
             self._add_tree(thisdir, adir)
-#            self.qr.put(('PRINT', ' added {}'.format(adir)))
 
     def _rename_children_of(self, parent):
         """rename all the children of parent, parents name is unchanged.
@@ -1125,7 +901,6 @@ class Backend(threading.Thread):
         parent_attribs = e_parent.attrib
 #        children = list(e_parent)
         children = e_parent.getchildren()
-#        ancestor_name = parent_attribs['Name']
         my_isalpha = True
         if parent_attribs['Name']:
             if parent_attribs['Name'][-1] == '@':
@@ -1212,7 +987,6 @@ class Backend(threading.Thread):
         """normalize strings to avoid unicode character which won't display
            correctly or whose use in filenames may crash filesystem"""
         l = list()
-#        self._fix_eng_bug_in_unidecode()
         if self.preferred == 0:
             self.pref = list()
             #aggresively normalize
@@ -1422,8 +1196,6 @@ class Backend(threading.Thread):
             attributes = e_child.attrib
 
             if attributes['Type'] == 'collection':
-#                thispath = os.path.normpath(temp_path + '/' + new_dir)
-#                final_path = os.path.normpath(project_path_ + '/' + new_dir)
                 thispath = str(tp / new_dir)
                 final_path = str(pp / new_dir)
                 os.makedirs(thispath, mode=0o777, exist_ok=True)
@@ -1459,9 +1231,7 @@ class Backend(threading.Thread):
 
     def _on_prepare_files(self):
         '''prepare files in temp folder'''
-#        print('prepare files in temp folder')
         self._extract_hashed_graphics()
-#        print('extracted graphics')
         self.qr.put(('PROGMAX', len(self.files)))
         for child in [self.trout.find(".//" + c) \
                       for c in sorted(self.files.keys())]:
@@ -1533,12 +1303,10 @@ class Backend(threading.Thread):
             _type = 3
             _desc = ''
             #add check file exists else break!!!!!
-#            _data = open(os.path.normpath(atag), \
-#                                     'rb').read()
             if Path(atag).exists():
                 _data = Path(atag).read_bytes()
             else:
-                return
+                return None
         return [_encoding, _mime, _type, _desc, _data]
 
     def _preparing_file_scaning_for_tags_advanced_mode(self, \
@@ -1594,7 +1362,7 @@ class Backend(threading.Thread):
         """add the APIC tag and data to the audio file"""
         picture_type_1_2 = False
         for atag in thetags:
-            if atag != '-' and atag != '#':
+            if atag not in ('-', '#'):
                 # is not empty so add it!
                 _encoding, _mime, _type, _desc, _data = \
                        self._preparing_file_scaning_for_tags_advanced_mode(\
@@ -1652,7 +1420,6 @@ class Backend(threading.Thread):
         if target[1:] != ':\\' and \
                  Path(target, self.project).exists():
             # remove if exists
-#            shutil.rmtree(os.path.normpath(target + '/' + self.project))
             shutil.rmtree(Path(target, self.project))
 
         tp = Path(target, self.project)
@@ -1675,8 +1442,6 @@ class Backend(threading.Thread):
         fileId = {}
         listpaths = []
         for child in sorted(self.files.keys()):
-#            final_path = os.path.dirname(\
-#                            os.path.normpath(target + self.files[child][3]))
             final_path = str(Path(target, self.files[child][3]).parent)
             if final_path not in listpaths:
                 os.makedirs(final_path, mode=0o777, exist_ok=True)
@@ -1689,9 +1454,7 @@ class Backend(threading.Thread):
             self.qr.put(('PROGSTEP', 1))
         self.qr.put(('STATUS', 'Copying to target files...'))
         for child in sorted(self.files.keys()):
-#            filein = open(os.path.normpath(self.files[child][0]), mode='rb')
             fileId[child].write(Path(self.files[child][0]).read_bytes())
-#            filein.close()
             self.qr.put(('PROGSTEP', 1))
         #close all files at once to make modified dates the same
         self.qr.put(('STATUS', 'Closing target files...'))
@@ -1709,8 +1472,6 @@ class Backend(threading.Thread):
                                                          play_list_targets"""
         ptarget = Path(target)
         self.qr.put(('STATUS', 'Copying playlists...'))
-#        source = os.path.normpath(self.Pub2SD + '/Temp/'+ self.project + '/')
-#        images = os.path.normpath(self.Pub2SD + '/Temp/'+ self.project + '/images/')
         #self.project most not have leading / if str!!!!
         source = Path(self.Pub2SD, 'Temp', self.project)
         images = Path(self.Pub2SD, 'Temp', self.project, 'images')
@@ -1753,17 +1514,7 @@ class Backend(threading.Thread):
             self.qr.put(('STATUS', 'Copying playlists to top folder...'))
             for pp in playlists:
                 encode = 'utf-8' if pp.endswith('.M3U8') else 'cp1252'
-#                fin = codecs.open(os.path.normpath(source + '/'+ pp),\
-#                                          mode='r', encoding=encode)
-#                fout = codecs.open(os.path.normpath(target + pp), mode='w', \
-#                                   encoding=encode)
-#                fin = (source / pp).open(mode='r', encoding=encode)
-#                fout = (ptarget / pp).open(mode='w', encoding=encode)
-#
-#                fout.write(fin.read().replace('../', './'))
-#                fin.close()
-#                fout.close()
-
+                #ptarget, pp, source all Path objects
                 (ptarget / pp).write_text(\
                     (source / pp).read_text(encoding=encode).\
                         replace('../', './'),\
@@ -1863,7 +1614,8 @@ class Backend(threading.Thread):
         e_child = self.trout.find(".//" + focus)
         found = False
         if etree.iselement(e_child):
-            if e_child.attrib['Type'] is 'project':
+#            if e_child.attrib['Type'] is 'project':
+            if e_child.attrib['Type'] == 'project':
                 self.qr.put(('MESSAGEBOXSHOWERRORIN', \
                              ("Can't demote", "Can't demote project.")))
             else:
@@ -1873,7 +1625,8 @@ class Backend(threading.Thread):
                     if child_index < len(list(e_parent[:-1])):
                         children = e_parent.getchildren()
                         for a_child in children[child_index + 1:]:
-                            if a_child.attrib['Type'] is 'collection':
+#                            if a_child.attrib['Type'] is 'collection':
+                            if a_child.attrib['Type'] == 'collection':
                                 a_child.append(e_child)
                                 found = True
                                 break
@@ -1969,17 +1722,14 @@ class Backend(threading.Thread):
                     e_parent = this_child.getparent()
                     ancestors.insert(0, e_parent.tag)
                     this_child = e_parent
-#                workspace = os.path.normpath('{}/Temp'.format(self.Pub2SD))
                 workspace = Path(self.Pub2SD / 'Temp')
                 for ancestor in ancestors:
                     workspace = workspace / ancestor.tag
                     os.makedirs(workspace, mode=0o777, exist_ok=True)
-#                filename = '{}/{}.mp3'.format(workspace,e_child.tag)
                 filename = str(workspace / (e_child.tag + 'mp3'))
                 sound.export(filename, 'mp3')
                 e_parent = e_child.getparent()
                 somevalues = self._read_mp3_tags(e_child.attrib['Location'])
-#                self._add_a_file(afile, e_parent, somevalues)
                 self._add_a_file(filename, e_parent, somevalues)
             else:
                 self.qr.put(('MESSAGEBOXSHOWWARNING2', \
@@ -2202,14 +1952,12 @@ class Backend(threading.Thread):
                 self._set_sort_(child)
         else:
             #is file so…
-#            name = parent.attrib['Name']
             name = e_parent.attrib['Name']
             if self.isHide == 1:
                 name = '"' + name + '"'
             else:
                 name = DEFAULT_VALUES['ide3v24'][column][0:5] + name + \
                                         DEFAULT_VALUES['ide3v24'][column][5:]
-#            parent.attrib[column] = name
             e_parent.attrib[column] = name
 
     def _set_tag_(self, parent, column=None, text=None):
@@ -2296,7 +2044,6 @@ class Backend(threading.Thread):
             return False
         else:
             testFrames = currentFrames + '|' + text
-#        if False in self._list_different_frames(currentFrames, text, tag):
         if False in self._list_different_frames(testFrames, tag):
             return False
         else:
@@ -2460,19 +2207,11 @@ class Backend(threading.Thread):
         """Create web page for current 'playlist' all stored under project
         directory with pages named after node name, titles will be displayed
         on web page not in web page file name."""
-#        self.qr.put(('PRINT', 'ploc is {}'.format(ploc)))
-#        if not playlist:
-#            fileout = '{}/Temp/{}/index.html'.format(self.Pub2SD, self.project)
-#        else:
-#            fileout =  '{}/Temp/{}/{}.html'.format(self.Pub2SD, self.project, \
-#                                                    playlist)
         if not playlist:
             webpagefile = Path(self.Pub2SD, 'Temp', self.project, 'index.html')
         else:
             webpagefile = Path(self.Pub2SD, 'Temp', self.project, \
                                                     (playlist +'.html'))
-#        self.qr.put(('PRINT', 'fileout is {}'.format(ploc)))
-#        webpagefile = codecs.open(fileout, mode='w',encoding='utf-8')
         linesout = [codecs.BOM_UTF8.decode(),\
 '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">', \
 "<html><head>", \
@@ -2578,8 +2317,6 @@ class Backend(threading.Thread):
                         apic_frames.append(theParameters)
                     else:
                         #replace first matching frame
-#                        theList = self._list_different_frames(\
-#                                            currentFrames, dumbPara, 'APIC')
                         theList = self._list_different_frames(\
                                             currentFrames, 'APIC')
                         if False in theList:
@@ -2622,8 +2359,6 @@ class Backend(threading.Thread):
                 else:
                     self.qr.put(('MESSAGEBOXSHOWERRORTHREADS', \
                                  ("Invalid path", "Can't find {}", atarget)))
-#thinks... this is same as [athread.join() for athread in threads]
-#        while len(threads):
         while threads:
             for athread in threads:
                 if not athread.is_alive():
@@ -2639,7 +2374,6 @@ class Backend(threading.Thread):
         else:
             tree = self.trout.find(".//" + _trout)
             parent = tree.tag
-#        if len(tree):
         if tree:
             for child in tree.getchildren():
                 vout = list()
@@ -2678,7 +2412,6 @@ class Backend(threading.Thread):
                     the_headings.append('<th>' + 'Base' + '</th>')
                 else:
                     the_headings.append('<th>' + c + '</th>')
-#        fileout = os.path.normpath(self.Pub2SD + '/' + self.project + '.html')
         fileout = Path(self.Pub2SD / (self.project + '.html'))
         self.html_out = ['\ufeff<!DOCTYPE html>', \
                     '<html>', \
@@ -2727,33 +2460,16 @@ class Backend(threading.Thread):
 
         self._html_tree_from('')
         self.html_out.append('')
-#        output = codecs.open(fileout, mode='w',encoding='utf-8')
-#        output.write( '\n'.join(self.html_out))
-#        output.flush()
-#        output.close()
         fileout.write_text('\n'.join(self.html_out), encoding='utf-8')
         #now open in browser
-#        url = os.path.normpath("file://" + fileout)
-#        webbrowser.open(url)
         webbrowser.open(fileout.absolute().as_uri())
         self.qr.put(('PROGVALUE', 0))
         self.qr.put(('STATUS', ''))
 
-#    def _hash_it(self, _data):
-#        """ saves to dictionary and returns hash tag and length string"""
-#        m = hashlib.sha256(_data)
-#        if m.hexdigest() not in self.hashed_graphics:
-#            self.hashed_graphics[m.hexdigest()] = _data
-#        length = int(len(_data)/1024 + 0.5)
-#        return  m.hexdigest(), "b'{}Kb'".format(length)
-
 
     def _extract_hashed_graphics(self):
         #try to make target dir, ok if it already exists
-#        tt = os.path.normpath('{}/Temp/{}/images/'.\
-#                                            format(self.Pub2SD, self.project))
         tt = str(Path(self.Pub2SD, 'Temp', self.project, 'images'))
-#        self.qr.put(("PRINT", tt))
         os.makedirs(tt, exist_ok=True)
         self.list_images = \
            [self.hashed_graphics[m] for m in list(self.hashed_graphics.keys())]
@@ -2764,13 +2480,6 @@ class Backend(threading.Thread):
             fout.close()
             m += 1
         #now add css dir and file
-#        cssdir = os.path.normpath(tt[:-6] + '/css/')
-#        self.qr.put(("PRINT", cssdir))
-#        os.makedirs(cssdir, exist_ok=True)
-#        fout = codecs.open('{}/latin.css'.format(cssdir), mode='w', encoding="utf-8")
-#        fout.write('\n'.join(FILECSSLATIN))
-#        fout.close()
-#        zipdir = os.path.normpath(self.script_dir + "/cssjs.zip")
         zipdir = Path(self.script_dir, "cssjs.zip")
         with zipfile.ZipFile(zipdir, "r") as zip_ref:
             zip_ref.extractall(Path(self.Pub2SD, 'Temp', self.project))
@@ -2856,4 +2565,5 @@ def to_alpha(anumber):
 
 def is_hashable(tag):
     '''return true if tag hashable'''
-    return True if True in HASH_TAG_ON[tag] else False
+#    return True if True in HASH_TAG_ON[tag] else False
+    return True in HASH_TAG_ON[tag]
