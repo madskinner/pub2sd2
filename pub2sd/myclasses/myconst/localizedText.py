@@ -307,6 +307,12 @@ SET_TAGS = {\
 
 LOCALIZED_TEXT = { \
         'en-US':{ \
+            "{} Deleting...":"{} Deleting...", \
+            "{} Creating...":"{} Creating...", \
+            "{} Opening...":"{} Opening...", \
+            "{} Copying...":"{} Copying...", \
+            "{} Closing...":"{} Closing...", \
+            "{} Playlists...":"{} Playlists...", \
             "Merge files":"Merge files", \
             "Merge_ttp":"Merge the mp3 files in this collection and insert the combine mp3 file at the same level as the collection.", \
             "There are no immediate descendants which are mp3 files.":"There are no immediate descendants which are mp3 files.", \
@@ -324,7 +330,7 @@ LOCALIZED_TEXT = { \
             "This will attempt to update the project file " + \
                 "format to the current standard, every field " + \
                 "must be verified. It may be faster to " + \
-                "recreate the project from scratch. " +
+                "recreate the project from scratch. " + \
                 "Do you wish to continue?":\
                 "This will attempt to update " + \
                 "the project file " + \
@@ -613,6 +619,12 @@ LOCALIZED_TEXT = { \
             "Preparing =>{}":"Preparing =>{}", \
             }, \
         'fr-FR':{ \
+            "{} Deleting...": "{} Supprimer...", \
+            "{} Creating...": "{} Créer...", \
+            "{} Opening...": "{} Ouverture...", \
+            "{} Copying...": "{} Copier...", \
+            "{} Closing...": "{} Fermeture...", \
+            "{} Playlists...":"{} Listes de lecture...", \
             "Append":"Ajouter", \
             "Append_ttp":"Ajoute le contenu de la zone de saisie à le tag MP3 actuellement sélectionnée. Cette commande est uniquement disponible en mode 'Avancé' et uniquement lorsque le tag MP3 actuellement sélectionnée peut contenir plusieurs blocs.", \
             "Can't find artwork.":"Impossible de trouver une image.", \
@@ -882,6 +894,12 @@ LOCALIZED_TEXT = { \
             "Unpacking complete.":"Déballage terminé.", \
             }, \
         'pt-PT':{ \
+            "{} Deleting...": "{} Apagar...", \
+            "{} Creating...": "{} Criando...", \
+            "{} Opening...": "{} Abrindo...", \
+            "{} Copying...": "{} Copiando...", \
+            "{} Closing...": "{} Fechando...", \
+            "{} Playlists...":"{} Playlists...", \
             "Append":"Acrescentar", \
             "Append_ttp":"Anexa o conteúdo da caixa de entrada à tag " + \
                 "MP3 atualmente selecionada. Este comando só está " + \

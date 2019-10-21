@@ -75,7 +75,7 @@ from .threads import MyThread
 class Backend(threading.Thread):
     """handle processing files"""
 
-    def __init__(self, qc, qr, aqr, scriptdir): #, tl):
+    def __init__(self, qc, qr, aqr, scriptdir, lang): #, tl):
         threading.Thread.__init__(self)
         self.threadID = 1
         self.name = 'backend'
@@ -104,6 +104,7 @@ class Backend(threading.Thread):
         self.prefix = ''
         self.html_out = ''
         self.script_dir = scriptdir
+        self.lang = lang
 
         #bodge to get past WinPython....
         self.Pub2SD = Path(Path.home(), 'Pub2SD')
@@ -2302,7 +2303,7 @@ class Backend(threading.Thread):
                 e_target.attrib['APIC_'] = '-'
             else:
                 currentTag = e_target.attrib['APIC']
-                if currentTag is '-' or self.mode == 0:
+                if currentTag == '-' or self.mode == 0:
                     e_target.attrib['APIC'] = dumbPara
                     e_target.attrib['APIC_'] = theParameters
                 else:
@@ -2334,36 +2335,72 @@ class Backend(threading.Thread):
 
     def _on_publish_to_SD(self):
         """publish files and playlists to SDs"""
-
-        threads = []
+#        self.qr.put(('PRINT', "got to backend _on_publish_to_SD()"))
+        threads = [None, None, None, None, None, None, None, None]
+        thread_index = list()
         self.usb_status = ['', '', '', '', '', '', '', '']
         self.qr.put(('PROGMAX', \
                      (2 * int(len(self.files)/20) * len(self.output_to))))
+#        self.qr.put(('PRINT', "output to >{}<".format(self.output_to)))
 
         i = 1
         currentThreadsActive = threading.activeCount()
+
         for atarget in self.output_to:
             if atarget:
-                if os.path.exists(atarget):
-                    target = atarget
-                    threads.append(MyThread(target, \
-                                            self.Pub2SD, self.project, \
+                if Path(atarget).exists:
+#                    target = atarget
+#                    self.qr.put(('PRINT', "going to load thread no. >{}<".format(i)))
+#                    self.qr.put(('PRINT', "nos arguments >{}<".format(len(\
+#                                 (str(Path(atarget)), \
+#                                            self.Pub2SD, \
+#                                            self.project, \
+#                                            self.play_list_targets, \
+#                                            self.is_copy_playlists_to_top, \
+#                                            self.files, \
+#                                            self.aqr[i-1],\
+#                                            self.script_dir))))
+
+                    threads[i-1] = MyThread(str(Path(atarget)), \
+                                            self.Pub2SD, \
+                                            self.project, \
                                             self.play_list_targets, \
                                             self.is_copy_playlists_to_top, \
-                                            self.files, self.aqr[i-1]),\
-                                            self.script_dir)
-                    i += 1
-                    threads[-1].start()
+                                            self.files, \
+                                            self.aqr[i-1],\
+                                            self.script_dir, \
+                                            self.lang)
+                    thread_index.append(i-1)
+#                  target, \
+#                 pub2sd, \
+#                 project, \
+#                 play_list_targets, \
+#                 is_copy_playlists_to_top, \
+#                 files, \
+#                 aqr, \
+#                 scriptdir):
+#                   self.qr.put(('PRINT', "going to launch thread no. >{}<".format(i)))
+                    threads[i-1].start()
                     self.qr.put(('STATUS{}', ('{} Threads active', \
-                                threading.activeCount()-currentThreadsActive)))
+                                threading.activeCount()-currentThreadsActive), self.lang))
+                    i += 1
                 else:
                     self.qr.put(('MESSAGEBOXSHOWERRORTHREADS', \
                                  ("Invalid path", "Can't find {}", atarget)))
-        while threads:
-            for athread in threads:
-                if not athread.is_alive():
-                    athread.join()
-                    threads.remove(athread)
+#        used_queues = i
+#        while not all(used_queues):
+        while thread_index:
+            for athread in thread_index:
+                if not threads[athread].is_alive():
+                    #remove any pending reports in that threads report queue
+                    try:
+                        while True:
+                            self.aqr[athread].get_nowait()
+                    except:
+                        pass
+                    threads[athread].join()
+                    thread_index.remove(athread)
+
         self.qr.put(('PROGVALUE', 0))
         self.qr.put(('STATUS', "Output to SD('s) completed."))
 

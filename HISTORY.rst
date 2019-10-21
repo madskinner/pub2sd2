@@ -2,9 +2,9 @@
 
 History
 -------
-1.1.9(2019/10)
+1.1.15(2019/10)
 -----
-Ast bug fixes for Linux including changed size of window, relocated mainc.ico and mainc.png to script dir and made queue explicitly close on exit.
+Ast bug fixes for Linux including changed size of window, relocated mainc.ico and mainc.png to script dir and made queue explicitly close on exit. Ast bug fixes to handling/reporting of queues for publishing to SD/USBs.
 
 1.1.8(2019/09)
 -----

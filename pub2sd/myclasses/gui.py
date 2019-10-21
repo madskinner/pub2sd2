@@ -81,8 +81,12 @@ qcommand = queue.Queue()
 qreport = queue.Queue()
 #qcommand = CQ()
 #qreport = CQ()
-aqr = [PQueue(), PQueue(), PQueue(), PQueue(), \
-       PQueue(), PQueue(), PQueue(), PQueue()]
+#aqr = [PQueue(), PQueue(), PQueue(), PQueue(), \
+#       PQueue(), PQueue(), PQueue(), PQueue()]
+#aqr = [queue.Queue(), queue.Queue(), queue.Queue(), queue.Queue(), \
+#       queue.Queue(), queue.Queue(), queue.Queue(), queue.Queue()]
+aqr = [CQ(), CQ(), CQ(), CQ(), \
+       CQ(), CQ(), CQ(), CQ()]
 
 class GuiCore(Tk):
     """Handle the graphical interface for Pub2SDwizard and the gui logic"""
@@ -140,15 +144,17 @@ class GuiCore(Tk):
             'PREFERRED':self._PREFERRED, \
             'PRINT':self._PRINT, \
             }
-        self._usb_report_queue = {
+        self._usb_report_queue = {\
             'PROGSTEP':self._PROGSTEP, \
             'PRINT':self._USBPRINT, \
+            'PRINTdiag':self._PRINT, \
             'STATUS':self._USBSTATUS, \
             }
 
     def _initialize(self):
         """initialize the GuiCore"""
-        self.backendthread = Backend(qcommand, qreport, aqr, SCRIPT_DIR) #, self.threadlock)
+        self.backendthread = Backend(qcommand, qreport, aqr, \
+                                     SCRIPT_DIR, lang='en-US')
         self.backendthread.start()
 #        self.script_dir = 'frontend'
 #        print(self.script_dir)
@@ -204,6 +210,7 @@ class GuiCore(Tk):
             lang = self.ddnGuiLanguage.get()
             areport = qreport.get()
             if areport[0] in self._report_queue.keys():
+#                print(areport, lang)
                 self._report_queue[areport[0]](areport[1], lang)
             else:
                 print('Unknown report >{}<'.format(areport))
@@ -212,8 +219,13 @@ class GuiCore(Tk):
         for i in range(0, 8):
             if not aqr[i].empty():
                 aqreport = aqr[i].get()
-                if aqreport[0] in self._usbreport_queue.keys():
-                    self._report_queue[areport[0]](areport[1], i)
+#                self._usb_report_queue
+                if aqreport[0] in self._usb_report_queue.keys():
+#                    self._report_queue[areport[0]](areport[1], i)
+                    #simple fifo queue
+                    #i says which status slot to update, ignored for PROGSTEP
+#                    print("aqreport=>{}<".format(aqreport))
+                    self._usb_report_queue[aqreport[0]](aqreport[1], i)
                 else:
                     pass
                 aqr[i].task_done()
@@ -279,8 +291,8 @@ class GuiCore(Tk):
     def _PRINT(self, areport, _):
         print(areport)
 
-    def _USBPRINT(self, areport, _):
-        print(areport[2])
+    def _USBPRINT(self, areport, i):
+        print("from thread {} => {}".format(i, areport))
 
     def _LISTPROJECTS(self, areport, _):
         self.list_projects = [f.rstrip('.prj') \
@@ -290,17 +302,34 @@ class GuiCore(Tk):
         self.ddnCurProject.set(areport[1])
 
     def _STATUS(self, areport, lang):
-        self.status['text'] = LOCALIZED_TEXT[lang][areport] \
-                                            if areport else ''
+        if areport:
+            self.status['text'] = LOCALIZED_TEXT[lang][areport]
+        else:
+            self.status['text'] = ''
+
     def _USBSTATUS(self, areport, i):
-        self.usb_status[i] = areport[2]
+        lang = self.ddnGuiLanguage.get()
+        if areport in LOCALIZED_TEXT[lang].keys():
+            self.usb_status[i] = LOCALIZED_TEXT[lang][areport]
+        else:
+            self.usb_status[i] = areport
         self.status['text'] = ';'.join(\
                    [t for t in self.usb_status if t])
 
-    def _STATUSBB(self, areport, lang):
-        self.status['text'] = LOCALIZED_TEXT[lang][areport[0]].\
-                                            format(areport[1]) \
-                                            if areport else ''
+    def _STATUSBB(self, areport, _):
+#        print("in _STATUSBB, areport=>{}<".format(areport))
+        lang = self.ddnGuiLanguage.get()
+        if len(areport) > 1:
+            if lang not in LOCALIZED_TEXT.keys():
+                print("in _STATUSBB, lang=>{}<, areport=>{}<".format(lang, areport))
+            if areport[0] not in  LOCALIZED_TEXT[lang].keys():
+                print("in _STATUSBB, areport=>{}<".format(areport))
+            self.status['text'] = LOCALIZED_TEXT[lang][areport[0]].format(areport[1])
+        else:
+            self._STATUS(areport, lang)
+#        self.status['text'] = LOCALIZED_TEXT[lang]['STATUS{}'].\
+#                                            format(areport) \
+#                                            if areport else ''
 
     def _MESSAGEBOXASKOKCANCEL(self, areport, lang):
         qcommand.put(('OKCANCEL', messagebox.askokcancel(\
@@ -366,6 +395,10 @@ class GuiCore(Tk):
     def _PROGSTEP(self, areport, _):
         self.progbar.step(areport)
 
+    def _USBPROGSTEP(self, areport, _):
+        #ignores which thread it's from and just does step
+        self.progbar.step(areport)
+
     def _PROGSTOP(self, areport, _):
         self.progbar.stop()
 
@@ -417,7 +450,7 @@ class GuiCore(Tk):
 
     def _IM_OUT_OF_HERE(self, areport, _):
         for pq in aqr:
-            pq.clear()
+#            pq.clear()
             pq.close()
         self.destroy()
 
@@ -1599,16 +1632,15 @@ class GuiCore(Tk):
                   "Help I've been kidnapped by {}.".format(platform.system()))
 
         for i in range(0, 8):
+            self.cb[i]['text'] = ''
+            self.cb[i]['state'] = 'disabled'
+            self.cbv[i].set('f')
             if i < len(self.tlist) and self.tlist[i][0]:
                 if platform.system() == 'Windows':
                     self.cb[i]['text'] = self.tlist[i][0]
                 elif platform.system() == 'Linux':
                     self.cb[i]['text'] = self.tlist[i][0].split('/')[-1]
                 self.cb[i]['state'] = 'normal'
-            else:
-                self.cb[i]['text'] = ''
-                self.cb[i]['state'] = 'disabled'
-                self.cbv[i].set('f')
 
     def _pdup_state(self, astate):
         """sets the states of the Promote, Demote, MoveUp and moveDown buttons
