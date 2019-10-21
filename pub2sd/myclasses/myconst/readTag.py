@@ -1,4 +1,8 @@
+# -*- coding: utf-8 -*-
 """
+Created on Sun May 13 16:23:28 2018
+
+@author: marks
 """
 READ_TAG = { \
             'TXXX':'[atag.encoding, atag.desc, atag.data]', \

@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun May 13 16:23:28 2018
+
+@author: marks
+"""
 
 INTERFACE_LANGS = {'langs':{'0':'en-US', '1':'fr-FR', '2':'pt-PT'},}
 
