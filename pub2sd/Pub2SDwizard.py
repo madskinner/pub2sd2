@@ -18,8 +18,8 @@ from pathlib import Path
 
 from tkinter import messagebox, PhotoImage
 
-from myclasses.myconst.therest import THIS_VERSION
-from myclasses.gui import GuiCore
+from .myclasses.myconst.therest import THIS_VERSION
+from .myclasses.gui import GuiCore
 
 if __name__ == '__main__' and __package__ is None:
     os.sys.path.append(os.path.dirname(os.path.dirname(\
