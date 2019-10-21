@@ -4,3 +4,4 @@ mutagen>=1.37
 psutil>=3.4.2
 Sphinx>=1.6.5
 pydub>=0.23.1
+pillow>=4.0.0

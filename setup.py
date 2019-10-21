@@ -14,7 +14,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
 #    package_data={'pub2sd': ['*.html', '*.json', '*.ico', '*.zip', 'images/*.png', 'images/*.jpg', 'images/*.ico']},
     package_data={'pub2sd': ['*.html', '*.ico', '*.zip', 'images/*.png', 'images/*.jpg', 'images/*.ico']},
-    install_requires=["lxml","psutil","mutagen","unidecode", "pydub"],
+    install_requires=["lxml","psutil","mutagen","unidecode", "pydub", "pillow"],
     license='MIT',
     classifiers=['Development Status :: 5 - Production/Stable',
                  'Intended Audience :: End Users/Desktop',
